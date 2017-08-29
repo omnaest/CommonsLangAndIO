@@ -52,4 +52,10 @@ public class CollectionUtilsTest
 						collectionDelta.getAdded());
 	}
 
+	@Test
+	public void testLast() throws Exception
+	{
+		assertEquals("b", CollectionUtils.last(Arrays.asList("a", "b")));
+	}
+
 }

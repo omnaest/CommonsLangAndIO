@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Helper methods regarding {@link Collection}s
@@ -110,5 +111,10 @@ public class CollectionUtils
 								.collect(Collectors.toSet());
 
 		return new CollectionDelta<>(added, removed, shared);
+	}
+
+	public static <E> E last(Collection<E> collection)
+	{
+		return ListUtils.last((collection == null ? Stream.<E>empty() : collection.stream()).collect(Collectors.toList()));
 	}
 }
