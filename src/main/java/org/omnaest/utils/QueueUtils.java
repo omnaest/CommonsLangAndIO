@@ -19,29 +19,51 @@
 package org.omnaest.utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 
-public class ListUtils
+/**
+ * Utils for {@link Queue} operations
+ *
+ * @see Queue
+ * @see BlockingQueue
+ * @author Omnaest
+ */
+public class QueueUtils
 {
-	public static <E> E last(List<E> list)
-	{
-		E retval = null;
 
-		if (list != null && !list.isEmpty())
-		{
-			retval = list.get(list.size() - 1);
-		}
-
-		return retval;
-	}
-
-	@SafeVarargs
-	public static <E> List<E> mergedList(List<E>... lists)
+	public static <E> List<E> drain(int number, Queue<E> queue)
 	{
 		List<E> retlist = new ArrayList<>();
-		Arrays	.asList(lists)
-				.forEach(list -> retlist.addAll(list));
+
+		E element = null;
+		for (int ii = 0; ii < number && (ii == 0 || element != null); ii++)
+		{
+			element = queue.poll();
+			if (element != null)
+			{
+				retlist.add(element);
+			}
+		}
+
+		return retlist;
+	}
+
+	public static <E> List<E> drainAll(Queue<E> queue)
+	{
+		List<E> retlist = new ArrayList<>();
+
+		E element = null;
+		do
+		{
+			element = queue.poll();
+			if (element != null)
+			{
+				retlist.add(element);
+			}
+		} while (element != null);
+
 		return retlist;
 	}
 }

@@ -16,32 +16,35 @@
 
 
 */
-package org.omnaest.utils;
+package org.omnaest.utils.events;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class ListUtils
+/**
+ * Distributing {@link EventHandlerRegistry}
+ *
+ * @author Omnaest
+ * @param <E>
+ */
+public class DistributionEventHandler<E> implements EventHandler<E>, EventHandlerRegistry<E>
 {
-	public static <E> E last(List<E> list)
+	private List<EventHandler<E>> handlers = new ArrayList<>();
+
+	@Override
+	public void handle(E event)
 	{
-		E retval = null;
-
-		if (list != null && !list.isEmpty())
-		{
-			retval = list.get(list.size() - 1);
-		}
-
-		return retval;
+		this.handlers	.stream()
+						.collect(Collectors.toList())
+						.forEach(handler -> handler.handle(event));
 	}
 
-	@SafeVarargs
-	public static <E> List<E> mergedList(List<E>... lists)
+	@Override
+	public DistributionEventHandler<E> register(EventHandler<E> eventHandler)
 	{
-		List<E> retlist = new ArrayList<>();
-		Arrays	.asList(lists)
-				.forEach(list -> retlist.addAll(list));
-		return retlist;
+		this.handlers.add(eventHandler);
+		return this;
 	}
+
 }

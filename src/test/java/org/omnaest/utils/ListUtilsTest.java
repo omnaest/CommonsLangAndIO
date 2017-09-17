@@ -18,30 +18,17 @@
 */
 package org.omnaest.utils;
 
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
-import java.util.List;
 
-public class ListUtils
+import org.junit.Test;
+
+public class ListUtilsTest
 {
-	public static <E> E last(List<E> list)
+	@Test
+	public void testMergedList() throws Exception
 	{
-		E retval = null;
-
-		if (list != null && !list.isEmpty())
-		{
-			retval = list.get(list.size() - 1);
-		}
-
-		return retval;
-	}
-
-	@SafeVarargs
-	public static <E> List<E> mergedList(List<E>... lists)
-	{
-		List<E> retlist = new ArrayList<>();
-		Arrays	.asList(lists)
-				.forEach(list -> retlist.addAll(list));
-		return retlist;
+		assertEquals(Arrays.asList("1", "2", "3", "4"), ListUtils.mergedList(Arrays.asList("1", "2"), Arrays.asList("3", "4")));
 	}
 }
