@@ -18,33 +18,29 @@
 */
 package org.omnaest.utils;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Helper for {@link Thread}s
- * 
- * @author omnaest
- */
+import org.omnaest.utils.exception.ExceptionHandler;
+
 public class ThreadUtils
 {
 	public static void sleepSilently(int duration, TimeUnit timeUnit)
 	{
-		sleepSilently(duration, timeUnit, (SimpleExceptionHandler) null);
+		ExceptionHandler exceptionHandler = null;
+		sleepSilently(duration, timeUnit, exceptionHandler);
 	}
 
-	public static void sleepSilently(int duration, TimeUnit timeUnit, SimpleExceptionHandler... handler)
+	public static void sleepSilently(int duration, TimeUnit timeUnit, ExceptionHandler exceptionHandler)
 	{
 		try
 		{
 			Thread.sleep(timeUnit.toMillis(duration));
-		} catch (InterruptedException e)
+		}
+		catch (InterruptedException e)
 		{
-			if (handler != null)
+			if (exceptionHandler != null)
 			{
-				Arrays	.asList(handler)
-						.stream()
-						.forEach(h -> h.handle(e));
+				exceptionHandler.handle(e);
 			}
 		}
 	}

@@ -16,32 +16,17 @@
 
 
 */
-package org.omnaest.utils;
+package org.omnaest.utils.exception;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import org.omnaest.utils.events.EventHandler;
 
-public class ListUtils
+/**
+ * {@link EventHandler} for {@link Exception}s
+ *
+ * @see EventHandler
+ * @author Omnaest
+ */
+public interface ExceptionHandler extends EventHandler<Exception>
 {
-	public static <E> E last(List<E> list)
-	{
-		E retval = null;
 
-		if (list != null && !list.isEmpty())
-		{
-			retval = list.get(list.size() - 1);
-		}
-
-		return retval;
-	}
-
-	@SafeVarargs
-	public static <E> List<E> mergedList(List<E>... lists)
-	{
-		List<E> retlist = new ArrayList<>();
-		Arrays	.asList(lists)
-				.forEach(list -> retlist.addAll(list));
-		return retlist;
-	}
 }

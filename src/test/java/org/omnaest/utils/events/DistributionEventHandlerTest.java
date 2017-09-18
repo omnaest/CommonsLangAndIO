@@ -16,32 +16,37 @@
 
 
 */
-package org.omnaest.utils;
+package org.omnaest.utils.events;
+
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ListUtils
+import org.junit.Test;
+
+/**
+ * @see DistributionEventHandler
+ * @author Omnaest
+ */
+public class DistributionEventHandlerTest
 {
-	public static <E> E last(List<E> list)
+
+	@Test
+	public void testHandle() throws Exception
 	{
-		E retval = null;
+		List<String> result = new ArrayList<>();
 
-		if (list != null && !list.isEmpty())
-		{
-			retval = list.get(list.size() - 1);
-		}
+		DistributionEventHandler<String> distributionEventHandler = new DistributionEventHandler<>();
+		distributionEventHandler.register(result::add)
+								.register(result::add);
 
-		return retval;
+		Arrays	.asList("1", "2", "3")
+				.stream()
+				.forEach(event -> distributionEventHandler.handle(event));
+
+		assertEquals(Arrays.asList("1", "1", "2", "2", "3", "3"), result);
 	}
 
-	@SafeVarargs
-	public static <E> List<E> mergedList(List<E>... lists)
-	{
-		List<E> retlist = new ArrayList<>();
-		Arrays	.asList(lists)
-				.forEach(list -> retlist.addAll(list));
-		return retlist;
-	}
 }
