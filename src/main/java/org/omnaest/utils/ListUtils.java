@@ -20,6 +20,8 @@ package org.omnaest.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class ListUtils
@@ -42,6 +44,17 @@ public class ListUtils
 		List<E> retlist = new ArrayList<>();
 		Arrays	.asList(lists)
 				.forEach(list -> retlist.addAll(list));
+		return retlist;
+	}
+
+	public static <E> List<E> shuffled(Collection<E> collection)
+	{
+		List<E> retlist = new ArrayList<>();
+		if (collection != null)
+		{
+			collection.addAll(collection);
+		}
+		Collections.shuffle(retlist);
 		return retlist;
 	}
 }
