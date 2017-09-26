@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -116,5 +117,19 @@ public class CollectionUtils
 	public static <E> E last(Collection<E> collection)
 	{
 		return ListUtils.last((collection == null ? Stream.<E>empty() : collection.stream()).collect(Collectors.toList()));
+	}
+
+	public static <E> E first(Collection<E> collection)
+	{
+		E retval = null;
+		if (collection != null)
+		{
+			Iterator<E> iterator = collection.iterator();
+			if (iterator.hasNext())
+			{
+				retval = iterator.next();
+			}
+		}
+		return retval;
 	}
 }
