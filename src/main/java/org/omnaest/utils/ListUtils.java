@@ -38,6 +38,18 @@ public class ListUtils
 		return retval;
 	}
 
+	public static <E> E first(List<E> list)
+	{
+		E retval = null;
+
+		if (list != null && !list.isEmpty())
+		{
+			retval = list.get(0);
+		}
+
+		return retval;
+	}
+
 	@SafeVarargs
 	public static <E> List<E> mergedList(List<E>... lists)
 	{
@@ -57,4 +69,5 @@ public class ListUtils
 		Collections.shuffle(retlist);
 		return retlist;
 	}
+
 }
