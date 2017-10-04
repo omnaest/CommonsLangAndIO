@@ -51,7 +51,7 @@ public class ListUtils
 	}
 
 	@SafeVarargs
-	public static <E> List<E> mergedList(List<E>... lists)
+	public static <E> List<E> mergedList(Collection<E>... lists)
 	{
 		List<E> retlist = new ArrayList<>();
 		Arrays	.asList(lists)

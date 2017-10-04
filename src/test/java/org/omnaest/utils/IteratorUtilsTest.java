@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -51,6 +52,19 @@ public class IteratorUtilsTest
 									.hasNext());
 		assertTrue(IteratorUtils.roundRobinIterator(Arrays.asList("1"))
 								.hasNext());
+	}
+
+	@Test
+	public void testRoundRobinIteratorWithConcurrentModification() throws Exception
+	{
+		List<String> list = new ArrayList<>(Arrays.asList("2", "3"));
+		Iterator<String> iterator = IteratorUtils.roundRobinIterator(list);
+		assertTrue(iterator.hasNext());
+		assertEquals("2", iterator.next());
+
+		list.add(0, "1");
+		assertTrue(iterator.hasNext());
+		assertEquals("1", iterator.next());
 	}
 
 }

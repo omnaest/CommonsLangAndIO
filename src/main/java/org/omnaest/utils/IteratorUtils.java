@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,13 +49,32 @@ public class IteratorUtils
 			@Override
 			public E next()
 			{
-				Iterator<E> iterator = this.currentIterator.get();
-				if (iterator == null || !iterator.hasNext())
+				E retval = null;
+
+				do
 				{
-					this.currentIterator.set(supplier.get());
-				}
-				return this.currentIterator	.get()
-											.next();
+					Iterator<E> iterator = this.currentIterator.get();
+					try
+					{
+						if (iterator == null || !iterator.hasNext())
+						{
+							this.resetIterator();
+						}
+
+						retval = this.currentIterator	.get()
+														.next();
+					} catch (ConcurrentModificationException e)
+					{
+						this.resetIterator();
+					}
+				} while (retval == null);
+
+				return retval;
+			}
+
+			private void resetIterator()
+			{
+				this.currentIterator.set(supplier.get());
 			}
 		};
 	}
