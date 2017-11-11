@@ -18,35 +18,26 @@
 */
 package org.omnaest.utils;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-/**
- * Helpoer methods for {@link Set}s
- *
- * @author Omnaest
- */
-public class SetUtils
+public class MapUtils
 {
-	@SafeVarargs
-	public static <E> Set<E> merge(Collection<E>... collections)
+
+	public static interface MapAction<K, V>
 	{
-		return Arrays	.asList(collections)
-						.stream()
-						.filter(collection -> collection != null)
-						.flatMap(collection -> collection.stream())
-						.collect(Collectors.toSet());
+		MapAction<K, V> put(K key, V value);
 	}
 
-	public static <E> E last(Set<E> set)
+	public static <K, V> MapAction<K, V> withMap(Map<K, V> map)
 	{
-		E retval = null;
-		for (E element : set)
+		return new MapAction<K, V>()
 		{
-			retval = element;
-		}
-		return retval;
+			@Override
+			public MapAction<K, V> put(K key, V value)
+			{
+				map.put(key, value);
+				return this;
+			}
+		};
 	}
 }
