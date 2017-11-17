@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -43,6 +44,14 @@ public class IteratorUtilsTest
 		Iterator<String> roundRobinIterator = IteratorUtils.roundRobinIterator(Arrays.asList("1", "2", "3"));
 		List<String> drained = IteratorUtils.drain(roundRobinIterator, 10);
 		assertEquals(Arrays.asList("1", "2", "3", "1", "2", "3", "1", "2", "3", "1"), drained);
+	}
+
+	@Test
+	public void testDrainWithTerminatePredicate() throws Exception
+	{
+		Iterator<String> roundRobinIterator = IteratorUtils.roundRobinIterator(Arrays.asList("1", "2", "3"));
+		List<String> drained = IteratorUtils.drain(roundRobinIterator, element -> element.equals("2"));
+		assertEquals(Arrays.asList("1", "2"), drained);
 	}
 
 	@Test
@@ -65,6 +74,18 @@ public class IteratorUtilsTest
 		list.add(0, "1");
 		assertTrue(iterator.hasNext());
 		assertEquals("1", iterator.next());
+	}
+
+	@Test
+	public void testWithConsumerListener() throws Exception
+	{
+		List<String> buffer = new ArrayList<>();
+		Iterator<String> iterator = IteratorUtils.withConsumerListener(	Arrays	.asList("1", "2")
+																				.iterator(),
+																		e -> buffer.add(e));
+		assertEquals(	StreamUtils.fromIterator(iterator)
+								.collect(Collectors.toList()),
+						buffer);
 	}
 
 }

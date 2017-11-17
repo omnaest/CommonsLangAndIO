@@ -18,11 +18,20 @@
 */
 package org.omnaest.utils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -95,4 +104,113 @@ public class StreamUtils
 		Collections.reverse(list);
 		return list.stream();
 	}
+
+	/**
+	 * Similar to {@link #fromReader(Reader)} using a given {@link InputStream} and a the given {@link Charset}
+	 * 
+	 * @see StandardCharsets
+	 * @param inputStream
+	 * @param charset
+	 * @return
+	 */
+	public static Stream<String> fromInputStream(InputStream inputStream, Charset charset)
+	{
+		return fromReader(new InputStreamReader(inputStream, charset));
+	}
+
+	/**
+	 * Returns a {@link Stream} of lines of the given {@link Reader}
+	 * 
+	 * @param reader
+	 * @return
+	 */
+	public static Stream<String> fromReader(Reader reader)
+	{
+		BufferedReader bufferedReader = new BufferedReader(reader);
+		return fromSupplier(() ->
+		{
+			try
+			{
+				return bufferedReader.readLine();
+			} catch (IOException e)
+			{
+				throw new IllegalStateException(e);
+			}
+		}, line -> line == null).onClose(() ->
+		{
+			try
+			{
+				bufferedReader.close();
+			} catch (IOException e)
+			{
+				throw new IllegalStateException(e);
+			}
+		});
+	}
+
+	public static interface Drainage<E>
+	{
+		public Stream<E> getStream();
+
+		public Stream<E> getPrefetch();
+
+		public Stream<E> getStreamIncludingPrefetch();
+	}
+
+	public static <E> Drainage<E> drain(Stream<E> stream, Predicate<E> terminatePrefetchPredicate)
+	{
+		Iterator<E> iterator = stream.iterator();
+		List<E> buffer = new ArrayList<>();
+		AtomicBoolean terminated = new AtomicBoolean();
+		Iterator<E> bufferIterator = IteratorUtils.withConsumerListener(iterator, e ->
+		{
+			buffer.add(e);
+			if (terminatePrefetchPredicate.test(e))
+			{
+				terminated.set(true);
+			}
+		});
+		Iterator<E> prefetchIterator = new Iterator<E>()
+		{
+			@Override
+			public boolean hasNext()
+			{
+				return !terminated.get() && bufferIterator.hasNext();
+			}
+
+			@Override
+			public E next()
+			{
+				return bufferIterator.next();
+			}
+
+			@Override
+			public void remove()
+			{
+				bufferIterator.remove();
+			}
+
+		};
+		return new Drainage<E>()
+		{
+			@Override
+			public Stream<E> getStream()
+			{
+				return fromIterator(iterator);
+			}
+
+			@Override
+			public Stream<E> getPrefetch()
+			{
+				return fromIterator(prefetchIterator);
+			}
+
+			@Override
+			public Stream<E> getStreamIncludingPrefetch()
+			{
+				return Stream.concat(buffer.stream(), this.getStream());
+			}
+		};
+	}
+
 }

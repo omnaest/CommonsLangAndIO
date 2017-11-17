@@ -24,6 +24,8 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -89,5 +91,54 @@ public class IteratorUtils
 		}
 
 		return retlist;
+	}
+
+	public static <E> List<E> drain(Iterator<E> iterator, Predicate<E> terminateDrainPredicate)
+	{
+		List<E> retlist = new ArrayList<>();
+
+		boolean terminate = false;
+		while (!terminate && iterator.hasNext())
+		{
+			E element = iterator.next();
+			terminate = terminateDrainPredicate.test(element);
+			retlist.add(element);
+		}
+
+		return retlist;
+	}
+
+	/**
+	 * Returns an {@link Iterator} based on the given {@link Iterator}, but attaches a {@link Consumer} to the {@link Iterator#next()} method
+	 * 
+	 * @param iterator
+	 * @param consumer
+	 * @return
+	 */
+	public static <E> Iterator<E> withConsumerListener(Iterator<E> iterator, Consumer<E> consumer)
+	{
+		return new Iterator<E>()
+		{
+			@Override
+			public boolean hasNext()
+			{
+				return iterator.hasNext();
+			}
+
+			@Override
+			public E next()
+			{
+				E element = iterator.next();
+				consumer.accept(element);
+				return element;
+			}
+
+			@Override
+			public void remove()
+			{
+				iterator.remove();
+			}
+
+		};
 	}
 }

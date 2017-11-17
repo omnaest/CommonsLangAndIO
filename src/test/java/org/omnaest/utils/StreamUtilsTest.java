@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
+import org.omnaest.utils.StreamUtils.Drainage;
 
 public class StreamUtilsTest
 {
@@ -95,6 +97,26 @@ public class StreamUtilsTest
 		assertEquals(Arrays.asList("c", "b", "a"), StreamUtils	.reverse(Arrays	.asList("a", "b", "c")
 																				.stream())
 																.collect(Collectors.toList()));
+	}
+
+	@Test
+	public void testFromInputStream() throws Exception
+	{
+		assertEquals(Arrays.asList("one", "two"), StreamUtils	.fromReader(new StringReader("one\ntwo"))
+																.collect(Collectors.toList()));
+	}
+
+	@Test
+	public void testDrain() throws Exception
+	{
+		Drainage<String> drainage = StreamUtils.drain(	Arrays.asList("1", "2", "3")
+															.stream(),
+														e -> e.equals("2"));
+		assertEquals(Arrays.asList("1", "2"), drainage	.getPrefetch()
+														.collect(Collectors.toList()));
+		assertEquals(Arrays.asList("1", "2", "3"), drainage	.getStreamIncludingPrefetch()
+															.collect(Collectors.toList()));
+
 	}
 
 }
