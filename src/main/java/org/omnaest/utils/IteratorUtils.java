@@ -141,4 +141,22 @@ public class IteratorUtils
 
 		};
 	}
+
+	/**
+	 * Returns an {@link Iterable} around the given {@link Iterator} {@link Supplier}
+	 * 
+	 * @param iterator
+	 * @return
+	 */
+	public static <E> Iterable<E> toIterable(Supplier<Iterator<E>> iterator)
+	{
+		return new Iterable<E>()
+		{
+			@Override
+			public Iterator<E> iterator()
+			{
+				return iterator.get();
+			}
+		};
+	}
 }

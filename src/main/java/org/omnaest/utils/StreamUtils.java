@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -211,6 +212,14 @@ public class StreamUtils
 				return Stream.concat(buffer.stream(), this.getStream());
 			}
 		};
+	}
+
+	public static <E> Stream<E> fromIterable(Iterable<E> iterable)
+	{
+		Supplier<Spliterator<E>> supplier = () -> iterable.spliterator();
+		int characteristics = iterable	.spliterator()
+										.characteristics();
+		return StreamSupport.stream(supplier, characteristics, false);
 	}
 
 }

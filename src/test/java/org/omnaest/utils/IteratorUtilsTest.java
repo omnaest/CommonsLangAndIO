@@ -88,4 +88,12 @@ public class IteratorUtilsTest
 						buffer);
 	}
 
+	@Test
+	public void testToIterable() throws Exception
+	{
+		assertEquals(Arrays.asList("1", "2"), StreamUtils	.fromIterable(IteratorUtils.toIterable(() -> Arrays	.asList("1", "2")
+																												.iterator()))
+															.collect(Collectors.toList()));
+	}
+
 }
