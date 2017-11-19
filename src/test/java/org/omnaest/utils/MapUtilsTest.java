@@ -23,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -61,6 +63,22 @@ public class MapUtilsTest
 		assertEquals(2, inverse.size());
 		assertEquals(Arrays.asList("key1", "key2"), inverse.get("value1"));
 		assertEquals(Arrays.asList("key3"), inverse.get("value2"));
+	}
+
+	@Test
+	public void testBuilder() throws Exception
+	{
+		Map<String, List<String>> map = MapUtils.builder()
+												.put("key2", Arrays.asList("value1"))
+												.put("key1", Arrays.asList("value1"))
+												.put("key3", Arrays.asList("value2"))
+												.useFactory(() -> new TreeMap<>())
+												.build();
+		assertEquals(3, map.size());
+		assertEquals(Arrays.asList("key1", "key2", "key3"), map	.keySet()
+																.stream()
+																.collect(Collectors.toList()));
+
 	}
 
 }

@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class MapUtils
 {
@@ -81,6 +82,10 @@ public class MapUtils
 	{
 		public <K2, V2> MapBuilder<K2, V2> put(K2 key, V2 value);
 
+		public <K2, V2> MapBuilder<K2, V2> putAll(Map<K2, V2> map);
+
+		public <K2, V2> MapBuilder<K2, V2> useFactory(Supplier<Map<K2, V2>> mapFactory);
+
 		public <K2 extends K, V2 extends V> Map<K2, V2> build();
 	}
 
@@ -89,7 +94,8 @@ public class MapUtils
 	{
 		return new MapBuilder<Object, Object>()
 		{
-			private Map<Object, Object> map = new LinkedHashMap<>();
+			private Map<Object, Object>				map			= new LinkedHashMap<>();
+			private Supplier<Map<Object, Object>>	mapFactory	= null;
 
 			@Override
 			public <K2, V2> MapBuilder<K2, V2> put(K2 key, V2 value)
@@ -99,9 +105,38 @@ public class MapUtils
 			}
 
 			@Override
+			public <K2, V2> MapBuilder<K2, V2> putAll(Map<K2, V2> map)
+			{
+				if (map != null)
+				{
+					this.map.putAll(map);
+				}
+				return (MapBuilder<K2, V2>) this;
+			}
+
+			@Override
+			public <K2, V2> MapBuilder<K2, V2> useFactory(Supplier<Map<K2, V2>> mapFactory)
+			{
+				this.mapFactory = () -> (Map<Object, Object>) mapFactory.get();
+				return (MapBuilder<K2, V2>) this;
+			}
+
+			@Override
 			public <K2, V2> Map<K2, V2> build()
 			{
-				return (Map<K2, V2>) this.map;
+				Map<K2, V2> retmap;
+
+				if (this.mapFactory != null)
+				{
+					retmap = (Map<K2, V2>) this.mapFactory.get();
+					retmap.putAll((Map<? extends K2, ? extends V2>) this.map);
+				}
+				else
+				{
+					retmap = (Map<K2, V2>) this.map;
+				}
+
+				return retmap;
 			}
 
 		};
