@@ -96,4 +96,19 @@ public class IteratorUtilsTest
 															.collect(Collectors.toList()));
 	}
 
+	@Test
+	public void testFrom() throws Exception
+	{
+		Iterator<Character> iterator = IteratorUtils.from("1234");
+		assertTrue(iterator.hasNext());
+		assertEquals(Character.valueOf('1'), iterator.next());
+		assertTrue(iterator.hasNext());
+		assertEquals(Character.valueOf('2'), iterator.next());
+		assertTrue(iterator.hasNext());
+		assertEquals(Character.valueOf('3'), iterator.next());
+		assertTrue(iterator.hasNext());
+		assertEquals(Character.valueOf('4'), iterator.next());
+		assertFalse(iterator.hasNext());
+	}
+
 }

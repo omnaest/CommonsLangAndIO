@@ -159,4 +159,26 @@ public class IteratorUtils
 			}
 		};
 	}
+
+	public static Iterator<Character> from(String string)
+	{
+		return new Iterator<Character>()
+		{
+			private int pos = 0;
+
+			@Override
+			public boolean hasNext()
+			{
+				return this.pos < string.length();
+			}
+
+			@Override
+			public Character next()
+			{
+				return string.charAt(this.pos++);
+			}
+
+		};
+
+	}
 }

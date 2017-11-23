@@ -31,4 +31,13 @@ public class ListUtilsTest
 	{
 		assertEquals(Arrays.asList("1", "2", "3", "4"), ListUtils.mergedList(Arrays.asList("1", "2"), Arrays.asList("3", "4")));
 	}
+
+	@Test
+	public void testCompare() throws Exception
+	{
+		assertEquals(0, ListUtils.compare(Arrays.asList("1", "2"), Arrays.asList("1", "2"), String::compareTo));
+		assertEquals(-1, ListUtils.compare(Arrays.asList("1", "2"), Arrays.asList("1", "2", "3"), ComparatorUtils::compare));
+		assertEquals(-1, ListUtils.compare(Arrays.asList("1", "2"), Arrays.asList("1", "3"), ComparatorUtils::compare));
+		assertEquals(1, ListUtils.compare(Arrays.asList("1", "3"), Arrays.asList("1", "2", "3"), ComparatorUtils::compare));
+	}
 }

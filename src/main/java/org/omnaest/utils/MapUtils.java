@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.omnaest.utils.element.LeftAndRight;
+import org.omnaest.utils.element.ModifiableLeftAndRight;
+
 public class MapUtils
 {
 
@@ -140,5 +143,32 @@ public class MapUtils
 			}
 
 		};
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <K, V> Map<K, LeftAndRight<V>> join(Map<K, V> leftMap, Map<K, V> rightMap)
+	{
+		Map<K, ModifiableLeftAndRight<V>> retmap = new LinkedHashMap<>();
+
+		if (leftMap != null)
+		{
+			for (K key : leftMap.keySet())
+			{
+				V value = leftMap.get(key);
+				retmap	.computeIfAbsent(key, k -> new ModifiableLeftAndRight<>())
+						.setLeft(value);
+			}
+		}
+		if (rightMap != null)
+		{
+			for (K key : rightMap.keySet())
+			{
+				V value = rightMap.get(key);
+				retmap	.computeIfAbsent(key, k -> new ModifiableLeftAndRight<>())
+						.setRight(value);
+			}
+		}
+
+		return (Map<K, LeftAndRight<V>>) ((Map<K, ? extends LeftAndRight<V>>) retmap);
 	}
 }

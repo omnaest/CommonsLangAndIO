@@ -27,6 +27,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
+import org.omnaest.utils.element.LeftAndRight;
 
 /**
  * @see MapUtils
@@ -78,6 +79,34 @@ public class MapUtilsTest
 		assertEquals(Arrays.asList("key1", "key2", "key3"), map	.keySet()
 																.stream()
 																.collect(Collectors.toList()));
+
+	}
+
+	@Test
+	public void testJoin() throws Exception
+	{
+		Map<String, LeftAndRight<String>> join = MapUtils.join(	MapUtils.builder()
+																		.put("1", "value1")
+																		.put("2", "value2.1")
+																		.build(),
+																MapUtils.builder()
+																		.put("2", "value2.2")
+																		.put("3", "value3")
+																		.build());
+
+		assertEquals(3, join.size());
+		assertEquals("value1", join	.get("1")
+									.getLeft());
+		assertEquals(null, join	.get("1")
+								.getRight());
+		assertEquals("value2.1", join	.get("2")
+										.getLeft());
+		assertEquals("value2.2", join	.get("2")
+										.getRight());
+		assertEquals(null, join	.get("3")
+								.getLeft());
+		assertEquals("value3", join	.get("3")
+									.getRight());
 
 	}
 
