@@ -18,6 +18,8 @@
 */
 package org.omnaest.utils;
 
+import java.util.Iterator;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class IterableUtils
@@ -25,5 +27,15 @@ public class IterableUtils
 	public static <E> Iterable<E> from(Stream<E> stream)
 	{
 		return IteratorUtils.toIterable(() -> stream.iterator());
+	}
+
+	public static <E> Iterable<E> from(Iterator<E> iterator)
+	{
+		return from(() -> iterator);
+	}
+
+	public static <E> Iterable<E> from(Supplier<Iterator<E>> iterator)
+	{
+		return IteratorUtils.toIterable(iterator);
 	}
 }
