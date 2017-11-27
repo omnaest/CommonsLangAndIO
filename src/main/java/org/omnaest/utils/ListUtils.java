@@ -114,4 +114,9 @@ public class ListUtils
 		return new ComparableListDecorator<>(list, comparator);
 	}
 
+	public static <E> List<E> defaultIfNull(List<E> list)
+	{
+		return list != null ? list : Collections.emptyList();
+	}
+
 }
