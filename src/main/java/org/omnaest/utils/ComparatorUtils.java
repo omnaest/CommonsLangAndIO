@@ -18,8 +18,10 @@
 */
 package org.omnaest.utils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -171,4 +173,163 @@ public class ComparatorUtils
 			return StringUtils.compare(Objects.toString(o1), Objects.toString(o2));
 		}
 	}
+
+	public static interface ComparatorBuilder
+	{
+		public <T> ComparatorBuilderLoaded<T> with(Comparator<T> comparator);
+
+		public <T, C extends Comparable<C>> ComparatorBuilderLoaded<T> with(Function<T, C> compareFunction);
+
+		public <T, C extends Comparable<C>, I> ComparatorBuilderLoaded<T> with(Function<T, I> compareFunction, Function<I, C> mapFunction);
+
+		public <T> ExecutableComparatorBuilder<T> of(T o1, T o2);
+	}
+
+	public static interface ExecutableComparatorBuilder<T>
+	{
+		public ExecutableComparatorBuilderLoaded<T> with(Comparator<T> comparator);
+
+		public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> with(Function<T, C> compareFunction);
+
+		public <C extends Comparable<C>, I> ExecutableComparatorBuilderLoaded<T> with(Function<T, I> compareFunction, Function<I, C> mapFunction);
+	}
+
+	public static interface ExecutableComparatorBuilderLoaded<T>
+	{
+		public ExecutableComparatorBuilderLoaded<T> and(Comparator<T> comparator);
+
+		public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> and(Function<T, C> compareFunction);
+
+		public <C extends Comparable<C>, I> ExecutableComparatorBuilderLoaded<T> and(Function<T, I> compareFunction, Function<I, C> mapFunction);
+
+		public int compare();
+	}
+
+	public static interface ComparatorBuilderLoaded<T>
+	{
+		public ComparatorBuilderLoaded<T> and(Comparator<T> comparator);
+
+		public <C extends Comparable<C>> ComparatorBuilderLoaded<T> and(Function<T, C> compareFunction);
+
+		public <C extends Comparable<C>, I> ComparatorBuilderLoaded<T> and(Function<T, I> compareFunction, Function<I, C> mapFunction);
+
+		public Comparator<T> build();
+
+	}
+
+	public static ComparatorBuilder builder()
+	{
+		return new ComparatorBuilder()
+		{
+
+			@Override
+			public <T, C extends Comparable<C>> ComparatorBuilderLoaded<T> with(Function<T, C> compareFunction)
+			{
+				return this.with((Comparator<T>) (o1, o2) -> compareFunction.apply(o1)
+																			.compareTo(compareFunction.apply(o2)));
+			}
+
+			@Override
+			public <T, C extends Comparable<C>, I> ComparatorBuilderLoaded<T> with(Function<T, I> compareFunction, Function<I, C> mapFunction)
+			{
+				return this.with(compareFunction.andThen(mapFunction));
+			}
+
+			@Override
+			public <T> ComparatorBuilderLoaded<T> with(Comparator<T> comparator)
+			{
+				return new ComparatorBuilderLoaded<T>()
+				{
+					private List<Comparator<T>> comparators = new ArrayList<>(Arrays.asList(comparator));
+
+					@Override
+					public ComparatorBuilderLoaded<T> and(Comparator<T> comparator)
+					{
+						this.comparators.add(comparator);
+						return this;
+					}
+
+					@Override
+					public <C extends Comparable<C>> ComparatorBuilderLoaded<T> and(Function<T, C> compareFunction)
+					{
+						return this.and((Comparator<T>) (o1, o2) -> compareFunction	.apply(o1)
+																					.compareTo(compareFunction.apply(o2)));
+					}
+
+					@Override
+					public Comparator<T> build()
+					{
+						return chainedComparator(this.comparators.stream());
+					}
+
+					@Override
+					public <C extends Comparable<C>, I> ComparatorBuilderLoaded<T> and(Function<T, I> compareFunction, Function<I, C> mapFunction)
+					{
+						return this.and(compareFunction.andThen(mapFunction));
+					}
+				};
+			}
+
+			@Override
+			public <T> ExecutableComparatorBuilder<T> of(T o1, T o2)
+			{
+				return new ExecutableComparatorBuilder<T>()
+				{
+					@Override
+					public ExecutableComparatorBuilderLoaded<T> with(Comparator<T> comparator)
+					{
+						return new ExecutableComparatorBuilderLoaded<T>()
+						{
+							private ComparatorBuilderLoaded<T> comparatorBuilderLoaded = ComparatorUtils.builder()
+																										.with(comparator);
+
+							@Override
+							public int compare()
+							{
+								return this.comparatorBuilderLoaded	.build()
+																	.compare(o1, o2);
+							}
+
+							@Override
+							public ExecutableComparatorBuilderLoaded<T> and(Comparator<T> comparator)
+							{
+								this.comparatorBuilderLoaded = this.comparatorBuilderLoaded.and(comparator);
+								return this;
+							}
+
+							@Override
+							public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> and(Function<T, C> compareFunction)
+							{
+								this.comparatorBuilderLoaded = this.comparatorBuilderLoaded.and(compareFunction);
+								return this;
+							}
+
+							@Override
+							public <C extends Comparable<C>, I> ExecutableComparatorBuilderLoaded<T> and(	Function<T, I> compareFunction,
+																											Function<I, C> mapFunction)
+							{
+								this.comparatorBuilderLoaded = this.comparatorBuilderLoaded.and(compareFunction, mapFunction);
+								return this;
+							}
+						};
+					}
+
+					@Override
+					public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> with(Function<T, C> compareFunction)
+					{
+						return this.with((Comparator<T>) (o1, o2) -> compareFunction.apply(o1)
+																					.compareTo(compareFunction.apply(o2)));
+					}
+
+					@Override
+					public <C extends Comparable<C>, I> ExecutableComparatorBuilderLoaded<T> with(Function<T, I> compareFunction, Function<I, C> mapFunction)
+					{
+						return this.with(compareFunction.andThen(mapFunction));
+					}
+				};
+			}
+
+		};
+	}
+
 }

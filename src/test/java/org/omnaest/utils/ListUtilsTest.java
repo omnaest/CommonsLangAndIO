@@ -40,4 +40,10 @@ public class ListUtilsTest
 		assertEquals(-1, ListUtils.compare(Arrays.asList("1", "2"), Arrays.asList("1", "3"), ComparatorUtils::compare));
 		assertEquals(1, ListUtils.compare(Arrays.asList("1", "3"), Arrays.asList("1", "2", "3"), ComparatorUtils::compare));
 	}
+
+	@Test
+	public void testInverse() throws Exception
+	{
+		assertEquals(Arrays.asList("2", "1"), ListUtils.inverse(Arrays.asList("1", "2")));
+	}
 }

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.commons.lang.math.NumberUtils;
 import org.junit.Test;
-import org.omnaest.utils.ComparatorUtils;
 
 public class ComparatorUtilsTest
 {
@@ -32,6 +31,40 @@ public class ComparatorUtilsTest
 	{
 		assertEquals(-1, ComparatorUtils.chainedComparator((String s) -> Integer.valueOf(NumberUtils.toInt(s)), (String s) -> s)
 										.compare("01", "1"));
+	}
+
+	private static class Wrapper
+
+	{
+		private int value;
+
+		public Wrapper(int value)
+		{
+			super();
+			this.value = value;
+		}
+
+		public int getValue()
+		{
+			return this.value;
+		}
+
+	}
+
+	@Test
+	public void testBuilder() throws Exception
+	{
+		assertEquals(-1, ComparatorUtils.builder()
+										.of(new Wrapper(1), new Wrapper(2))
+										.with((w1, w2) -> 0)
+										.and(w -> w.getValue())
+										.compare());
+
+		assertEquals(1, ComparatorUtils	.builder()
+										.of(new Wrapper(2), new Wrapper(1))
+										.with((w1, w2) -> 0)
+										.and(w -> w.getValue(), Integer::valueOf)
+										.compare());
 	}
 
 }

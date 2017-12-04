@@ -119,4 +119,23 @@ public class ListUtils
 		return list != null ? list : Collections.emptyList();
 	}
 
+	/**
+	 * Returns a new {@link List} with the elements of the given {@link Collection} in reverse order.<br>
+	 * <br>
+	 * Return null if the given {@link Collection} is null.
+	 * 
+	 * @param collection
+	 * @return
+	 */
+	public static <E> List<E> inverse(Collection<E> collection)
+	{
+		List<E> retlist = null;
+		if (collection != null)
+		{
+			retlist = new ArrayList<>(collection);
+			Collections.reverse(retlist);
+		}
+		return retlist;
+	}
+
 }

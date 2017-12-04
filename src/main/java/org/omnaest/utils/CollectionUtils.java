@@ -132,4 +132,9 @@ public class CollectionUtils
 		}
 		return retval;
 	}
+
+	public static <E> boolean isNotEmpty(Collection<E> collection)
+	{
+		return collection != null && !collection.isEmpty();
+	}
 }
