@@ -18,6 +18,7 @@
 */
 package org.omnaest.utils;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.StringReader;
@@ -117,6 +118,27 @@ public class StreamUtilsTest
 		assertEquals(Arrays.asList("1", "2", "3"), drainage	.getStreamIncludingPrefetch()
 															.collect(Collectors.toList()));
 
+	}
+
+	@Test
+	public void testFramed() throws Exception
+	{
+		{
+			List<String[]> frames = StreamUtils	.framed(3, Arrays	.asList("1", "2", "3", "4", "5", "6")
+																	.stream())
+												.collect(Collectors.toList());
+			assertEquals(2, frames.size());
+			assertArrayEquals(new String[] { "1", "2", "3" }, frames.get(0));
+			assertArrayEquals(new String[] { "4", "5", "6" }, frames.get(1));
+		}
+		{
+			List<String[]> frames = StreamUtils	.framed(3, Arrays	.asList("1", null, "3", "4", "5")
+																	.stream())
+												.collect(Collectors.toList());
+			assertEquals(2, frames.size());
+			assertArrayEquals(new String[] { "1", null, "3" }, frames.get(0));
+			assertArrayEquals(new String[] { "4", "5", null }, frames.get(1));
+		}
 	}
 
 }

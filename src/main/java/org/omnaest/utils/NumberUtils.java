@@ -34,6 +34,8 @@ public class NumberUtils
 		NumberFormatter withMinimumFractionDigits(int minimumFractionDigits);
 
 		NumberFormatter withMaximumFractionDigits(int maximumFractionDigits);
+
+		NumberFormatter withThousandSeparator();
 	}
 
 	public static NumberFormatter formatter()
@@ -43,6 +45,14 @@ public class NumberUtils
 			private Locale	locale					= Locale.US;
 			private int		minimumFractionDigits	= 0;
 			private int		maximumFractionDigits	= 20;
+			private boolean	useThousandSeparator	= false;
+
+			@Override
+			public NumberFormatter withThousandSeparator()
+			{
+				this.useThousandSeparator = true;
+				return this;
+			}
 
 			@Override
 			public NumberFormatter forLocale(Locale locale)
@@ -78,6 +88,7 @@ public class NumberUtils
 
 				retval.setMinimumFractionDigits(this.minimumFractionDigits);
 				retval.setMaximumFractionDigits(this.maximumFractionDigits);
+				retval.setGroupingUsed(this.useThousandSeparator);
 				return retval;
 			}
 

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -33,7 +34,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -220,6 +223,35 @@ public class StreamUtils
 		int characteristics = iterable	.spliterator()
 										.characteristics();
 		return StreamSupport.stream(supplier, characteristics, false);
+	}
+
+	public static <E> Stream<E[]> framed(int frameSize, Stream<E> stream)
+	{
+		AtomicLong position = new AtomicLong();
+		AtomicReference<E[]> frame = new AtomicReference<E[]>();
+		@SuppressWarnings("unchecked")
+		Predicate<E> filter = element ->
+		{
+			int frameIndex = (int) (position.getAndIncrement() % frameSize);
+			if (frame.get() == null && element != null)
+			{
+				frame.set((E[]) Array.newInstance(element.getClass(), frameSize));
+			}
+
+			if (frame.get() != null)
+			{
+				frame.get()[frameIndex] = element;
+			}
+
+			boolean frameFinished = frameIndex == frameSize - 1;
+			return frameFinished;
+		};
+		Function<E, E[]> mapper = element -> frame.getAndSet(null);
+		Stream<E[]> retval = stream	.filter(filter)
+									.map(mapper);
+		return Stream.concat(retval, Stream	.of(1)
+											.filter(n -> frame.get() != null)
+											.map(n -> frame.getAndSet(null)));
 	}
 
 }

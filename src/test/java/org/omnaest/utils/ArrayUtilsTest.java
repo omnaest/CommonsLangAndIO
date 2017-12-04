@@ -18,27 +18,27 @@
 */
 package org.omnaest.utils;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNotSame;
 
 import org.junit.Test;
 
-public class NumberUtilsTest
+public class ArrayUtilsTest
 {
 
 	@Test
-	public void testFormatter() throws Exception
+	public void testDeepClone() throws Exception
 	{
-		String result = NumberUtils	.formatter()
-									.format(1.00001);
-		assertEquals("1.00001", result);
-	}
+		String[][] matrix = new String[][] { new String[] { "1", "2" }, new String[] { "3", "4" } };
 
-	@Test
-	public void testFormatter2() throws Exception
-	{
-		String result = NumberUtils	.formatter()
-									.format(100001);
-		assertEquals("100001", result);
+		String[][] clone = ArrayUtils.deepClone(matrix);
+		assertArrayEquals(matrix, clone);
+
+		clone[1][1] = "x";
+		assertNotSame(matrix, clone);
+		assertNotSame("x", matrix[1][1]);
+		assertNotSame(matrix[1], clone[1]);
+		assertArrayEquals(matrix[0], clone[0]);
 	}
 
 }

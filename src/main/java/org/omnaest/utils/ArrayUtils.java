@@ -18,27 +18,20 @@
 */
 package org.omnaest.utils;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-
-public class NumberUtilsTest
+public class ArrayUtils
 {
-
-	@Test
-	public void testFormatter() throws Exception
+	public static <E> E[][] deepClone(E[][] array)
 	{
-		String result = NumberUtils	.formatter()
-									.format(1.00001);
-		assertEquals("1.00001", result);
+		E[][] retval = clone(array);
+		for (int ii = 0; ii < retval.length; ii++)
+		{
+			retval[ii] = clone(retval[ii]);
+		}
+		return retval;
 	}
 
-	@Test
-	public void testFormatter2() throws Exception
+	public static <E> E[] clone(E[] array)
 	{
-		String result = NumberUtils	.formatter()
-									.format(100001);
-		assertEquals("100001", result);
+		return org.apache.commons.lang3.ArrayUtils.clone(array);
 	}
-
 }
