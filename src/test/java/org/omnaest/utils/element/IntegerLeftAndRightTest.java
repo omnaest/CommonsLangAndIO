@@ -23,35 +23,35 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-public class LeftAndRightIntegerTest
+public class IntegerLeftAndRightTest
 {
 
 	@Test
 	public void testGetMin() throws Exception
 	{
-		assertEquals(1, new LeftAndRightInteger(1, 2)	.getMin()
+		assertEquals(1, new IntegerLeftAndRight(1, 2)	.getMin()
 														.intValue());
-		assertEquals(1, new LeftAndRightInteger(2, 1)	.getMin()
+		assertEquals(1, new IntegerLeftAndRight(2, 1)	.getMin()
 														.intValue());
-		assertEquals(1, new LeftAndRightInteger(1, null).getMin()
+		assertEquals(1, new IntegerLeftAndRight(1, null).getMin()
 														.intValue());
-		assertEquals(1, new LeftAndRightInteger(null, 1).getMin()
+		assertEquals(1, new IntegerLeftAndRight(null, 1).getMin()
 														.intValue());
-		assertNull(new LeftAndRightInteger(null, null).getMin());
+		assertNull(new IntegerLeftAndRight(null, null).getMin());
 	}
 
 	@Test
 	public void testGetMax() throws Exception
 	{
-		assertEquals(2, new LeftAndRightInteger(1, 2)	.getMax()
+		assertEquals(2, new IntegerLeftAndRight(1, 2)	.getMax()
 														.intValue());
-		assertEquals(2, new LeftAndRightInteger(2, 1)	.getMax()
+		assertEquals(2, new IntegerLeftAndRight(2, 1)	.getMax()
 														.intValue());
-		assertEquals(2, new LeftAndRightInteger(null, 2).getMax()
+		assertEquals(2, new IntegerLeftAndRight(null, 2).getMax()
 														.intValue());
-		assertEquals(2, new LeftAndRightInteger(2, null).getMax()
+		assertEquals(2, new IntegerLeftAndRight(2, null).getMax()
 														.intValue());
-		assertNull(new LeftAndRightInteger(null, null).getMax());
+		assertNull(new IntegerLeftAndRight(null, null).getMax());
 	}
 
 }

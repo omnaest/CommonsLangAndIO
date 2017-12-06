@@ -27,7 +27,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
-import org.omnaest.utils.element.LeftAndRight;
+import org.omnaest.utils.element.UnaryLeftAndRight;
 
 /**
  * @see MapUtils
@@ -85,7 +85,7 @@ public class MapUtilsTest
 	@Test
 	public void testJoin() throws Exception
 	{
-		Map<String, LeftAndRight<String>> join = MapUtils.join(	MapUtils.builder()
+		Map<String, UnaryLeftAndRight<String>> join = MapUtils.join(	MapUtils.builder()
 																		.put("1", "value1")
 																		.put("2", "value2.1")
 																		.build(),

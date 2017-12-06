@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.omnaest.utils.element.LeftAndRight;
-import org.omnaest.utils.element.ModifiableLeftAndRight;
+import org.omnaest.utils.element.UnaryLeftAndRight;
+import org.omnaest.utils.element.ModifiableUnaryLeftAndRight;
 
 public class MapUtils
 {
@@ -146,16 +146,16 @@ public class MapUtils
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <K, V> Map<K, LeftAndRight<V>> join(Map<K, V> leftMap, Map<K, V> rightMap)
+	public static <K, V> Map<K, UnaryLeftAndRight<V>> join(Map<K, V> leftMap, Map<K, V> rightMap)
 	{
-		Map<K, ModifiableLeftAndRight<V>> retmap = new LinkedHashMap<>();
+		Map<K, ModifiableUnaryLeftAndRight<V>> retmap = new LinkedHashMap<>();
 
 		if (leftMap != null)
 		{
 			for (K key : leftMap.keySet())
 			{
 				V value = leftMap.get(key);
-				retmap	.computeIfAbsent(key, k -> new ModifiableLeftAndRight<>())
+				retmap	.computeIfAbsent(key, k -> new ModifiableUnaryLeftAndRight<>())
 						.setLeft(value);
 			}
 		}
@@ -164,11 +164,11 @@ public class MapUtils
 			for (K key : rightMap.keySet())
 			{
 				V value = rightMap.get(key);
-				retmap	.computeIfAbsent(key, k -> new ModifiableLeftAndRight<>())
+				retmap	.computeIfAbsent(key, k -> new ModifiableUnaryLeftAndRight<>())
 						.setRight(value);
 			}
 		}
 
-		return (Map<K, LeftAndRight<V>>) ((Map<K, ? extends LeftAndRight<V>>) retmap);
+		return (Map<K, UnaryLeftAndRight<V>>) ((Map<K, ? extends UnaryLeftAndRight<V>>) retmap);
 	}
 }

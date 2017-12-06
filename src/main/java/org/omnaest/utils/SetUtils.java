@@ -49,4 +49,15 @@ public class SetUtils
 		}
 		return retval;
 	}
+
+	public static <E> E first(Set<E> set)
+	{
+		E retval = null;
+		if (set != null && !set.isEmpty())
+		{
+			retval = set.iterator()
+						.next();
+		}
+		return retval;
+	}
 }

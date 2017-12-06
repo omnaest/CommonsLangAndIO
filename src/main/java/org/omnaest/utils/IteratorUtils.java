@@ -28,6 +28,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.omnaest.utils.element.LeftAndRight;
+
 /**
  * Helper for {@link Iterator}s
  * 
@@ -180,5 +182,40 @@ public class IteratorUtils
 
 		};
 
+	}
+
+	/**
+	 * Merges the elements from two {@link Iterator} instances into a {@link LeftAndRight} element
+	 * 
+	 * @param iterator1
+	 * @param iterator2
+	 * @return
+	 */
+	public static <L, R> Iterator<LeftAndRight<L, R>> merge(Iterator<L> iterator1, Iterator<R> iterator2)
+	{
+		return new Iterator<LeftAndRight<L, R>>()
+		{
+			@Override
+			public boolean hasNext()
+			{
+				return iterator1.hasNext() || iterator2.hasNext();
+			}
+
+			@Override
+			public LeftAndRight<L, R> next()
+			{
+				L left = iterator1.hasNext() ? iterator1.next() : null;
+				R right = iterator2.hasNext() ? iterator2.next() : null;
+				return new LeftAndRight<L, R>(left, right);
+			}
+
+			@Override
+			public void remove()
+			{
+				iterator1.remove();
+				iterator2.remove();
+			}
+
+		};
 	}
 }

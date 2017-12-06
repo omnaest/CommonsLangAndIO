@@ -43,6 +43,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.omnaest.utils.element.LeftAndRight;
+
 public class StreamUtils
 {
 
@@ -252,6 +254,29 @@ public class StreamUtils
 		return Stream.concat(retval, Stream	.of(1)
 											.filter(n -> frame.get() != null)
 											.map(n -> frame.getAndSet(null)));
+	}
+
+	/**
+	 * Merges to given {@link Stream} instances into a single {@link Stream} of {@link LeftAndRight} elements
+	 * 
+	 * @param stream1
+	 * @param stream2
+	 * @return
+	 */
+	public static <L, R> Stream<LeftAndRight<L, R>> merge(Stream<L> stream1, Stream<R> stream2)
+	{
+		return StreamUtils.fromIterator(IteratorUtils.merge(stream1.iterator(), stream2.iterator()));
+	}
+
+	public static <E> Stream<List<E>> chop(Stream<E> stream, Predicate<E> chopStartMatcher)
+	{
+		AtomicReference<List<E>> chunk = new AtomicReference<>();
+		return Stream.concat(	stream	.peek(element -> chunk.getAndUpdate(elements -> ListUtils.addTo(elements, element)))
+										.filter(chopStartMatcher)
+										.map((Function<E, List<E>>) element -> ListUtils.modified(	chunk.getAndSet(ListUtils.of(ListUtils.last(chunk.get()))),
+																									list -> list.subList(0, list.size() - 1))),
+								Stream	.of(1)
+										.flatMap(i -> chunk.get() != null ? Stream.of(chunk.get()) : Stream.empty()));
 	}
 
 }

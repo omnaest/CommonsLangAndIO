@@ -141,4 +141,27 @@ public class StreamUtilsTest
 		}
 	}
 
+	@Test
+	public void testMerge() throws Exception
+	{
+		assertEquals("A1B2C", StreamUtils	.merge(	Arrays.asList("A", "B", "C")
+														.stream(),
+													Arrays	.asList("1", "2")
+															.stream())
+											.flatMap(lar -> Stream.of(lar.getLeft(), lar.getRight()))
+											.filter(value -> value != null)
+											.collect(Collectors.joining()));
+	}
+
+	@Test
+	public void testChop() throws Exception
+	{
+		assertEquals("1,234", StreamUtils	.chop(	Arrays	.asList("1", "2", "3", "4")
+															.stream(),
+													e -> "2".equals(e))
+											.map(chunk -> chunk	.stream()
+																.collect(Collectors.joining()))
+											.collect(Collectors.joining(",")));
+	}
+
 }

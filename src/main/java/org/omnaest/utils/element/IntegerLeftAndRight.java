@@ -19,13 +19,13 @@
 package org.omnaest.utils.element;
 
 /**
- * @see LeftAndRight
- * @see ModifiableLeftAndRightInteger
+ * @see UnaryLeftAndRight
+ * @see ModifiableIntegerLeftAndRight
  * @author omnaest
  */
-public class LeftAndRightInteger extends LeftAndRight<Integer>
+public class IntegerLeftAndRight extends UnaryLeftAndRight<Integer>
 {
-	public LeftAndRightInteger(Integer left, Integer right)
+	public IntegerLeftAndRight(Integer left, Integer right)
 	{
 		super(left, right);
 	}

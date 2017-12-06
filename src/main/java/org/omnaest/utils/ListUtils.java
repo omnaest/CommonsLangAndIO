@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
 import org.omnaest.utils.list.ComparableList;
@@ -136,6 +137,48 @@ public class ListUtils
 			Collections.reverse(retlist);
 		}
 		return retlist;
+	}
+
+	/**
+	 * Adds a given element to the given {@link List} or returns a new {@link List} instance if the given {@link List} is null
+	 * 
+	 * @param list
+	 * @param element
+	 * @return given list instance
+	 */
+	public static <E> List<E> addTo(List<E> list, E element)
+	{
+		if (list == null)
+		{
+			list = new ArrayList<>();
+		}
+		list.add(element);
+		return list;
+	}
+
+	@SafeVarargs
+	public static <E> List<E> of(E... elements)
+	{
+		return new ArrayList<>(Arrays.asList(elements));
+	}
+
+	@SafeVarargs
+	public static <E> List<E> modified(List<E> list, UnaryOperator<List<E>>... modifiers)
+	{
+		List<E> retlist = list;
+		if (modifiers != null)
+		{
+			for (UnaryOperator<List<E>> modifier : modifiers)
+			{
+				retlist = modifier.apply(retlist);
+			}
+		}
+		return retlist;
+	}
+
+	public static <E> boolean isNotEmpty(List<E> list)
+	{
+		return list != null && !list.isEmpty();
 	}
 
 }
