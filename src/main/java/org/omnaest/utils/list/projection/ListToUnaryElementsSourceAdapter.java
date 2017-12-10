@@ -16,40 +16,44 @@
 
 
 */
-package org.omnaest.utils.list;
+package org.omnaest.utils.list.projection;
 
 import java.util.List;
 
-import org.omnaest.utils.ListUtils;
+import org.omnaest.utils.list.projection.ListProjectionBuilder.UnaryElementsSource;
 
 /**
+ * @see ListProjectionBuilder.UnaryElementsSource
  * @see List
- * @see ListUtils#toList(CRUDList)
- * @see #valueOf(List)
  * @author omnaest
  * @param <E>
  */
-public interface CRUDList<E> extends ReadList<E>
+public class ListToUnaryElementsSourceAdapter<E> implements UnaryElementsSource<E>
 {
-	public E set(int index, E element);
+	private List<E> list;
 
-	public void add(int index, E element);
-
-	public E remove(int index);
-
-	/**
-	 * @see ListUtils#toCRUDList(List)
-	 * @param list
-	 * @return
-	 */
-	public static <E> CRUDList<E> valueOf(List<E> list)
+	public ListToUnaryElementsSourceAdapter(List<E> list)
 	{
-		return new ListToCRUDAdapter<>(list);
+		super();
+		this.list = list;
 	}
 
-	public static <E> CRUDList<E> valueOf(ReadList<E> readList)
+	@Override
+	public E get(int index)
 	{
-		return new ReadListToCRUDListAdapter<>(readList);
+		return this.list.get(index);
+	}
+
+	@Override
+	public int size()
+	{
+		return this.list.size();
+	}
+
+	@Override
+	public String toString()
+	{
+		return "ListToUnaryElementsSourceAdapter [list=" + this.list + "]";
 	}
 
 }

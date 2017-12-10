@@ -20,36 +20,20 @@ package org.omnaest.utils.list;
 
 import java.util.List;
 
-import org.omnaest.utils.ListUtils;
-
 /**
- * @see List
- * @see ListUtils#toList(CRUDList)
+ * @see CRUDList
  * @see #valueOf(List)
  * @author omnaest
  * @param <E>
  */
-public interface CRUDList<E> extends ReadList<E>
+public interface ReadList<E>
 {
-	public E set(int index, E element);
+	public E get(int index);
 
-	public void add(int index, E element);
+	public int size();
 
-	public E remove(int index);
-
-	/**
-	 * @see ListUtils#toCRUDList(List)
-	 * @param list
-	 * @return
-	 */
-	public static <E> CRUDList<E> valueOf(List<E> list)
+	public static <E> ReadList<E> valueOf(List<E> list)
 	{
-		return new ListToCRUDAdapter<>(list);
+		return CRUDList.valueOf(list);
 	}
-
-	public static <E> CRUDList<E> valueOf(ReadList<E> readList)
-	{
-		return new ReadListToCRUDListAdapter<>(readList);
-	}
-
 }

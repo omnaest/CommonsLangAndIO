@@ -34,10 +34,85 @@ import org.apache.commons.lang.StringUtils;
 import org.omnaest.utils.ProxyUtils.MethodAndHandler;
 import org.omnaest.utils.ProxyUtils.MethodHandler;
 import org.omnaest.utils.ReflectionUtils.Method;
+import org.omnaest.utils.element.CachedElement;
 import org.omnaest.utils.map.MapDecorator;
 
 public class BeanUtils
 {
+	static class FlattenedPropertyImpl extends AbstractFlattenedProperty
+	{
+		private Property<Object> property;
+
+		@SuppressWarnings("unchecked")
+		public FlattenedPropertyImpl(Property<?> property)
+		{
+			this.property = (Property<Object>) property;
+		}
+
+		@Override
+		public Property<Object> getProperty()
+		{
+			return this.property;
+		}
+
+		@Override
+		public List<String> getNestedName()
+		{
+			return Arrays.asList(this.property.getName());
+		}
+
+		@Override
+		public FlattenedProperty getParentProperty()
+		{
+			//root return null
+			return null;
+		}
+
+		@Override
+		public Stream<NestedFlattenedProperty> getSubProperties()
+		{
+			boolean hasPrimitiveType = this.property.hasPrimitiveType();
+			return hasPrimitiveType ? Stream.empty() : BeanUtils.analyze(this.property.getType())
+																.getNestedFlattenedProperties()
+																.map(flattenedProperty -> this.wrapSubNestedProperty(this, flattenedProperty));
+		}
+
+		private <T> NestedFlattenedProperty wrapSubNestedProperty(FlattenedProperty parentProperty, NestedFlattenedProperty flattenedProperty)
+		{
+			return new AbstractFlattenedProperty()
+			{
+				@Override
+				public Property<Object> getProperty()
+				{
+					return flattenedProperty.getProperty();
+				}
+
+				@Override
+				public FlattenedProperty getParentProperty()
+				{
+					return parentProperty;
+				}
+
+				@Override
+				public List<String> getNestedName()
+				{
+					return Stream	.concat(parentProperty	.getNestedName()
+															.stream(),
+											flattenedProperty	.getNestedName()
+																.stream())
+									.collect(Collectors.toList());
+				}
+
+				@Override
+				public Stream<NestedFlattenedProperty> getSubProperties()
+				{
+					return flattenedProperty.getSubProperties()
+											.map(subProperty -> FlattenedPropertyImpl.this.wrapSubNestedProperty(this, subProperty));
+				}
+			};
+		}
+	}
+
 	public static interface PropertyAccessor<E> extends UnknownTypePropertyAccessor
 	{
 		public E get();
@@ -72,20 +147,145 @@ public class BeanUtils
 
 		public <E> PropertyAccessor<E> access(Class<E> propertyType, T instance);
 
+		public PropertyAccessor<Object> access(T instance);
+
 		public <E> PropertyAccessor<E> access(Class<E> propertyType, Supplier<T> instance);
+
+		public Class<?> getType();
+
+		public boolean hasPrimitiveType();
+	}
+
+	public static interface FlattenedProperty
+	{
+		public List<String> getNestedName();
+
+		public FlattenedProperty getParentProperty();
+
+		public String getPropertyName();
+
+		public Property<Object> getProperty();
+	}
+
+	public static interface NestedFlattenedProperty extends FlattenedProperty
+	{
+		public Stream<NestedFlattenedProperty> getSubProperties();
+
+		public <E, T> PropertyAccessor<E> accessFromRoot(Class<E> propertyType, T instance);
+
+		List<FlattenedProperty> getParentPropertiesAndThis();
+
+		List<FlattenedProperty> getParentProperties();
+	}
+
+	static abstract class AbstractFlattenedProperty implements NestedFlattenedProperty
+	{
+		@Override
+		public String getPropertyName()
+		{
+			return this	.getNestedName()
+						.stream()
+						.collect(Collectors.joining("."));
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return this	.getNestedName()
+						.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			return this	.getNestedName()
+						.equals(obj);
+		}
+
+		@Override
+		public String toString()
+		{
+			return this	.getNestedName()
+						.toString();
+		}
+
+		@Override
+		public List<FlattenedProperty> getParentProperties()
+		{
+			List<FlattenedProperty> retlist = new ArrayList<>();
+
+			FlattenedProperty parentProperty = this;
+			do
+			{
+				parentProperty = parentProperty.getParentProperty();
+				if (parentProperty != null)
+				{
+					retlist.add(0, parentProperty);
+				}
+			} while (parentProperty != null);
+			return retlist;
+		}
+
+		@Override
+		public List<FlattenedProperty> getParentPropertiesAndThis()
+		{
+			return ListUtils.mergedList(this.getParentProperties(), Arrays.asList(this));
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <E, T> PropertyAccessor<E> accessFromRoot(Class<E> propertyType, T instance)
+		{
+			PropertyAccessor<?> retval = null;
+
+			Object currentInstance = instance;
+			for (FlattenedProperty property : this.getParentPropertiesAndThis())
+			{
+				retval = property	.getProperty()
+									.access(currentInstance);
+				currentInstance = retval.get();
+			}
+
+			return (PropertyAccessor<E>) retval;
+		}
+
+	}
+
+	public static interface InstanceAccessor<T>
+	{
+		public PropertyAccessorMap asMap();
+
+		public FlattenedPropertyAccessorMap asFlattenedMap();
 	}
 
 	public static interface BeanAnalyzer<T>
 	{
+		/**
+		 * Gets the {@link Property} of the given {@link Class} type
+		 * 
+		 * @return
+		 */
 		public Stream<Property<T>> getProperties();
 
-		public PropertyAccessorMap accessAsMap(T instance);
+		/**
+		 * Returns the {@link NestedFlattenedProperty} for the root level, but allows to retrieve any child level via
+		 * {@link NestedFlattenedProperty#getSubProperties()}
+		 * 
+		 * @return
+		 */
+		public Stream<NestedFlattenedProperty> getNestedFlattenedProperties();
 
-		public PropertyAccessorMap accessAsMap(Supplier<T> instance);
+		/**
+		 * Similar to {@link #getNestedFlattenedProperties()} with a fully expanded property tree. Be aware that this will fail for cyclic references in the
+		 * type tree!
+		 * 
+		 * @return
+		 */
+		public Stream<FlattenedProperty> getFlattenedProperties();
 
-		public FlattenedPropertyAccessorMap accessAsFlattenedMap(T instance);
+		public InstanceAccessor<T> access(T instance);
 
-		public FlattenedPropertyAccessorMap accessAsFlattenedMap(Supplier<T> instance);
+		public InstanceAccessor<T> access(Supplier<T> instance);
 
 		public T newProxy(Map<String, ? extends BeanPropertyAccessor<?>> propertyToAccessor);
 
@@ -188,9 +388,73 @@ public class BeanUtils
 
 	}
 
+	private static class CachedBeanAnalyzer<T> implements BeanAnalyzer<T>
+	{
+		private BeanAnalyzer<T> analyzer;
+
+		private CachedElement<List<Property<T>>>				properties					= CachedElement.of(() -> this.analyzer	.getProperties()
+																																	.collect(Collectors.toList()));
+		private CachedElement<List<FlattenedProperty>>			flattenedProperties			= CachedElement.of(() -> this.analyzer	.getFlattenedProperties()
+																																	.collect(Collectors.toList()));
+		private CachedElement<List<NestedFlattenedProperty>>	nestedFlattenedProperties	= CachedElement.of(() -> this.analyzer	.getNestedFlattenedProperties()
+																																	.collect(Collectors.toList()));
+
+		public CachedBeanAnalyzer(BeanAnalyzer<T> analyzer)
+		{
+			super();
+			this.analyzer = analyzer;
+		}
+
+		@Override
+		public Stream<Property<T>> getProperties()
+		{
+			return this.properties	.get()
+									.stream();
+		}
+
+		@Override
+		public Stream<NestedFlattenedProperty> getNestedFlattenedProperties()
+		{
+			return this.nestedFlattenedProperties	.get()
+													.stream();
+		}
+
+		@Override
+		public Stream<FlattenedProperty> getFlattenedProperties()
+		{
+			return this.flattenedProperties	.get()
+											.stream();
+		}
+
+		@Override
+		public InstanceAccessor<T> access(T instance)
+		{
+			return this.analyzer.access(instance);
+		}
+
+		@Override
+		public InstanceAccessor<T> access(Supplier<T> instance)
+		{
+			return this.analyzer.access(instance);
+		}
+
+		@Override
+		public T newProxy(Map<String, ? extends BeanPropertyAccessor<?>> propertyToAccessor)
+		{
+			return this.analyzer.newProxy(propertyToAccessor);
+		}
+
+		@Override
+		public T newProxy(Consumer<BeanPropertyAccessorRegistry> registerStream)
+		{
+			return this.analyzer.newProxy(registerStream);
+		}
+
+	}
+
 	public static <T> BeanAnalyzer<T> analyze(Class<T> type)
 	{
-		return new BeanAnalyzer<T>()
+		return new CachedBeanAnalyzer<>(new BeanAnalyzer<T>()
 		{
 			@Override
 			public T newProxy(Consumer<BeanPropertyAccessorRegistry> registerStream)
@@ -285,6 +549,20 @@ public class BeanUtils
 																				this.determineWriteMethod(entry.getValue())));
 			}
 
+			@Override
+			public Stream<NestedFlattenedProperty> getNestedFlattenedProperties()
+			{
+				return this	.getProperties()
+							.map(FlattenedPropertyImpl::new);
+			}
+
+			@Override
+			public Stream<FlattenedProperty> getFlattenedProperties()
+			{
+				return this	.getNestedFlattenedProperties()
+							.flatMap(property -> Stream.concat(Stream.of(property), property.getSubProperties()));
+			}
+
 			private boolean isPropertyMethod(Method<T> method)
 			{
 				boolean isGetter = StringUtils.startsWithAny(method.getName(), new String[] { "is", "get" }) && method	.getParameterTypes()
@@ -352,6 +630,30 @@ public class BeanUtils
 					}
 
 					@Override
+					public Class<?> getType()
+					{
+						Class<?> getterType = readMethod != null ? readMethod.getReturnType() : null;
+						Class<?> setterType = writeMethod != null && !writeMethod	.getParameterTypes()
+																					.isEmpty()
+																							? writeMethod	.getParameterTypes()
+																											.get(0)
+																							: null;
+						return org.apache.commons.lang3.ObjectUtils.defaultIfNull(getterType, setterType);
+					}
+
+					@Override
+					public boolean hasPrimitiveType()
+					{
+						return org.omnaest.utils.ObjectUtils.isPrimitiveOrString(this.getType());
+					}
+
+					@Override
+					public PropertyAccessor<Object> access(T instance)
+					{
+						return this.access(Object.class, instance);
+					}
+
+					@Override
 					public <E> PropertyAccessor<E> access(Class<E> propertyType, Supplier<T> instance)
 					{
 						return new PropertyAccessor<E>()
@@ -404,108 +706,124 @@ public class BeanUtils
 			}
 
 			@Override
-			public PropertyAccessorMap accessAsMap(T instance)
+			public InstanceAccessor<T> access(T instance)
 			{
-				return this.accessAsMap(() -> instance);
+				return this.access(() -> instance);
 			}
 
 			@Override
-			public PropertyAccessorMap accessAsMap(Supplier<T> instance)
+			public InstanceAccessor<T> access(Supplier<T> instance)
 			{
-				return new PropertyAccessorMapImpl(this	.getProperties()
-														.collect(Collectors.toMap(	property -> property.getName(),
-																					property -> (UnknownTypePropertyAccessor) property.access(	Object.class,
-																																				instance))));
-			}
+				return new InstanceAccessor<T>()
+				{
+					private CachedElement<PropertyAccessorMap>			propertyAccessorMap				= CachedElement.of(() -> this.asMapUncached());
+					private CachedElement<FlattenedPropertyAccessorMap>	flattenedPropertyAccessorMap	= CachedElement.of(() -> this.asFlattenedMapUncached());
 
-			@Override
-			public FlattenedPropertyAccessorMap accessAsFlattenedMap(T instance)
-			{
-				return this.accessAsFlattenedMap(() -> instance);
-			}
+					@Override
+					public PropertyAccessorMap asMap()
+					{
+						return this.propertyAccessorMap.get();
+					}
 
-			@Override
-			public FlattenedPropertyAccessorMap accessAsFlattenedMap(Supplier<T> instance)
-			{
-				return new FlattenedPropertyAccessorMapImpl(this.accessAsMap(instance)
-																.entrySet()
-																.stream()
-																.flatMap(entry ->
-																{
-																	String property = entry.getKey();
+					private PropertyAccessorMap asMapUncached()
+					{
+						return new PropertyAccessorMapImpl(getProperties().collect(Collectors.toMap(property -> property.getName(),
+																									property -> (UnknownTypePropertyAccessor) property.access(	Object.class,
+																																								instance))));
+					}
 
-																	UnknownTypePropertyAccessor propertyAccessor = entry.getValue();
+					@Override
+					public FlattenedPropertyAccessorMap asFlattenedMap()
+					{
+						return this.flattenedPropertyAccessorMap.get();
+					}
 
-																	Stream<Map.Entry<List<String>, UnknownTypePropertyAccessor>> entries;
-
-																	boolean hasPrimitiveType = propertyAccessor.hasPrimitiveType();
-																	if (hasPrimitiveType)
-																	{
-																		Map.Entry<List<String>, UnknownTypePropertyAccessor> flattenedEntry = new Map.Entry<List<String>, UnknownTypePropertyAccessor>()
+					private FlattenedPropertyAccessorMap asFlattenedMapUncached()
+					{
+						return new FlattenedPropertyAccessorMapImpl(this.asMap()
+																		.entrySet()
+																		.stream()
+																		.flatMap(entry ->
 																		{
-																			@Override
-																			public List<String> getKey()
+																			String property = entry.getKey();
+
+																			UnknownTypePropertyAccessor propertyAccessor = entry.getValue();
+
+																			Stream<Map.Entry<List<String>, UnknownTypePropertyAccessor>> entries;
+
+																			boolean hasPrimitiveType = propertyAccessor.hasPrimitiveType();
+																			if (hasPrimitiveType)
 																			{
-																				return Arrays.asList(property);
+																				Map.Entry<List<String>, UnknownTypePropertyAccessor> flattenedEntry = new Map.Entry<List<String>, UnknownTypePropertyAccessor>()
+																				{
+																					@Override
+																					public List<String> getKey()
+																					{
+																						return Arrays.asList(property);
+																					}
+
+																					@Override
+																					public UnknownTypePropertyAccessor getValue()
+																					{
+																						return propertyAccessor;
+																					}
+
+																					@Override
+																					public UnknownTypePropertyAccessor setValue(UnknownTypePropertyAccessor value)
+																					{
+																						throw new UnsupportedOperationException();
+																					}
+																				};
+																				entries = Stream.of(flattenedEntry);
+																			}
+																			else
+																			{
+																				@SuppressWarnings("unchecked")
+																				Class<Object> propertyType = (Class<Object>) propertyAccessor.getType();
+
+																				entries = BeanUtils	.analyze(propertyType)
+																									.access(() -> propertyAccessor	.as(Object.class)
+																																	.get())
+																									.asFlattenedMap()
+																									.entrySet()
+																									.stream()
+																									.map(subEntry ->
+																									{
+																										Map.Entry<List<String>, UnknownTypePropertyAccessor> retval = new Map.Entry<List<String>, UnknownTypePropertyAccessor>()
+																										{
+																											@Override
+																											public List<String> getKey()
+																											{
+																												return ListUtils.addToNew(	subEntry.getKey(), 0,
+																																			property);
+																											}
+
+																											@Override
+																											public UnknownTypePropertyAccessor getValue()
+																											{
+																												return subEntry.getValue();
+																											}
+
+																											@Override
+																											public UnknownTypePropertyAccessor setValue(UnknownTypePropertyAccessor value)
+																											{
+																												throw new UnsupportedOperationException();
+																											}
+																										};
+
+																										return retval;
+																									});
 																			}
 
-																			@Override
-																			public UnknownTypePropertyAccessor getValue()
-																			{
-																				return propertyAccessor;
-																			}
+																			return entries;
+																		})
+																		.collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue())));
+					}
 
-																			@Override
-																			public UnknownTypePropertyAccessor setValue(UnknownTypePropertyAccessor value)
-																			{
-																				throw new UnsupportedOperationException();
-																			}
-																		};
-																		entries = Stream.of(flattenedEntry);
-																	}
-																	else
-																	{
-																		@SuppressWarnings("unchecked")
-																		Class<Object> propertyType = (Class<Object>) propertyAccessor.getType();
-
-																		entries = BeanUtils	.analyze(propertyType)
-																							.accessAsFlattenedMap(() -> propertyAccessor.as(Object.class)
-																																		.get())
-																							.entrySet()
-																							.stream()
-																							.map(subEntry ->
-																							{
-																								Map.Entry<List<String>, UnknownTypePropertyAccessor> retval = new Map.Entry<List<String>, UnknownTypePropertyAccessor>()
-																								{
-																									@Override
-																									public List<String> getKey()
-																									{
-																										return ListUtils.addToNew(	subEntry.getKey(), 0,
-																																	property);
-																									}
-
-																									@Override
-																									public UnknownTypePropertyAccessor getValue()
-																									{
-																										return subEntry.getValue();
-																									}
-
-																									@Override
-																									public UnknownTypePropertyAccessor setValue(UnknownTypePropertyAccessor value)
-																									{
-																										throw new UnsupportedOperationException();
-																									}
-																								};
-
-																								return retval;
-																							});
-																	}
-
-																	return entries;
-																})
-																.collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue())));
+				};
 			}
+		});
 
-		};
 	}
+
 }

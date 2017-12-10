@@ -21,13 +21,36 @@ package org.omnaest.utils;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Helper for common {@link Object} instances
+ * 
+ * @author omnaest
+ */
 public class ObjectUtils
 {
+	private static final List<Class<?>> primitiveTypes = Arrays.asList(	Long.class, Integer.class, Short.class, Byte.class, Double.class, Float.class,
+																		Character.class, Boolean.class);
+
+	/**
+	 * Returns true if the given type is a primitive or {@link String}
+	 * 
+	 * @param type
+	 * @return
+	 */
 	public static boolean isPrimitiveOrString(Class<?> type)
 	{
-		List<Class<?>> primitiveTypes = Arrays.asList(	String.class, Long.class, Integer.class, Short.class, Byte.class, Double.class, Float.class,
-														Character.class, Boolean.class);
-		return type.isPrimitive() || primitiveTypes	.stream()
-													.anyMatch(itype -> itype.isAssignableFrom(type));
+		return type != null && (isPrimitiveType(type) || String.class.isAssignableFrom(type));
+	}
+
+	/**
+	 * Returns true if the given type is a primitive
+	 * 
+	 * @param type
+	 * @return
+	 */
+	private static boolean isPrimitiveType(Class<?> type)
+	{
+		return type != null && (type.isPrimitive() || primitiveTypes.stream()
+																	.anyMatch(itype -> itype.isAssignableFrom(type)));
 	}
 }

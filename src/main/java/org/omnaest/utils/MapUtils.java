@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.omnaest.utils.element.UnaryLeftAndRight;
 import org.omnaest.utils.element.ModifiableUnaryLeftAndRight;
+import org.omnaest.utils.element.UnaryLeftAndRight;
 
 public class MapUtils
 {
@@ -90,6 +90,7 @@ public class MapUtils
 		public <K2, V2> MapBuilder<K2, V2> useFactory(Supplier<Map<K2, V2>> mapFactory);
 
 		public <K2 extends K, V2 extends V> Map<K2, V2> build();
+
 	}
 
 	@SuppressWarnings("unchecked")

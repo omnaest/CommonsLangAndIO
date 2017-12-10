@@ -100,7 +100,8 @@ public class BeanUtilsTest
 	public void testAsFlattenedMap()
 	{
 		Map<String, Object> map = BeanUtils	.analyze(ParentBean.class)
-											.accessAsFlattenedMap(new BeanImpl(new BeanImpl("parent value"), "child value"))
+											.access(new BeanImpl(new BeanImpl("parent value"), "child value"))
+											.asFlattenedMap()
 											.asPropertyMap();
 
 		assertEquals(2, map.size());
