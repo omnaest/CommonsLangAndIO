@@ -44,6 +44,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.omnaest.utils.element.LeftAndRight;
 
 public class StreamUtils
@@ -239,6 +240,30 @@ public class StreamUtils
 		return StreamSupport.stream(supplier, characteristics, false);
 	}
 
+	/**
+	 * Similar to {@link #framed(int, Stream)} for an {@link IntStream}
+	 * 
+	 * @see IntStream
+	 * @see #framed(int, Stream)
+	 * @param frameSize
+	 * @param stream
+	 * @return
+	 */
+	public static Stream<int[]> framed(int frameSize, IntStream stream)
+	{
+		return framed(frameSize, stream.mapToObj(Integer::valueOf)).map(array -> ArrayUtils.toPrimitive(array));
+	}
+
+	/**
+	 * Creates block frames of a given size based on a given {@link Stream} of elements.<br>
+	 * <br>
+	 * E.g. [1,2,3,4,5,6] -> [1,2],[3,4],[5,6] for a frame size = 2
+	 * 
+	 * @see #framed(int, IntStream)
+	 * @param frameSize
+	 * @param stream
+	 * @return
+	 */
 	public static <E> Stream<E[]> framed(int frameSize, Stream<E> stream)
 	{
 		AtomicLong position = new AtomicLong();
