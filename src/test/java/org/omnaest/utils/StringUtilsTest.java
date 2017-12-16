@@ -20,34 +20,28 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.junit.Test;
 
-public class NumberUtilsTest
+public class StringUtilsTest
 {
 
 	@Test
-	public void testFormatter() throws Exception
+	public void testSplitToStream() throws Exception
 	{
-		String result = NumberUtils	.formatter()
-									.format(1.00001);
-		assertEquals("1.00001", result);
+		List<String> tokens = StringUtils	.splitToStream("abc")
+											.collect(Collectors.toList());
+		assertEquals("a", tokens.get(0));
+		assertEquals("b", tokens.get(1));
+		assertEquals("c", tokens.get(2));
 	}
 
 	@Test
-	public void testFormatter2() throws Exception
+	public void testReverse() throws Exception
 	{
-		String result = NumberUtils	.formatter()
-									.format(100001);
-		assertEquals("100001", result);
-	}
-
-	@Test
-	public void testFormatterWithPercentage() throws Exception
-	{
-		String result = NumberUtils	.formatter()
-									.withPercentage()
-									.format(0.05);
-		assertEquals("5%", result);
+		assertEquals("321", StringUtils.reverse("123"));
 	}
 
 }

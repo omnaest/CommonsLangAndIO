@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -61,6 +62,29 @@ public class StreamUtils
 	{
 		return streams	.reduce(Stream::concat)
 						.orElseGet(() -> Stream.empty());
+	}
+
+	/**
+	 * Returns a {@link Stream} from a {@link Queue} using the {@link Queue#poll()} method
+	 * 
+	 * @param queue
+	 * @return
+	 */
+	public static <E> Stream<E> fromQueue(Queue<E> queue)
+	{
+		return fromIterator(IteratorUtils.from(queue));
+	}
+
+	/**
+	 * Returns a {@link Stream} from the given {@link Queue} using any of its methods
+	 * 
+	 * @param queue
+	 * @param elementDrainFunction
+	 * @return
+	 */
+	public static <E> Stream<E> fromQueue(Queue<E> queue, Function<Queue<E>, E> elementDrainFunction)
+	{
+		return fromIterator(IteratorUtils.from(queue, elementDrainFunction));
 	}
 
 	public static <E> Stream<E> fromIterator(Iterator<E> iterator)
@@ -99,7 +123,9 @@ public class StreamUtils
 
 	/**
 	 * Reverses the order of the given {@link Stream}. Be aware that this will terminate the given {@link Stream} and returns a new {@link Stream}, which makes
-	 * this a TERMINAL operation!!
+	 * this a TERMINAL operation!!<br>
+	 * <br>
+	 * Also important: this will need to read the whole source {@link Stream} into a memory object to reverse it.
 	 *
 	 * @param stream
 	 * @return
@@ -291,6 +317,102 @@ public class StreamUtils
 		return Stream.concat(retval, Stream	.of(1)
 											.filter(n -> frame.get() != null)
 											.map(n -> frame.getAndSet(null)));
+	}
+
+	public static interface Window<E>
+	{
+		public List<E> getBefore();
+
+		public List<E> getAfter();
+
+		public E get();
+
+		public List<E> getAll();
+	}
+
+	public static <E> Stream<Window<E>> windowed(Stream<E> stream, int before, int after)
+	{
+		List<E> elementsBefore = new ArrayList<>();
+		List<E> elementsAfter = new ArrayList<>();
+		AtomicReference<E> currentElement = new AtomicReference<>();
+		AtomicBoolean first = new AtomicBoolean(true);
+
+		Function<? super E, ? extends Window<E>> mapper = element ->
+		{
+			List<E> localElementsBefore = new ArrayList<>(elementsBefore);
+			List<E> localElementsAfter = new ArrayList<>(elementsAfter);
+			E localCurrentElement = currentElement.get();
+
+			return new Window<E>()
+			{
+				@Override
+				public List<E> getBefore()
+				{
+					return localElementsBefore;
+				}
+
+				@Override
+				public List<E> getAfter()
+				{
+					return localElementsAfter;
+				}
+
+				@Override
+				public E get()
+				{
+					return localCurrentElement;
+				}
+
+				@Override
+				public List<E> getAll()
+				{
+					return ListUtils.mergedList(localElementsBefore, Arrays.asList(localCurrentElement), localElementsAfter);
+				}
+
+			};
+		};
+
+		Stream<Window<E>> primaryStream = stream.filter(element ->
+		{
+			elementsAfter.add(element);
+
+			while (elementsAfter.size() > after)
+			{
+				E next = elementsAfter.remove(0);
+				E last = currentElement.getAndSet(next);
+				if (!first.getAndSet(false))
+				{
+					elementsBefore.add(last);
+				}
+			}
+
+			while (elementsBefore.size() > before)
+			{
+				elementsBefore.remove(0);
+			}
+
+			return elementsAfter.size() >= after && !first.get();
+		})
+												.map(mapper);
+		Stream<Window<E>> secondaryStream = Stream	.of(1)
+													.flatMap(i -> elementsAfter	.stream()
+																				.collect(Collectors.toList())
+																				.stream()
+																				.peek(element ->
+																				{
+																					E next = elementsAfter.remove(0);
+																					E last = currentElement.getAndSet(next);
+																					elementsBefore.add(last);
+
+																					while (elementsBefore.size() > before)
+																					{
+																						elementsBefore.remove(0);
+																					}
+																				})
+																				.map(mapper));
+
+		return Stream.concat(primaryStream, secondaryStream);
+
 	}
 
 	/**

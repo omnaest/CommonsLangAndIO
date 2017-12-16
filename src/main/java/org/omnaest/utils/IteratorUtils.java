@@ -23,12 +23,15 @@ import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.omnaest.utils.element.LeftAndRight;
+import org.omnaest.utils.iterator.QueueIterator;
 
 /**
  * Helper for {@link Iterator}s
@@ -217,5 +220,30 @@ public class IteratorUtils
 			}
 
 		};
+	}
+
+	/**
+	 * Returns an {@link Iterator} of the given {@link Queue} using its {@link Queue#poll()} method
+	 * 
+	 * @see Queue
+	 * @see #from(Queue, Function)
+	 * @param queue
+	 * @return
+	 */
+	public static <E> Iterator<E> from(Queue<E> queue)
+	{
+		return new QueueIterator<>(queue);
+	}
+
+	/**
+	 * @see Queue
+	 * @see #from(Queue)
+	 * @param queue
+	 * @param elementDrainFunction
+	 * @return
+	 */
+	public static <E> Iterator<E> from(Queue<E> queue, Function<Queue<E>, E> elementDrainFunction)
+	{
+		return new QueueIterator<>(queue, elementDrainFunction);
 	}
 }

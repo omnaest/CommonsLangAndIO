@@ -164,4 +164,68 @@ public class StreamUtilsTest
 											.collect(Collectors.joining(",")));
 	}
 
+	@Test
+	public void testWindowed() throws Exception
+	{
+		{
+			List<String> windows = StreamUtils	.windowed(	Arrays	.asList("1", "2", "3", "4")
+																	.stream(),
+															1, 1)
+												.map(window -> window	.getAll()
+																		.stream()
+																		.collect(Collectors.joining()))
+												.collect(Collectors.toList());
+			assertEquals(4, windows.size());
+			assertEquals("12", windows.get(0));
+			assertEquals("123", windows.get(1));
+			assertEquals("234", windows.get(2));
+			assertEquals("34", windows.get(3));
+		}
+		{
+			List<String> windows = StreamUtils	.windowed(	Arrays	.asList("1", "2", "3", "4", "5")
+																	.stream(),
+															1, 1)
+												.map(window -> window	.getAll()
+																		.stream()
+																		.collect(Collectors.joining()))
+												.collect(Collectors.toList());
+			assertEquals(5, windows.size());
+			assertEquals("12", windows.get(0));
+			assertEquals("123", windows.get(1));
+			assertEquals("234", windows.get(2));
+			assertEquals("345", windows.get(3));
+			assertEquals("45", windows.get(4));
+		}
+		{
+			List<String> windows = StreamUtils	.windowed(	Arrays	.asList("1", "2", "3", "4", "5")
+																	.stream(),
+															0, 2)
+												.map(window -> window	.getAll()
+																		.stream()
+																		.collect(Collectors.joining()))
+												.collect(Collectors.toList());
+			assertEquals(5, windows.size());
+			assertEquals("123", windows.get(0));
+			assertEquals("234", windows.get(1));
+			assertEquals("345", windows.get(2));
+			assertEquals("45", windows.get(3));
+			assertEquals("5", windows.get(4));
+		}
+		{
+			List<String> windows = StreamUtils	.windowed(	Arrays	.asList("1", "2", "3", "4", "5")
+																	.stream(),
+															2, 0)
+												.map(window -> window	.getAll()
+																		.stream()
+																		.collect(Collectors.joining()))
+												.collect(Collectors.toList());
+			assertEquals(5, windows.size());
+			assertEquals("1", windows.get(0));
+			assertEquals("12", windows.get(1));
+			assertEquals("123", windows.get(2));
+			assertEquals("234", windows.get(3));
+			assertEquals("345", windows.get(4));
+		}
+	}
+
 }

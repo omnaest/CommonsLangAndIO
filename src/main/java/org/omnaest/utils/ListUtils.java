@@ -212,6 +212,33 @@ public class ListUtils
 		return retlist;
 	}
 
+	public static <E> List<E> setTo(List<E> list, int index, E element)
+	{
+		if (index >= 0)
+		{
+			while (list.size() <= index)
+			{
+				list.add(null);
+			}
+
+			list.set(index, element);
+		}
+		return list;
+	}
+
+	public static <E> List<E> setTo(List<E> list, int index, Stream<E> elements)
+	{
+		AtomicInteger position = new AtomicInteger(index);
+		if (elements != null)
+		{
+			elements.forEach(element ->
+			{
+				setTo(list, position.getAndIncrement(), element);
+			});
+		}
+		return list;
+	}
+
 	@SafeVarargs
 	public static <E> List<E> modified(List<E> list, UnaryOperator<List<E>>... modifiers)
 	{

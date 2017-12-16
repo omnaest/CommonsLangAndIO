@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 
 import org.omnaest.utils.element.ModifiableUnaryLeftAndRight;
 import org.omnaest.utils.element.UnaryLeftAndRight;
+import org.omnaest.utils.map.CRUDMap;
 
 public class MapUtils
 {
@@ -171,5 +172,15 @@ public class MapUtils
 		}
 
 		return (Map<K, UnaryLeftAndRight<V>>) ((Map<K, ? extends UnaryLeftAndRight<V>>) retmap);
+	}
+
+	public static <K, V> CRUDMap<K, V> toCRUDMap(Map<K, V> map)
+	{
+		return CRUDMap.of(map);
+	}
+
+	public static <K, V> Map<K, V> toMap(CRUDMap<K, V> crudMap)
+	{
+		return crudMap.toMap();
 	}
 }

@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.function.Function;
 
 public class NumberUtils
 {
@@ -31,26 +32,44 @@ public class NumberUtils
 
 		public String format(float value);
 
-		NumberFormatter withMinimumFractionDigits(int minimumFractionDigits);
+		public NumberFormatter withMinimumFractionDigits(int minimumFractionDigits);
 
-		NumberFormatter withMaximumFractionDigits(int maximumFractionDigits);
+		public NumberFormatter withMaximumFractionDigits(int maximumFractionDigits);
 
-		NumberFormatter withThousandSeparator();
+		public NumberFormatter withThousandSeparator();
+
+		public NumberFormatter withPercentage();
 	}
 
 	public static NumberFormatter formatter()
 	{
 		return new NumberFormatter()
 		{
-			private Locale	locale					= Locale.US;
-			private int		minimumFractionDigits	= 0;
-			private int		maximumFractionDigits	= 20;
-			private boolean	useThousandSeparator	= false;
+			private Locale							locale					= Locale.US;
+			private Integer							minimumFractionDigits	= null;
+			private Integer							maximumFractionDigits	= null;
+			private boolean							useThousandSeparator	= false;
+			private Function<Locale, NumberFormat>	formatterFactory		= locale ->
+																			{
+																				return locale != null ? NumberFormat.getNumberInstance(locale)
+																						: NumberFormat.getNumberInstance();
+																			};
 
 			@Override
 			public NumberFormatter withThousandSeparator()
 			{
 				this.useThousandSeparator = true;
+				return this;
+			}
+
+			@Override
+			public NumberFormatter withPercentage()
+			{
+				this.formatterFactory = locale -> locale != null ? NumberFormat.getPercentInstance(locale) : NumberFormat.getPercentInstance();
+				if (this.maximumFractionDigits == null)
+				{
+					this.maximumFractionDigits = 2;
+				}
 				return this;
 			}
 
@@ -84,10 +103,10 @@ public class NumberUtils
 
 			private NumberFormat createNumberFormatInstance()
 			{
-				NumberFormat retval = this.locale != null ? NumberFormat.getNumberInstance(this.locale) : NumberFormat.getNumberInstance();
+				NumberFormat retval = this.formatterFactory.apply(this.locale);
 
-				retval.setMinimumFractionDigits(this.minimumFractionDigits);
-				retval.setMaximumFractionDigits(this.maximumFractionDigits);
+				retval.setMinimumFractionDigits(ObjectUtils.defaultIfNull(this.minimumFractionDigits, 0));
+				retval.setMaximumFractionDigits(ObjectUtils.defaultIfNull(this.maximumFractionDigits, 20));
 				retval.setGroupingUsed(this.useThousandSeparator);
 				return retval;
 			}

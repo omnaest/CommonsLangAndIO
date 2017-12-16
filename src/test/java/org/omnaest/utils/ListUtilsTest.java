@@ -193,6 +193,7 @@ public class ListUtilsTest
 	}
 
 	@Test
+	@Ignore
 	public void testToMemoryOptimizedListPerformanceCompared() throws Exception
 	{
 		List<TestElement> sourceList = new ArrayList<>();
@@ -217,5 +218,15 @@ public class ListUtilsTest
 		System.out.println("Waiting");
 		ThreadUtils.sleepSilently(20, TimeUnit.SECONDS);
 
+	}
+
+	@Test
+	public void testSetTo()
+	{
+		List<String> list = ListUtils.setTo(new ArrayList<String>(), 10, Arrays	.asList("A", "B")
+																				.stream());
+		assertEquals(12, list.size());
+		assertEquals("A", list.get(10));
+		assertEquals("B", list.get(11));
 	}
 }

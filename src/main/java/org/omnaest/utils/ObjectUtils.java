@@ -53,4 +53,16 @@ public class ObjectUtils
 		return type != null && (type.isPrimitive() || primitiveTypes.stream()
 																	.anyMatch(itype -> itype.isAssignableFrom(type)));
 	}
+
+	/**
+	 * Returns the default object if the given primary object is null
+	 * 
+	 * @param object
+	 * @param defaultObject
+	 * @return
+	 */
+	public static <E> E defaultIfNull(E object, E defaultObject)
+	{
+		return object != null ? object : defaultObject;
+	}
 }

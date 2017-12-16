@@ -20,34 +20,26 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Test;
+import java.io.File;
 
-public class NumberUtilsTest
+import org.junit.Test;
+import org.omnaest.utils.FileUtils.FileStringContentConsumer;
+import org.omnaest.utils.FileUtils.FileStringContentSupplier;
+
+public class FileUtilsTest
 {
 
 	@Test
-	public void testFormatter() throws Exception
+	public void testToSupplier() throws Exception
 	{
-		String result = NumberUtils	.formatter()
-									.format(1.00001);
-		assertEquals("1.00001", result);
-	}
+		File file = FileUtils.createRandomTempFile();
+		FileStringContentConsumer consumer = FileUtils.toConsumer(file);
+		FileStringContentSupplier supplier = FileUtils.toSupplier(file);
 
-	@Test
-	public void testFormatter2() throws Exception
-	{
-		String result = NumberUtils	.formatter()
-									.format(100001);
-		assertEquals("100001", result);
-	}
+		assertEquals("", supplier.get());
 
-	@Test
-	public void testFormatterWithPercentage() throws Exception
-	{
-		String result = NumberUtils	.formatter()
-									.withPercentage()
-									.format(0.05);
-		assertEquals("5%", result);
+		consumer.accept("text");
+		assertEquals("text", supplier.get());
 	}
 
 }
