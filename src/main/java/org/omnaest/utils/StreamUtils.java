@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -332,10 +333,22 @@ public class StreamUtils
 
 	public static <E> Stream<Window<E>> windowed(Stream<E> stream, int before, int after)
 	{
-		List<E> elementsBefore = new ArrayList<>();
-		List<E> elementsAfter = new ArrayList<>();
+		int step = 1;
+		return windowed(stream, before, after, step);
+	}
+
+	public static <E> Stream<Window<E>> windowed(Stream<E> stream, int before, int after, int step)
+	{
+		List<E> elementsBefore = new LinkedList<>();
+		List<E> elementsAfter = new LinkedList<>();
 		AtomicReference<E> currentElement = new AtomicReference<>();
 		AtomicBoolean first = new AtomicBoolean(true);
+		AtomicLong stepCounter = new AtomicLong();
+
+		Supplier<Boolean> stepTest = () ->
+		{
+			return stepCounter.incrementAndGet() % step == 0;
+		};
 
 		Function<? super E, ? extends Window<E>> mapper = element ->
 		{
@@ -374,6 +387,7 @@ public class StreamUtils
 
 		Stream<Window<E>> primaryStream = stream.filter(element ->
 		{
+
 			elementsAfter.add(element);
 
 			while (elementsAfter.size() > after)
@@ -391,13 +405,15 @@ public class StreamUtils
 				elementsBefore.remove(0);
 			}
 
-			return elementsAfter.size() >= after && !first.get();
+			boolean isStep = stepTest.get();
+			return isStep && elementsAfter.size() >= after && !first.get();
 		})
 												.map(mapper);
 		Stream<Window<E>> secondaryStream = Stream	.of(1)
 													.flatMap(i -> elementsAfter	.stream()
 																				.collect(Collectors.toList())
 																				.stream()
+																				.filter(e -> stepTest.get())
 																				.peek(element ->
 																				{
 																					E next = elementsAfter.remove(0);

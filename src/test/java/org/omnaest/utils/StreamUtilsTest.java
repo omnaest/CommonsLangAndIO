@@ -226,6 +226,21 @@ public class StreamUtilsTest
 			assertEquals("234", windows.get(3));
 			assertEquals("345", windows.get(4));
 		}
+
+		//with step
+		{
+			List<String> windows = StreamUtils	.windowed(	Arrays	.asList("1", "2", "3", "4", "5")
+																	.stream(),
+															1, 1, 2)
+												.map(window -> window	.getAll()
+																		.stream()
+																		.collect(Collectors.joining()))
+												.collect(Collectors.toList());
+			assertEquals(3, windows.size());
+			assertEquals("12", windows.get(0));
+			assertEquals("234", windows.get(1));
+			assertEquals("45", windows.get(2));
+		}
 	}
 
 }
