@@ -18,6 +18,7 @@
 */
 package org.omnaest.utils;
 
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
@@ -88,5 +89,15 @@ public class StringUtils
 	{
 		return StreamUtils	.reverse(splitToStream(str))
 							.collect(Collectors.joining());
+	}
+
+	/**
+	 * Returns a simple {@link String} {@link Comparator}
+	 * 
+	 * @return
+	 */
+	public static Comparator<String> comparator()
+	{
+		return (o1, o2) -> org.apache.commons.lang3.StringUtils.compare(o1, o2);
 	}
 }
