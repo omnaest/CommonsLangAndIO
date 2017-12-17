@@ -283,6 +283,19 @@ public class ComparatorUtils
 
 	}
 
+	/**
+	 * Example:<br>
+	 * <br>
+	 * 
+	 * <pre>
+	 * ComparatorUtils.builder()
+	 * 				.of(ProteinTokenResult.class)
+	 * 				.with(result -> result.getCoverage())
+	 * 				.build()
+	 * </pre>
+	 * 
+	 * @return
+	 */
 	public static ComparatorBuilder builder()
 	{
 		return new ComparatorBuilder()
