@@ -450,4 +450,24 @@ public class ListUtils
 							.build();
 	}
 
+	/**
+	 * Returns the element at the given index position of the given {@link List} but never throws an {@link IndexOutOfBoundsException}s instead returns null.
+	 * 
+	 * @param list
+	 * @param index
+	 * @return
+	 */
+	public static <E> E get(List<E> list, int index)
+	{
+		E retval = null;
+
+		if (list != null && index >= 0 && index < list.size())
+		{
+			retval = list.get(index);
+		}
+
+		return retval;
+
+	}
+
 }

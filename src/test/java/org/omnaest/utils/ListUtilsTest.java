@@ -19,6 +19,7 @@
 package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -228,5 +229,15 @@ public class ListUtilsTest
 		assertEquals(12, list.size());
 		assertEquals("A", list.get(10));
 		assertEquals("B", list.get(11));
+	}
+
+	@Test
+	public void testGet() throws Exception
+	{
+		assertEquals("1", ListUtils.get(Arrays.asList("1", "2"), 0));
+		assertEquals("2", ListUtils.get(Arrays.asList("1", "2"), 1));
+		assertNull(ListUtils.get(Arrays.asList("1", "2"), -1));
+		assertNull(ListUtils.get(Arrays.asList("1", "2"), 2));
+		assertNull(ListUtils.get(null, 0));
 	}
 }
