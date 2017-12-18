@@ -20,6 +20,11 @@ package org.omnaest.utils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import org.omnaest.utils.ExceptionUtils.Operation;
+import org.omnaest.utils.ExceptionUtils.RuntimeExceptionHandler;
 
 /**
  * Helper for common {@link Object} instances
@@ -64,5 +69,51 @@ public class ObjectUtils
 	public static <E> E defaultIfNull(E object, E defaultObject)
 	{
 		return object != null ? object : defaultObject;
+	}
+
+	/**
+	 * Returns the element from the {@link Supplier#get()} if the test object is not null
+	 * 
+	 * @param testObject
+	 * @param supplier
+	 * @return
+	 */
+	public static <E, T> E getIfNotNull(T testObject, Supplier<E> supplier)
+	{
+		return testObject != null ? supplier.get() : null;
+	}
+
+	/**
+	 * Similar to {@link #getIfNotNull(Object, Supplier)} but takes a {@link Function} as argument which gets the test object supplier
+	 * 
+	 * @param testObject
+	 * @param supplier
+	 * @return
+	 */
+	public static <E, T> E getIfNotNull(T testObject, Function<T, E> supplier)
+	{
+		return testObject != null ? supplier.apply(testObject) : null;
+	}
+
+	/**
+	 * Returns the {@link Supplier#get()} element and catches any {@link Exception} thrown by the {@link Supplier}
+	 * 
+	 * @see ExceptionUtils#executeSilent(Operation, RuntimeExceptionHandler)
+	 * @param supplier
+	 * @return {@link Supplier#get()} or null in the case of any {@link Exception}
+	 */
+	public static <E> E getCatchingException(Supplier<E> supplier)
+	{
+		E retval = null;
+
+		try
+		{
+			retval = supplier.get();
+		} catch (Exception e)
+		{
+			//do nothing
+		}
+
+		return retval;
 	}
 }

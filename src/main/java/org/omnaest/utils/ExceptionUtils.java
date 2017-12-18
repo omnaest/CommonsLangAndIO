@@ -45,7 +45,15 @@ public class ExceptionUtils
 		public void handle(RuntimeException e);
 	}
 
-	public static <R, EX> R execute(OperationWithException<R> operation, ExceptionHandler exceptionHandler) throws Exception
+	/**
+	 * Similar to {@link #executeSilent(Operation, RuntimeExceptionHandler...)} but throwing an {@link Exception}
+	 * 
+	 * @param operation
+	 * @param exceptionHandlers
+	 * @return
+	 * @throws Exception
+	 */
+	public static <R> R execute(OperationWithException<R> operation, ExceptionHandler... exceptionHandlers) throws Exception
 	{
 		R retval = null;
 
@@ -54,13 +62,26 @@ public class ExceptionUtils
 			retval = operation.execute();
 		} catch (Exception e)
 		{
-			exceptionHandler.handle(e);
+			if (exceptionHandlers != null)
+			{
+				for (ExceptionHandler exceptionHandler : exceptionHandlers)
+				{
+					exceptionHandler.handle(e);
+				}
+			}
 		}
 
 		return retval;
 	}
 
-	public static <R> R executeSilent(Operation<R> operation, RuntimeExceptionHandler exceptionHandler)
+	/**
+	 * Executes the given {@link Operation} using the given {@link RuntimeExceptionHandler} to handle any exception
+	 * 
+	 * @param operation
+	 * @param exceptionHandlers
+	 * @return
+	 */
+	public static <R> R executeSilent(Operation<R> operation, RuntimeExceptionHandler... exceptionHandlers)
 	{
 		R retval = null;
 
@@ -69,7 +90,13 @@ public class ExceptionUtils
 			retval = operation.execute();
 		} catch (RuntimeException e)
 		{
-			exceptionHandler.handle(e);
+			if (exceptionHandlers != null)
+			{
+				for (RuntimeExceptionHandler exceptionHandler : exceptionHandlers)
+				{
+					exceptionHandler.handle(e);
+				}
+			}
 		}
 
 		return retval;
