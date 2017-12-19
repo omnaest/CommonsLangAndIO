@@ -31,7 +31,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.omnaest.utils.FileUtils.FileReader.FileReaderLoaded;
+import org.omnaest.utils.FileUtils.BatchFileReader.BatchFileReaderLoaded;
 
 public class FileUtils
 {
@@ -193,17 +193,17 @@ public class FileUtils
 		return tempFile;
 	}
 
-	public static interface FileReader
+	public static interface BatchFileReader
 	{
-		public FileReaderLoaded from(File... files);
+		public BatchFileReaderLoaded from(File... files);
 
-		public FileReaderLoaded fromDirectory(File directory);
+		public BatchFileReaderLoaded fromDirectory(File directory);
 
-		public FileReaderLoaded from(File file);
+		public BatchFileReaderLoaded from(File file);
 
-		public static interface FileReaderLoaded extends FileReader
+		public static interface BatchFileReaderLoaded extends BatchFileReader
 		{
-			public FileReaderLoaded usingEncoding(Charset encoding);
+			public BatchFileReaderLoaded usingEncoding(Charset encoding);
 
 			public Stream<String> getAsStringStream();
 
@@ -224,7 +224,7 @@ public class FileUtils
 	}
 
 	/**
-	 * Returns a new {@link FileReader} instance.<br>
+	 * Returns a new {@link BatchFileReader} instance.<br>
 	 * <br>
 	 * Example:<br>
 	 * 
@@ -237,15 +237,15 @@ public class FileUtils
 	 * 
 	 * @return
 	 */
-	public static FileReader read()
+	public static BatchFileReader read()
 	{
-		return new FileReaderLoaded()
+		return new BatchFileReaderLoaded()
 		{
 			private List<File>	files		= new ArrayList<>();
 			private Charset		encoding	= StandardCharsets.UTF_8;
 
 			@Override
-			public FileReaderLoaded from(File... files)
+			public BatchFileReaderLoaded from(File... files)
 			{
 				if (files != null)
 				{
@@ -258,7 +258,7 @@ public class FileUtils
 			}
 
 			@Override
-			public FileReaderLoaded from(File file)
+			public BatchFileReaderLoaded from(File file)
 			{
 				if (file != null)
 				{
@@ -275,7 +275,7 @@ public class FileUtils
 			}
 
 			@Override
-			public FileReaderLoaded fromDirectory(File directory)
+			public BatchFileReaderLoaded fromDirectory(File directory)
 			{
 				if (directory != null)
 				{
@@ -285,7 +285,7 @@ public class FileUtils
 			}
 
 			@Override
-			public FileReaderLoaded usingEncoding(Charset encoding)
+			public BatchFileReaderLoaded usingEncoding(Charset encoding)
 			{
 				this.encoding = encoding;
 				return this;
