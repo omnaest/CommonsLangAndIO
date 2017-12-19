@@ -33,6 +33,11 @@ import java.util.stream.Stream;
 
 import org.omnaest.utils.FileUtils.BatchFileReader.BatchFileReaderLoaded;
 
+/**
+ * Utils regarding {@link File} operations
+ * 
+ * @author omnaest
+ */
 public class FileUtils
 {
 	/**
