@@ -21,6 +21,8 @@ package org.omnaest.utils;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.omnaest.utils.FileUtils.FileStringContentConsumer;
@@ -40,6 +42,28 @@ public class FileUtilsTest
 
 		consumer.accept("text");
 		assertEquals("text", supplier.get());
+	}
+
+	@Test
+	public void testRead() throws Exception
+	{
+		File tempFile1 = FileUtils.createRandomTempFile();
+		File tempFile2 = FileUtils.createRandomTempFile();
+
+		FileUtils	.toConsumer(tempFile1)
+					.accept("test1\ntest2");
+		FileUtils	.toConsumer(tempFile2)
+					.accept("test3\ntest4");
+
+		List<String> lines = FileUtils	.read()
+										.from(tempFile1, tempFile2)
+										.getAsLinesStream()
+										.collect(Collectors.toList());
+		assertEquals(4, lines.size());
+		assertEquals("test1", lines.get(0));
+		assertEquals("test2", lines.get(1));
+		assertEquals("test3", lines.get(2));
+		assertEquals("test4", lines.get(3));
 	}
 
 }

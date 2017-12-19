@@ -19,12 +19,19 @@
 package org.omnaest.utils;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import org.omnaest.utils.FileUtils.FileReader.FileReaderLoaded;
 
 public class FileUtils
 {
@@ -184,5 +191,140 @@ public class FileUtils
 								.toFile();
 		tempFile.deleteOnExit();
 		return tempFile;
+	}
+
+	public static interface FileReader
+	{
+		public FileReaderLoaded from(File... files);
+
+		public FileReaderLoaded fromDirectory(File directory);
+
+		public FileReaderLoaded from(File file);
+
+		public static interface FileReaderLoaded extends FileReader
+		{
+			public FileReaderLoaded usingEncoding(Charset encoding);
+
+			public Stream<String> getAsStringStream();
+
+			public Stream<String> getAsLinesStream();
+		}
+
+	}
+
+	public static class FileAccessRuntimeException extends RuntimeException
+	{
+		private static final long serialVersionUID = -4087596140531337664L;
+
+		public FileAccessRuntimeException(Throwable cause)
+		{
+			super(cause);
+		}
+
+	}
+
+	/**
+	 * Returns a new {@link FileReader} instance.<br>
+	 * <br>
+	 * Example:<br>
+	 * 
+	 * <pre>
+	 * List<String> lines = FileUtils.read()
+	 * 								.from(tempFile1, tempFile2)
+	 * 								.getAsLinesStream()
+	 * 								.collect(Collectors.toList());
+	 * </pre>
+	 * 
+	 * @return
+	 */
+	public static FileReader read()
+	{
+		return new FileReaderLoaded()
+		{
+			private List<File>	files		= new ArrayList<>();
+			private Charset		encoding	= StandardCharsets.UTF_8;
+
+			@Override
+			public FileReaderLoaded from(File... files)
+			{
+				if (files != null)
+				{
+					for (File file : files)
+					{
+						this.from(file);
+					}
+				}
+				return this;
+			}
+
+			@Override
+			public FileReaderLoaded from(File file)
+			{
+				if (file != null)
+				{
+					if (file.isFile())
+					{
+						this.files.add(file);
+					}
+					else if (file.isDirectory())
+					{
+						this.fromDirectory(file);
+					}
+				}
+				return this;
+			}
+
+			@Override
+			public FileReaderLoaded fromDirectory(File directory)
+			{
+				if (directory != null)
+				{
+					this.files.addAll(Arrays.asList(directory.listFiles((FileFilter) file -> file.isFile())));
+				}
+				return this;
+			}
+
+			@Override
+			public FileReaderLoaded usingEncoding(Charset encoding)
+			{
+				this.encoding = encoding;
+				return this;
+			}
+
+			@Override
+			public Stream<String> getAsStringStream()
+			{
+				return this.files	.stream()
+									.filter(PredicateUtils.notNull())
+									.map(file ->
+									{
+										try
+										{
+											return org.apache.commons.io.FileUtils.readFileToString(file, this.encoding);
+										} catch (IOException e)
+										{
+											throw new FileAccessRuntimeException(e);
+										}
+									});
+			}
+
+			@Override
+			public Stream<String> getAsLinesStream()
+			{
+				return this.files	.stream()
+									.filter(PredicateUtils.notNull())
+									.flatMap(file ->
+									{
+										try
+										{
+											return org.apache.commons.io.FileUtils	.readLines(file, this.encoding)
+																					.stream();
+										} catch (IOException e)
+										{
+											throw new FileAccessRuntimeException(e);
+										}
+									});
+			}
+		};
 	}
 }
