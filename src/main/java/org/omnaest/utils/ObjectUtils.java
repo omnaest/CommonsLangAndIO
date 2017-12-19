@@ -84,6 +84,19 @@ public class ObjectUtils
 	}
 
 	/**
+	 * Similar to {@link #getOrDefaultIfNotNull(Object, Function, Function)}
+	 * 
+	 * @param testObject
+	 * @param supplier
+	 * @param defaultSupplier
+	 * @return
+	 */
+	public static <E, T> E getOrDefaultIfNotNull(T testObject, Supplier<E> supplier, Supplier<E> defaultSupplier)
+	{
+		return testObject != null ? supplier.get() : defaultSupplier.get();
+	}
+
+	/**
 	 * Similar to {@link #getIfNotNull(Object, Supplier)} but takes a {@link Function} as argument which gets the test object supplier
 	 * 
 	 * @param testObject
@@ -93,6 +106,19 @@ public class ObjectUtils
 	public static <E, T> E getIfNotNull(T testObject, Function<T, E> supplier)
 	{
 		return testObject != null ? supplier.apply(testObject) : null;
+	}
+
+	/**
+	 * If the given test object is not null the supplier {@link Function} is called otherwise the default supplier {@link Function}
+	 * 
+	 * @param testObject
+	 * @param supplier
+	 * @param defaultSupplier
+	 * @return
+	 */
+	public static <E, T> E getOrDefaultIfNotNull(T testObject, Function<T, E> supplier, Function<T, E> defaultSupplier)
+	{
+		return testObject != null ? supplier.apply(testObject) : defaultSupplier.apply(testObject);
 	}
 
 	/**
