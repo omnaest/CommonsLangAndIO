@@ -45,7 +45,10 @@ public interface DurationCapture
 
 		public String getDurationAsString(TimeUnit timeUnit);
 
+		public String getDurationAsCanonicalString();
+
 		public MeasurementResult doWithResult(Consumer<MeasurementResult> resultConsumer);
+
 	}
 
 	public static interface MeasurementResultWithReturnValue<R> extends MeasurementResult
@@ -65,4 +68,11 @@ public interface DurationCapture
 	{
 		return new DefaultDurationCapture();
 	}
+
+	public static interface DurationMeasurement
+	{
+		public MeasurementResult stop();
+	}
+
+	public DurationMeasurement start();
 }

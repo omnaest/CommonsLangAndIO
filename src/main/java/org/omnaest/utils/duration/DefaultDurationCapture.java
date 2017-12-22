@@ -24,25 +24,19 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.omnaest.utils.MapUtils;
+import org.omnaest.utils.TimeFormatUtils;
 
 public class DefaultDurationCapture implements DurationCapture
 {
-	private static class MeasurementResultWithReturnValueImpl<R> implements MeasurementResultWithReturnValue<R>
-	{
-		private R		retval;
-		private long	duration;
 
-		public MeasurementResultWithReturnValueImpl(R retval, long duration)
+	private static class MeasurementResultImpl implements MeasurementResult
+	{
+		private long duration;
+
+		public MeasurementResultImpl(long duration)
 		{
 			super();
-			this.retval = retval;
 			this.duration = duration;
-		}
-
-		@Override
-		public R getReturnValue()
-		{
-			return this.retval;
 		}
 
 		@Override
@@ -54,11 +48,27 @@ public class DefaultDurationCapture implements DurationCapture
 		@Override
 		public String getDurationAsString(TimeUnit timeUnit)
 		{
-			return this.getDuration(timeUnit) + " " + timeUnitToLabelMap.getOrDefault(timeUnit, timeUnit.toString());
+			return TimeFormatUtils	.format()
+									.duration(this.getDuration(timeUnit), timeUnit)
+									.asString();
 		}
 
 		@Override
-		public MeasurementResultWithReturnValue<R> doWithResult(Consumer<MeasurementResult> resultConsumer)
+		public String getDurationAsCanonicalString()
+		{
+			return TimeFormatUtils	.format()
+									.duration(this.getDuration(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
+									.asCanonicalString();
+		}
+
+		@Override
+		public String toString()
+		{
+			return this.getDurationAsString(TimeUnit.MILLISECONDS);
+		}
+
+		@Override
+		public MeasurementResult doWithResult(Consumer<MeasurementResult> resultConsumer)
 		{
 			if (resultConsumer != null)
 			{
@@ -67,10 +77,29 @@ public class DefaultDurationCapture implements DurationCapture
 			return this;
 		}
 
-		@Override
-		public String toString()
+	}
+
+	private static class MeasurementResultWithReturnValueImpl<R> extends MeasurementResultImpl implements MeasurementResultWithReturnValue<R>
+	{
+		private R retval;
+
+		public MeasurementResultWithReturnValueImpl(R retval, long duration)
 		{
-			return this.getDurationAsString(TimeUnit.MILLISECONDS);
+			super(duration);
+			this.retval = retval;
+		}
+
+		@Override
+		public R getReturnValue()
+		{
+			return this.retval;
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public MeasurementResultWithReturnValue<R> doWithResult(Consumer<MeasurementResult> resultConsumer)
+		{
+			return (MeasurementResultWithReturnValue<R>) super.doWithResult(resultConsumer);
 		}
 
 	}
@@ -117,6 +146,21 @@ public class DefaultDurationCapture implements DurationCapture
 
 		//
 		return new MeasurementResultWithReturnValueImpl<>(retval.get(), duration);
+	}
+
+	@Override
+	public DurationMeasurement start()
+	{
+		long start = System.currentTimeMillis();
+		return new DurationMeasurement()
+		{
+			@Override
+			public MeasurementResult stop()
+			{
+				long duration = System.currentTimeMillis() - start;
+				return new MeasurementResultImpl(duration);
+			}
+		};
 	}
 
 }
