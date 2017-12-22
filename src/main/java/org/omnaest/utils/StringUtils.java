@@ -117,4 +117,14 @@ public class StringUtils
 	{
 		return (o1, o2) -> org.apache.commons.lang3.StringUtils.compare(o1, o2);
 	}
+
+	/**
+	 * Returns a {@link StringBuilder}
+	 * 
+	 * @return
+	 */
+	public static StringBuilder builder()
+	{
+		return new StringBuilder();
+	}
 }
