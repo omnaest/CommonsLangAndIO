@@ -216,12 +216,18 @@ public class ListUtils
 	{
 		if (index >= 0)
 		{
-			while (list.size() <= index)
-			{
-				list.add(null);
-			}
+			ensureSize(list, index + 1);
 
 			list.set(index, element);
+		}
+		return list;
+	}
+
+	public static <E> List<E> ensureSize(List<E> list, int size)
+	{
+		while (list.size() < size)
+		{
+			list.add(null);
 		}
 		return list;
 	}

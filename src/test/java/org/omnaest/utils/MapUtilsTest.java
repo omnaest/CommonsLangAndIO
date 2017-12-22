@@ -85,14 +85,14 @@ public class MapUtilsTest
 	@Test
 	public void testJoin() throws Exception
 	{
-		Map<String, UnaryLeftAndRight<String>> join = MapUtils.join(	MapUtils.builder()
-																		.put("1", "value1")
-																		.put("2", "value2.1")
-																		.build(),
-																MapUtils.builder()
-																		.put("2", "value2.2")
-																		.put("3", "value3")
-																		.build());
+		Map<String, UnaryLeftAndRight<String>> join = MapUtils.join(MapUtils.builder()
+																			.put("1", "value1")
+																			.put("2", "value2.1")
+																			.build(),
+																	MapUtils.builder()
+																			.put("2", "value2.2")
+																			.put("3", "value3")
+																			.build());
 
 		assertEquals(3, join.size());
 		assertEquals("value1", join	.get("1")
@@ -107,6 +107,50 @@ public class MapUtilsTest
 								.getLeft());
 		assertEquals("value3", join	.get("3")
 									.getRight());
+
+	}
+
+	@Test
+	public void testMultiJoin() throws Exception
+	{
+		Map<String, List<String>> join = MapUtils.join(	MapUtils.builder()
+																.put("1", "value1")
+																.put("2", "value2.1")
+																.build(),
+														MapUtils.builder()
+																.put("2", "value2.2")
+																.put("3", "value3")
+																.build(),
+														MapUtils.builder()
+																.put("4", "value4")
+																.put("2", "value2.3")
+																.build());
+
+		assertEquals(4, join.size());
+		assertEquals("value1", join	.get("1")
+									.get(0));
+		assertEquals(null, join	.get("1")
+								.get(1));
+		assertEquals(null, join	.get("1")
+								.get(2));
+		assertEquals("value2.1", join	.get("2")
+										.get(0));
+		assertEquals("value2.2", join	.get("2")
+										.get(1));
+		assertEquals("value2.3", join	.get("2")
+										.get(2));
+		assertEquals(null, join	.get("3")
+								.get(0));
+		assertEquals("value3", join	.get("3")
+									.get(1));
+		assertEquals(null, join	.get("3")
+								.get(2));
+		assertEquals(null, join	.get("4")
+								.get(0));
+		assertEquals(null, join	.get("4")
+								.get(1));
+		assertEquals("value4", join	.get("4")
+									.get(2));
 
 	}
 

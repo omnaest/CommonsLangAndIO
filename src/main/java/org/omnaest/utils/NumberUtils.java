@@ -120,6 +120,11 @@ public class NumberUtils
 		};
 	}
 
+	/**
+	 * @see org.apache.commons.lang3.math.NumberUtils#toDouble(String)
+	 * @param value
+	 * @return
+	 */
 	public static double toDouble(String value)
 	{
 		return org.apache.commons.lang3.math.NumberUtils.toDouble(value);

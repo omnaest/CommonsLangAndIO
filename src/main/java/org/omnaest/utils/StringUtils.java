@@ -18,6 +18,7 @@
 */
 package org.omnaest.utils;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -46,14 +47,30 @@ public class StringUtils
 	}
 
 	/**
-	 * Returns a {@link Stream} of single character tokens for the given text
+	 * Returns a {@link Stream} of single character tokens for the given {@link String}
 	 * 
-	 * @param text
+	 * @param str
 	 * @return
 	 */
-	public static Stream<String> splitToStream(String text)
+	public static Stream<String> splitToStream(String str)
 	{
-		return StreamUtils.fromIterator(new StringIterator(text));
+		return StreamUtils.fromIterator(new StringIterator(str));
+	}
+
+	/**
+	 * Returns a {@link Stream} of {@link String} tokens which represents the splitted parts of the given {@link String}
+	 * 
+	 * @see org.apache.commons.lang3.StringUtils#splitPreserveAllTokens(String, String)
+	 * @param str
+	 * @param separatorChars
+	 * @return
+	 */
+	public static Stream<String> splitToStream(String str, String separatorChars)
+	{
+		String[] tokens = org.apache.commons.lang3.StringUtils.splitPreserveAllTokens(str, separatorChars);
+		return tokens != null ? Arrays	.asList(tokens)
+										.stream()
+				: Stream.empty();
 	}
 
 	/**

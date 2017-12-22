@@ -19,11 +19,14 @@
 package org.omnaest.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.omnaest.utils.element.ModifiableUnaryLeftAndRight;
 import org.omnaest.utils.element.UnaryLeftAndRight;
@@ -172,6 +175,37 @@ public class MapUtils
 		}
 
 		return (Map<K, UnaryLeftAndRight<V>>) ((Map<K, ? extends UnaryLeftAndRight<V>>) retmap);
+	}
+
+	@SafeVarargs
+	public static <K, V> Map<K, List<V>> join(Map<K, V>... maps)
+	{
+		return join(Arrays.asList(maps));
+	}
+
+	/**
+	 * Joins multiple {@link Map}s with the same value and key type into a single one
+	 * 
+	 * @param maps
+	 * @return never null
+	 */
+	public static <K, V> Map<K, List<V>> join(Collection<Map<K, V>> maps)
+	{
+		Map<K, List<V>> retmap = Collections.emptyMap();
+
+		if (maps != null)
+		{
+			retmap = maps	.stream()
+							.flatMap(map -> map	.keySet()
+												.stream())
+							.filter(PredicateUtils.notNull())
+							.distinct()
+							.collect(Collectors.toMap(key -> key, key -> maps	.stream()
+																				.map(map -> map.getOrDefault(key, null))
+																				.collect(Collectors.toList())));
+		}
+
+		return retmap;
 	}
 
 	public static <K, V> CRUDMap<K, V> toCRUDMap(Map<K, V> map)

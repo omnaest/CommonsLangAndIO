@@ -240,4 +240,11 @@ public class ListUtilsTest
 		assertNull(ListUtils.get(Arrays.asList("1", "2"), 2));
 		assertNull(ListUtils.get(null, 0));
 	}
+
+	@Test
+	public void testEnsureSize() throws Exception
+	{
+		List<String> list = ListUtils.ensureSize(new ArrayList<>(), 3);
+		assertEquals(3, list.size());
+	}
 }

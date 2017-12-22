@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -60,7 +61,16 @@ public class FileUtils
 		 *             for any {@link IOException}
 		 */
 		@Override
-		void accept(String data);
+		public void accept(String data);
+
+		/**
+		 * Returns a {@link Consumer} which will consume the input of the given {@link Function} which produces the {@link String} result given to the current
+		 * {@link FileStringContentConsumer}
+		 * 
+		 * @param serializer
+		 * @return
+		 */
+		public <T> Consumer<T> with(Function<T, String> serializer);
 	}
 
 	/**
@@ -143,6 +153,13 @@ public class FileUtils
 				}
 
 			}
+
+			@Override
+			public <T> Consumer<T> with(Function<T, String> serializer)
+			{
+				return serializationObject -> this.accept(serializer.apply(serializationObject));
+			}
+
 		};
 	}
 
