@@ -20,13 +20,41 @@ package org.omnaest.utils.element;
 
 import java.util.function.Supplier;
 
+/**
+ * A single cached element
+ * 
+ * @see #of(Supplier)
+ * @author omnaest
+ * @param <E>
+ */
 public interface CachedElement<E> extends Supplier<E>
 {
+	/**
+	 * Returns the cached element of if the cached element is null will resolve a new element from the {@link Supplier}
+	 */
 	@Override
 	public E get();
 
+	/**
+	 * Returns the cached element and {@link #reset()}s the cache
+	 * 
+	 * @return
+	 */
+	public E getAndReset();
+
+	/**
+	 * Resets the cache, so that the next call to {@link #get()} will resolve a new element from the {@link Supplier}
+	 * 
+	 * @return
+	 */
 	public CachedElement<E> reset();
 
+	/**
+	 * Returns a new {@link CachedElement}
+	 * 
+	 * @param supplier
+	 * @return
+	 */
 	public static <E> CachedElement<E> of(Supplier<E> supplier)
 	{
 		return new AtomicCachedElementImpl<>(supplier);

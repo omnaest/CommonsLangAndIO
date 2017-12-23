@@ -41,6 +41,12 @@ public class AtomicCachedElementImpl<E> implements CachedElement<E>
 	public E get()
 	{
 		E retval = this.element.get();
+		retval = this.getFromSupplierIfNull(retval);
+		return retval;
+	}
+
+	private E getFromSupplierIfNull(E retval)
+	{
 		if (retval == null)
 		{
 			retval = this.element.updateAndGet(e -> e == null ? this.supplier.get() : e);
@@ -49,10 +55,24 @@ public class AtomicCachedElementImpl<E> implements CachedElement<E>
 	}
 
 	@Override
+	public E getAndReset()
+	{
+		E retval = this.element.getAndSet(null);
+		retval = this.getFromSupplierIfNull(retval);
+		return retval;
+	}
+
+	@Override
 	public CachedElement<E> reset()
 	{
 		this.element.set(null);
 		return this;
+	}
+
+	@Override
+	public String toString()
+	{
+		return "AtomicCachedElementImpl [element=" + this.element + ", supplier=" + this.supplier + "]";
 	}
 
 }
