@@ -106,6 +106,13 @@ public class MatcherUtils
 		 */
 		public Map<Integer, String> getGroups();
 
+		/**
+		 * Returns the input region between {@link #getStart()} and {@link #getEnd()} inclusive
+		 * 
+		 * @return
+		 */
+		public String getMatchRegion();
+
 	}
 
 	/**
@@ -181,6 +188,12 @@ public class MatcherUtils
 										public int getEnd()
 										{
 											return end - 1;
+										}
+
+										@Override
+										public String getMatchRegion()
+										{
+											return input.substring(start, end);
 										}
 
 										@Override

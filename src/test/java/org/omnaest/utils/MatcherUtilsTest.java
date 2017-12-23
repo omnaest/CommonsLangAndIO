@@ -44,6 +44,7 @@ public class MatcherUtilsTest
 									.get();
 		assertEquals(1, match.getStart());
 		assertEquals(3, match.getEnd());
+		assertEquals("bcd", match.getMatchRegion());
 		assertEquals("a   e", match.replaceWith("   "));
 		assertEquals("bcd", match	.getGroups()
 									.get(1));
