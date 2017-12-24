@@ -44,4 +44,23 @@ public class StringUtilsTest
 		assertEquals("321", StringUtils.reverse("123"));
 	}
 
+	@Test
+	public void testSplitToStreamByRegEx() throws Exception
+	{
+		List<String> tokens = StringUtils	.splitToStreamByRegEx("abcde", "[bd]")
+											.collect(Collectors.toList());
+		assertEquals("a", tokens.get(0));
+		assertEquals("c", tokens.get(1));
+		assertEquals("e", tokens.get(2));
+	}
+
+	@Test
+	public void testSplitToStreamByRegExFind() throws Exception
+	{
+		List<String> tokens = StringUtils	.splitToStreamByRegExFind("abcde", "[bd]")
+											.collect(Collectors.toList());
+		assertEquals("b", tokens.get(0));
+		assertEquals("d", tokens.get(1));
+	}
+
 }

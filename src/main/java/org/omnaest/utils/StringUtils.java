@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -49,6 +50,7 @@ public class StringUtils
 	/**
 	 * Returns a {@link Stream} of single character tokens for the given {@link String}
 	 * 
+	 * @see #splitToStream(String, String)
 	 * @param str
 	 * @return
 	 */
@@ -60,6 +62,7 @@ public class StringUtils
 	/**
 	 * Returns a {@link Stream} of {@link String} tokens which represents the splitted parts of the given {@link String}
 	 * 
+	 * @see #splitToStreamByRegEx(String, String)
 	 * @see org.apache.commons.lang3.StringUtils#splitPreserveAllTokens(String, String)
 	 * @param str
 	 * @param separatorChars
@@ -68,6 +71,23 @@ public class StringUtils
 	public static Stream<String> splitToStream(String str, String separatorChars)
 	{
 		String[] tokens = org.apache.commons.lang3.StringUtils.splitPreserveAllTokens(str, separatorChars);
+		return tokens != null ? Arrays	.asList(tokens)
+										.stream()
+				: Stream.empty();
+	}
+
+	/**
+	 * Similar to {@link #splitToStream(String, String)} using a regex pattern
+	 * 
+	 * @see #splitToStream(String, String)
+	 * @see Pattern
+	 * @param str
+	 * @param regex
+	 * @return
+	 */
+	public static Stream<String> splitToStreamByRegEx(String str, String regex)
+	{
+		String[] tokens = str != null ? str.split(regex) : null;
 		return tokens != null ? Arrays	.asList(tokens)
 										.stream()
 				: Stream.empty();
@@ -126,5 +146,21 @@ public class StringUtils
 	public static StringBuilder builder()
 	{
 		return new StringBuilder();
+	}
+
+	/**
+	 * Returns a {@link Stream} of {@link String} tokens representing all found subtokens matching the given regex
+	 * 
+	 * @param str
+	 * @param regex
+	 * @return
+	 */
+	public static Stream<String> splitToStreamByRegExFind(String str, String regex)
+	{
+		return MatcherUtils	.matcher()
+							.of(Pattern.compile(regex))
+							.findIn(str)
+							.get()
+							.map(match -> match.getMatchRegion());
 	}
 }
