@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.omnaest.utils.StreamUtils;
+import org.omnaest.utils.list.crud.CRUDList;
 
 public abstract class AbstractList<E> implements List<E>, CRUDList<E>
 {

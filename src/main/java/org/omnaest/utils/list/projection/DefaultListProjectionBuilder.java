@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.omnaest.utils.ListUtils;
-import org.omnaest.utils.list.CRUDList;
+import org.omnaest.utils.list.crud.CRUDList;
 
 public class DefaultListProjectionBuilder implements ListProjectionBuilder
 {

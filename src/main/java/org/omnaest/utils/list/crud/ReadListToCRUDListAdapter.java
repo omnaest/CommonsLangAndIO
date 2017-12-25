@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.utils.list;
+package org.omnaest.utils.list.crud;
 
 /**
  * @see CRUDList

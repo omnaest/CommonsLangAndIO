@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.utils.list;
+package org.omnaest.utils.list.enumeration;
 
 import java.util.BitSet;
 import java.util.Collection;
@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.omnaest.utils.BitSetUtils;
 import org.omnaest.utils.BitSetUtils.BitSetFrame;
 import org.omnaest.utils.BitSetUtils.EnumBitSetTranslator;
+import org.omnaest.utils.list.AbstractList;
 
 /**
  * {@link List} implementation for storing a {@link List} of {@link Enum}s based on an internal {@link BitSet}. This minimizes the memory consumption, as only
@@ -34,7 +35,7 @@ import org.omnaest.utils.BitSetUtils.EnumBitSetTranslator;
  * @author omnaest
  * @param <E>
  */
-public class EnumBitSetList<E extends Enum<?>> extends AbstractList<E>
+public class EnumBitSetList<E extends Enum<?>> extends AbstractList<E> implements EnumList<E>
 {
 	private int		size	= 0;
 	private BitSet	bitSet	= new BitSet();

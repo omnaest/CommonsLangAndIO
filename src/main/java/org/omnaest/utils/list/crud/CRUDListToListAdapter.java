@@ -16,9 +16,11 @@
 
 
 */
-package org.omnaest.utils.list;
+package org.omnaest.utils.list.crud;
 
 import java.util.ArrayList;
+
+import org.omnaest.utils.list.AbstractList;
 
 public class CRUDListToListAdapter<E> extends AbstractList<E>
 {

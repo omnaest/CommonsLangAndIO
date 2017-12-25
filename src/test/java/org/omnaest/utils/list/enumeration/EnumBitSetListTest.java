@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.utils.list;
+package org.omnaest.utils.list.enumeration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -27,8 +27,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.omnaest.utils.ThreadUtils;
+import org.omnaest.utils.list.enumeration.EnumBitSetList;
 
 public class EnumBitSetListTest
 {
@@ -100,7 +102,11 @@ public class EnumBitSetListTest
 		}
 	}
 
+	/**
+	 * Tests with java visual vm showed reduction from 450 MB to 70 MB -> so about a factor 6
+	 */
 	@Test
+	@Ignore
 	public void memoryConsumptionTest()
 	{
 		List<TestEnum> list = new ArrayList<>();

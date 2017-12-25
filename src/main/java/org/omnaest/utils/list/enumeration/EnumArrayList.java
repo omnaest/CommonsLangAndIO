@@ -16,48 +16,29 @@
 
 
 */
-package org.omnaest.utils.list;
+package org.omnaest.utils.list.enumeration;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 
-public class ListToCRUDAdapter<E> implements CRUDList<E>
+/**
+ * {@link ArrayList} based {@link EnumList}
+ * 
+ * @author omnaest
+ * @param <E>
+ */
+public class EnumArrayList<E extends Enum<?>> extends ArrayList<E> implements EnumList<E>
 {
-	private List<E> list;
+	private static final long serialVersionUID = 5208379807666239497L;
 
-	public ListToCRUDAdapter(List<E> list)
+	public EnumArrayList()
 	{
 		super();
-		this.list = list;
 	}
 
-	@Override
-	public E get(int index)
+	public EnumArrayList(Collection<? extends E> c)
 	{
-		return this.list.get(index);
-	}
-
-	@Override
-	public E set(int index, E element)
-	{
-		return this.list.set(index, element);
-	}
-
-	@Override
-	public void add(int index, E element)
-	{
-		this.list.add(index, element);
-	}
-
-	@Override
-	public E remove(int index)
-	{
-		return this.list.remove(index);
-	}
-
-	@Override
-	public int size()
-	{
-		return this.list.size();
+		super(c);
 	}
 
 }

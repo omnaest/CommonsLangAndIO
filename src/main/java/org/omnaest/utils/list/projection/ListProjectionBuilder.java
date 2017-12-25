@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.omnaest.utils.ListUtils;
-import org.omnaest.utils.list.ReadList;
+import org.omnaest.utils.list.crud.ReadList;
 
 public interface ListProjectionBuilder
 {

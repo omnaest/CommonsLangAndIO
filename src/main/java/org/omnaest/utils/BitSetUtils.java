@@ -113,12 +113,21 @@ public class BitSetUtils
 
 			private int determineBitsPerEnum(Class<T> enumType)
 			{
-				int numberOfEnums = enumType.getEnumConstants().length;
+				int numberOfEnums = enumType.getEnumConstants().length + 1;
 
+				/**
+				 * 2^0 = 1 -> 1
+				 * 2^1 = 2 -> 3
+				 * 2^2 = 4 -> 7
+				 */
 				int retval = 0;
-				while (Math.pow(2, retval) < numberOfEnums)
+
+				int accumulatedValue = 0;
+
+				while (accumulatedValue < numberOfEnums)
 				{
 					retval++;
+					accumulatedValue += Math.pow(2, retval);
 				}
 				return retval + 1;
 			}

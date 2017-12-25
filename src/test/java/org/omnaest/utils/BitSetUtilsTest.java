@@ -47,6 +47,13 @@ public class BitSetUtilsTest
 	}
 
 	@Test
+	public void testNumberOfBits()
+	{
+		assertEquals(3, BitSetUtils	.enumTranslator(TestEnum.class)
+									.getNumberOfBitsPerEnum());
+	}
+
+	@Test
 	public void testToByte() throws Exception
 	{
 		BitSet bitSet = new BitSet();
