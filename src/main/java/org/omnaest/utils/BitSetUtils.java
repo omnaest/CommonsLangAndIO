@@ -74,6 +74,13 @@ public class BitSetUtils
 		 * @return
 		 */
 		public T toEnum(BitSet bitSet);
+
+		/**
+		 * Returns the number of bits used per {@link Enum}
+		 * 
+		 * @return
+		 */
+		public int getNumberOfBitsPerEnum();
 	}
 
 	/**
@@ -87,15 +94,19 @@ public class BitSetUtils
 		return new EnumBitSetTranslator<T>()
 		{
 			private T[]	enumConstants		= enumType.getEnumConstants();
-			private int	numberOfBitsForEnum	= this.determineBitsPerEnum(enumType);
+			private int	numberOfBitsPerEnum	= this.determineBitsPerEnum(enumType);
 
 			private Function<Number, BitSet>	numberToBitSetMapper	= BitSetUtils	.mapper()
 																						.fromNumberWithMaxValue(this.enumConstants.length + 1);
 			private Function<BitSet, Number>	bitSetToNumber			= BitSetUtils	.mapper()
 																						.toNumberWithMaxValue(this.enumConstants.length + 1);
 
-			private Function<T, Number>	enumToOrdinalNumberMapper	= enumConstant -> enumConstant.ordinal() + 1;
-			private Function<Number, T>	ordinalNumberToEnumMapper	= ordinal -> this.enumConstants[ordinal.intValue() - 1];
+			private Function<T, Number>	enumToOrdinalNumberMapper	= enumConstant -> enumConstant != null ? enumConstant.ordinal() + 1 : 0;
+			private Function<Number, T>	ordinalNumberToEnumMapper	= ordinal ->
+																	{
+																		int ordinalIntValue = ordinal.intValue();
+																		return ordinalIntValue >= 1 ? this.enumConstants[ordinalIntValue - 1] : null;
+																	};
 
 			private Function<T, BitSet>	enumToBitSetMapper	= this.enumToOrdinalNumberMapper.andThen(this.numberToBitSetMapper);
 			private Function<BitSet, T>	bitSetToEnumMapper	= this.bitSetToNumber.andThen(this.ordinalNumberToEnumMapper);
@@ -113,6 +124,12 @@ public class BitSetUtils
 			}
 
 			@Override
+			public int getNumberOfBitsPerEnum()
+			{
+				return this.numberOfBitsPerEnum;
+			}
+
+			@Override
 			public BitSet toBitSet(Stream<T> stream)
 			{
 				BitSet retval = new BitSet();
@@ -121,7 +138,7 @@ public class BitSetUtils
 				stream	.map(this.enumToBitSetMapper)
 						.forEach(elementBitSet ->
 						{
-							frame(retval, this.numberOfBitsForEnum, frameIndex.getAndIncrement()).set(elementBitSet);
+							frame(retval, this.numberOfBitsPerEnum, frameIndex.getAndIncrement()).set(elementBitSet);
 						});
 
 				return retval;
@@ -130,7 +147,7 @@ public class BitSetUtils
 			@Override
 			public Stream<T> toEnumStream(BitSet bitSet)
 			{
-				return frameStream(bitSet, this.numberOfBitsForEnum).filter(iframe -> iframe.getAsByte() != 0)
+				return frameStream(bitSet, this.numberOfBitsPerEnum).filter(iframe -> iframe.getAsByte() != 0)
 																	.map(iframe -> iframe.get())
 																	.map(this.bitSetToEnumMapper);
 			}
@@ -210,11 +227,14 @@ public class BitSetUtils
 			{
 				BitSet retval = new BitSet();
 
-				for (int ii = 0; ii < frameSize; ii++)
+				if (frameIndex >= 0)
 				{
-					int bitIndex = ii + frameSize * frameIndex;
-					boolean value = bitSet.get(bitIndex);
-					retval.set(ii, value);
+					for (int ii = 0; ii < frameSize; ii++)
+					{
+						int bitIndex = ii + frameSize * frameIndex;
+						boolean value = bitSet.get(bitIndex);
+						retval.set(ii, value);
+					}
 				}
 
 				return retval;

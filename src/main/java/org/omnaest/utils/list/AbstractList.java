@@ -82,7 +82,9 @@ public abstract class AbstractList<E> implements List<E>, CRUDList<E>
 	public boolean addAll(Collection<? extends E> c)
 	{
 		return c != null && c	.stream()
-								.anyMatch(this::add);
+								.map(this::add)
+								.reduce((b1, b2) -> b1 | b2)
+								.orElse(false);
 	}
 
 	@Override
@@ -127,7 +129,7 @@ public abstract class AbstractList<E> implements List<E>, CRUDList<E>
 	@Override
 	public boolean add(E element)
 	{
-		int index = this.size() - 1;
+		int index = this.size();
 		this.add(index, element);
 		return true;
 	}
