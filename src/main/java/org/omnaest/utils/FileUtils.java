@@ -94,6 +94,14 @@ public class FileUtils
 		 */
 		@Override
 		public String get();
+
+		/**
+		 * Returns a {@link Supplier} based on the given deserialization {@link Function}
+		 * 
+		 * @param deserializer
+		 * @return
+		 */
+		public <T> Supplier<T> with(Function<String, T> deserializer);
 	}
 
 	/**
@@ -204,6 +212,13 @@ public class FileUtils
 				}
 				return retval;
 			}
+
+			@Override
+			public <T> Supplier<T> with(Function<String, T> deserializer)
+			{
+				return () -> deserializer.apply(this.get());
+			}
+
 		};
 	}
 

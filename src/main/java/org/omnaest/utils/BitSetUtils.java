@@ -516,4 +516,20 @@ public class BitSetUtils
 
 		};
 	}
+
+	public static BitSet valueOf(byte... values)
+	{
+		BitSet bitSet = new BitSet();
+
+		if (values != null)
+		{
+			int frameSize = Byte.SIZE;
+			for (int frameIndex = 0; frameIndex < values.length; frameIndex++)
+			{
+				frame(bitSet, frameSize, frameIndex).set(toBitSet(values[frameIndex]));
+			}
+		}
+
+		return bitSet;
+	}
 }

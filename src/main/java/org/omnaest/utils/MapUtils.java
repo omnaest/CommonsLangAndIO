@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.omnaest.utils.element.ModifiableUnaryLeftAndRight;
 import org.omnaest.utils.element.UnaryLeftAndRight;
@@ -91,8 +92,39 @@ public class MapUtils
 
 		public <K2, V2> MapBuilder<K2, V2> putAll(Map<K2, V2> map);
 
+		/**
+		 * Merges two given {@link List}s into the {@link Map} where one {@link List} is the source of the keys and one {@link List} the source of the values,
+		 * which are both joined in the order given in the {@link List}s
+		 * 
+		 * @param keys
+		 * @param values
+		 * @return
+		 */
+		public <K2, V2> MapBuilder<K2, V2> putAll(List<K2> keys, List<V2> values);
+
+		/**
+		 * Merges two given {@link Stream}s into the {@link Map} where the key {@link Stream} and value {@link Stream} elements are joined in their incoming
+		 * order.
+		 * 
+		 * @param keys
+		 * @param values
+		 * @return
+		 */
+		public <K2, V2> MapBuilder<K2, V2> putAll(Stream<K2> keys, Stream<V2> values);
+
+		/**
+		 * Defines the {@link Map} factory used to build the {@link Map}
+		 * 
+		 * @param mapFactory
+		 * @return
+		 */
 		public <K2, V2> MapBuilder<K2, V2> useFactory(Supplier<Map<K2, V2>> mapFactory);
 
+		/**
+		 * Builds the {@link Map}
+		 * 
+		 * @return
+		 */
 		public <K2 extends K, V2 extends V> Map<K2, V2> build();
 
 	}
@@ -119,6 +151,20 @@ public class MapUtils
 				{
 					this.map.putAll(map);
 				}
+				return (MapBuilder<K2, V2>) this;
+			}
+
+			@Override
+			public <K2, V2> MapBuilder<K2, V2> putAll(List<K2> keyList, List<V2> valueList)
+			{
+				return this.putAll(keyList.stream(), valueList.stream());
+			}
+
+			@Override
+			public <K2, V2> MapBuilder<K2, V2> putAll(Stream<K2> keys, Stream<V2> values)
+			{
+				StreamUtils	.merge(keys, values)
+							.forEach(lar -> this.put(lar.getLeft(), lar.getRight()));
 				return (MapBuilder<K2, V2>) this;
 			}
 
