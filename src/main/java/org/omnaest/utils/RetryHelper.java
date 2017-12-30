@@ -28,70 +28,92 @@ import java.util.concurrent.TimeUnit;
 public class RetryHelper
 {
 
-	public static interface RetryOperation
-	{
-		public void run() throws Exception;
-	}
+    public static interface RetryOperation
+    {
+        public void run() throws Exception;
+    }
 
-	public static interface RetryGetOperation<E>
-	{
-		public E run() throws Exception;
-	}
+    public static interface RetryGetOperation<E>
+    {
+        public E run() throws Exception;
+    }
 
-	/**
-	 * Similar to {@link #retry(int, int, TimeUnit, RetryGetOperation)}
-	 * 
-	 * @param times
-	 * @param durationInBetween
-	 * @param timeUnit
-	 * @param operation
-	 * @throws Exception
-	 */
-	public static void retry(int times, int durationInBetween, TimeUnit timeUnit, RetryOperation operation) throws Exception
-	{
-		retry(times, durationInBetween, timeUnit, () ->
-		{
-			operation.run();
-			return null;
-		});
-	}
+    /**
+     * Similar to {@link #retry(int, int, TimeUnit, RetryGetOperation)}
+     * 
+     * @param times
+     * @param durationInBetween
+     * @param timeUnit
+     * @param operation
+     * @throws Exception
+     */
+    public static void retry(int times, int durationInBetween, TimeUnit timeUnit, RetryOperation operation) throws Exception
+    {
+        retry(times, durationInBetween, timeUnit, () ->
+        {
+            operation.run();
+            return null;
+        });
+    }
 
-	/**
-	 * Retries a given {@link RetryGetOperation} the given number of time and waits the given duration in between
-	 * 
-	 * @param times
-	 * @param durationInBetween
-	 * @param timeUnit
-	 * @param operation
-	 * @return
-	 * @throws Exception
-	 */
-	public static <E> E retry(int times, int durationInBetween, TimeUnit timeUnit, RetryGetOperation<E> operation) throws Exception
-	{
-		E retval = null;
+    /**
+     * Retries the {@link RetryOperation} an unlimited number of times
+     * 
+     * @see #retry(int, int, TimeUnit, RetryOperation)
+     * @param durationInBetween
+     * @param timeUnit
+     * @param operation
+     * @throws Exception
+     */
+    public static void retryUnlimited(int durationInBetween, TimeUnit timeUnit, RetryOperation operation)
+    {
+        try
+        {
+            retry(Integer.MAX_VALUE, durationInBetween, timeUnit, operation);
+        }
+        catch (Exception e)
+        {
+            throw new IllegalStateException(e);
+        }
+    }
 
-		for (int ii = 0; ii < times; ii++)
-		{
-			try
-			{
-				//
-				retval = operation.run();
+    /**
+     * Retries a given {@link RetryGetOperation} the given number of time and waits the given duration in between
+     * 
+     * @param times
+     * @param durationInBetween
+     * @param timeUnit
+     * @param operation
+     * @return
+     * @throws Exception
+     */
+    public static <E> E retry(int times, int durationInBetween, TimeUnit timeUnit, RetryGetOperation<E> operation) throws Exception
+    {
+        E retval = null;
 
-				//
-				break;
-			} catch (Exception e)
-			{
-				if (ii >= times - 1)
-				{
-					throw e;
-				}
-				else
-				{
-					ThreadUtils.sleepSilently(durationInBetween, timeUnit);
-				}
-			}
-		}
+        for (int ii = 0; ii < times; ii++)
+        {
+            try
+            {
+                //
+                retval = operation.run();
 
-		return retval;
-	}
+                //
+                break;
+            }
+            catch (Exception e)
+            {
+                if (ii >= times - 1)
+                {
+                    throw e;
+                }
+                else
+                {
+                    ThreadUtils.sleepSilently(durationInBetween, timeUnit);
+                }
+            }
+        }
+
+        return retval;
+    }
 }

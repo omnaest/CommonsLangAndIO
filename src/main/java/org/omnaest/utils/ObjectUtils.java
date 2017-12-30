@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -33,113 +34,131 @@ import org.omnaest.utils.ExceptionUtils.RuntimeExceptionHandler;
  */
 public class ObjectUtils
 {
-	private static final List<Class<?>> primitiveTypes = Arrays.asList(	Long.class, Integer.class, Short.class, Byte.class, Double.class, Float.class,
-																		Character.class, Boolean.class);
+    private static final List<Class<?>> primitiveTypes = Arrays.asList(Long.class, Integer.class, Short.class, Byte.class, Double.class, Float.class,
+                                                                       Character.class, Boolean.class);
 
-	/**
-	 * Returns true if the given type is a primitive or {@link String}
-	 * 
-	 * @param type
-	 * @return
-	 */
-	public static boolean isPrimitiveOrString(Class<?> type)
-	{
-		return type != null && (isPrimitiveType(type) || String.class.isAssignableFrom(type));
-	}
+    /**
+     * Returns true if the given type is a primitive or {@link String}
+     * 
+     * @param type
+     * @return
+     */
+    public static boolean isPrimitiveOrString(Class<?> type)
+    {
+        return type != null && (isPrimitiveType(type) || String.class.isAssignableFrom(type));
+    }
 
-	/**
-	 * Returns true if the given type is a primitive
-	 * 
-	 * @param type
-	 * @return
-	 */
-	private static boolean isPrimitiveType(Class<?> type)
-	{
-		return type != null && (type.isPrimitive() || primitiveTypes.stream()
-																	.anyMatch(itype -> itype.isAssignableFrom(type)));
-	}
+    /**
+     * Returns true if the given type is a primitive
+     * 
+     * @param type
+     * @return
+     */
+    private static boolean isPrimitiveType(Class<?> type)
+    {
+        return type != null && (type.isPrimitive() || primitiveTypes.stream()
+                                                                    .anyMatch(itype -> itype.isAssignableFrom(type)));
+    }
 
-	/**
-	 * Returns the default object if the given primary object is null
-	 * 
-	 * @param object
-	 * @param defaultObject
-	 * @return
-	 */
-	public static <E> E defaultIfNull(E object, E defaultObject)
-	{
-		return object != null ? object : defaultObject;
-	}
+    /**
+     * Returns the default object if the given primary object is null
+     * 
+     * @param object
+     * @param defaultObject
+     * @return
+     */
+    public static <E> E defaultIfNull(E object, E defaultObject)
+    {
+        return object != null ? object : defaultObject;
+    }
 
-	/**
-	 * Returns the element from the {@link Supplier#get()} if the test object is not null
-	 * 
-	 * @param testObject
-	 * @param supplier
-	 * @return
-	 */
-	public static <E, T> E getIfNotNull(T testObject, Supplier<E> supplier)
-	{
-		return testObject != null ? supplier.get() : null;
-	}
+    /**
+     * Returns the element from the {@link Supplier#get()} if the test object is not null
+     * 
+     * @param testObject
+     * @param supplier
+     * @return
+     */
+    public static <E, T> E getIfNotNull(T testObject, Supplier<E> supplier)
+    {
+        return testObject != null ? supplier.get() : null;
+    }
 
-	/**
-	 * Similar to {@link #getOrDefaultIfNotNull(Object, Function, Function)}
-	 * 
-	 * @param testObject
-	 * @param supplier
-	 * @param defaultSupplier
-	 * @return
-	 */
-	public static <E, T> E getOrDefaultIfNotNull(T testObject, Supplier<E> supplier, Supplier<E> defaultSupplier)
-	{
-		return testObject != null ? supplier.get() : defaultSupplier.get();
-	}
+    /**
+     * Similar to {@link #getOrDefaultIfNotNull(Object, Function, Function)}
+     * 
+     * @param testObject
+     * @param supplier
+     * @param defaultSupplier
+     * @return
+     */
+    public static <E, T> E getOrDefaultIfNotNull(T testObject, Supplier<E> supplier, Supplier<E> defaultSupplier)
+    {
+        return testObject != null ? supplier.get() : defaultSupplier.get();
+    }
 
-	/**
-	 * Similar to {@link #getIfNotNull(Object, Supplier)} but takes a {@link Function} as argument which gets the test object supplier
-	 * 
-	 * @param testObject
-	 * @param supplier
-	 * @return
-	 */
-	public static <E, T> E getIfNotNull(T testObject, Function<T, E> supplier)
-	{
-		return testObject != null ? supplier.apply(testObject) : null;
-	}
+    /**
+     * Similar to {@link #getIfNotNull(Object, Supplier)} but takes a {@link Function} as argument which gets the test object supplier
+     * 
+     * @param testObject
+     * @param supplier
+     * @return
+     */
+    public static <E, T> E getIfNotNull(T testObject, Function<T, E> supplier)
+    {
+        return testObject != null ? supplier.apply(testObject) : null;
+    }
 
-	/**
-	 * If the given test object is not null the supplier {@link Function} is called otherwise the default supplier {@link Function}
-	 * 
-	 * @param testObject
-	 * @param supplier
-	 * @param defaultSupplier
-	 * @return
-	 */
-	public static <E, T> E getOrDefaultIfNotNull(T testObject, Function<T, E> supplier, Function<T, E> defaultSupplier)
-	{
-		return testObject != null ? supplier.apply(testObject) : defaultSupplier.apply(testObject);
-	}
+    /**
+     * If the given test object is not null the supplier {@link Function} is called otherwise the default supplier {@link Function}
+     * 
+     * @param testObject
+     * @param supplier
+     * @param defaultSupplier
+     * @return
+     */
+    public static <E, T> E getOrDefaultIfNotNull(T testObject, Function<T, E> supplier, Function<T, E> defaultSupplier)
+    {
+        return testObject != null ? supplier.apply(testObject) : defaultSupplier.apply(testObject);
+    }
 
-	/**
-	 * Returns the {@link Supplier#get()} element and catches any {@link Exception} thrown by the {@link Supplier}
-	 * 
-	 * @see ExceptionUtils#executeSilent(Operation, RuntimeExceptionHandler)
-	 * @param supplier
-	 * @return {@link Supplier#get()} or null in the case of any {@link Exception}
-	 */
-	public static <E> E getCatchingException(Supplier<E> supplier)
-	{
-		E retval = null;
+    /**
+     * Returns the {@link Supplier#get()} element and catches any {@link Exception} thrown by the {@link Supplier}
+     * 
+     * @see #getCatchingException(Supplier, Consumer)
+     * @see ExceptionUtils#executeSilent(Operation, RuntimeExceptionHandler)
+     * @param supplier
+     * @return {@link Supplier#get()} or null in the case of any {@link Exception}
+     */
+    public static <E> E getCatchingException(Supplier<E> supplier)
+    {
+        Consumer<Exception> exceptionHandler = null;
+        return getCatchingException(supplier, exceptionHandler);
+    }
 
-		try
-		{
-			retval = supplier.get();
-		} catch (Exception e)
-		{
-			//do nothing
-		}
+    /**
+     * Returns the {@link Supplier#get()} element and catches any occuring {@link Exception} and providing it to the given {@link Consumer}
+     * 
+     * @see #getCatchingException(Supplier)
+     * @param supplier
+     * @param exceptionHandler
+     * @return
+     */
+    public static <E> E getCatchingException(Supplier<E> supplier, Consumer<Exception> exceptionHandler)
+    {
+        E retval = null;
 
-		return retval;
-	}
+        try
+        {
+            retval = supplier.get();
+        } catch (Exception e)
+        {
+            if (exceptionHandler != null)
+            {
+                exceptionHandler.accept(e);
+            }
+        }
+
+        return retval;
+    }
 }
