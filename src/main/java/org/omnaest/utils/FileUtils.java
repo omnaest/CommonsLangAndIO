@@ -161,7 +161,8 @@ public class FileUtils
                     {
                         org.apache.commons.io.FileUtils.deleteQuietly(file);
                     }
-                } catch (IOException e)
+                }
+                catch (IOException e)
                 {
                     throw new FileAccessException(e);
                 }
@@ -212,7 +213,8 @@ public class FileUtils
                     {
                         retval = org.apache.commons.io.FileUtils.readFileToString(file, this.charset);
                     }
-                } catch (IOException e)
+                }
+                catch (IOException e)
                 {
                     throw new FileAccessException(e);
                 }
@@ -344,7 +346,8 @@ public class FileUtils
                                      try
                                      {
                                          return org.apache.commons.io.FileUtils.readFileToString(file, this.encoding);
-                                     } catch (IOException e)
+                                     }
+                                     catch (IOException e)
                                      {
                                          throw new FileAccessRuntimeException(e);
                                      }
@@ -362,7 +365,8 @@ public class FileUtils
                                      {
                                          return org.apache.commons.io.FileUtils.readLines(file, this.encoding)
                                                                                .stream();
-                                     } catch (IOException e)
+                                     }
+                                     catch (IOException e)
                                      {
                                          throw new FileAccessRuntimeException(e);
                                      }
@@ -397,7 +401,6 @@ public class FileUtils
         try (Writer writer = new FileWriterWithEncoding(file, encoding))
         {
             writeOperation.accept(writer);
-            writer.flush();
         }
     }
 

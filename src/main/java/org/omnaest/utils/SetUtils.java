@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,34 +31,41 @@ import java.util.stream.Collectors;
  */
 public class SetUtils
 {
-	@SafeVarargs
-	public static <E> Set<E> merge(Collection<E>... collections)
-	{
-		return Arrays	.asList(collections)
-						.stream()
-						.filter(collection -> collection != null)
-						.flatMap(collection -> collection.stream())
-						.collect(Collectors.toSet());
-	}
+    @SafeVarargs
+    public static <E> Set<E> merge(Collection<E>... collections)
+    {
+        return Arrays.asList(collections)
+                     .stream()
+                     .filter(collection -> collection != null)
+                     .flatMap(collection -> collection.stream())
+                     .collect(Collectors.toSet());
+    }
 
-	public static <E> E last(Set<E> set)
-	{
-		E retval = null;
-		for (E element : set)
-		{
-			retval = element;
-		}
-		return retval;
-	}
+    public static <E> E last(Set<E> set)
+    {
+        E retval = null;
+        for (E element : set)
+        {
+            retval = element;
+        }
+        return retval;
+    }
 
-	public static <E> E first(Set<E> set)
-	{
-		E retval = null;
-		if (set != null && !set.isEmpty())
-		{
-			retval = set.iterator()
-						.next();
-		}
-		return retval;
-	}
+    public static <E> E first(Set<E> set)
+    {
+        E retval = null;
+        if (set != null && !set.isEmpty())
+        {
+            retval = set.iterator()
+                        .next();
+        }
+        return retval;
+    }
+
+    public static <E> Set<E> addToNew(Set<E> set, E element)
+    {
+        Set<E> retset = set != null ? new LinkedHashSet<>(set) : new LinkedHashSet<>();
+        retset.add(element);
+        return retset;
+    }
 }
