@@ -18,6 +18,10 @@
 */
 package org.omnaest.utils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
@@ -26,6 +30,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.IOUtils;
 import org.omnaest.utils.iterator.StringIterator;
 
 /**
@@ -162,5 +167,20 @@ public class StringUtils
                            .findIn(str)
                            .get()
                            .map(match -> match.getMatchRegion());
+    }
+
+    /**
+     * Translates the given {@link InputStream} to a {@link String} using the given {@link Charset}
+     * 
+     * @see StandardCharsets
+     * @see IOUtils#toString(InputStream, Charset)
+     * @param inputStream
+     * @param charset
+     * @return
+     * @throws IOException
+     */
+    public static String toString(InputStream inputStream, Charset charset) throws IOException
+    {
+        return IOUtils.toString(inputStream, charset);
     }
 }
