@@ -21,6 +21,7 @@ package org.omnaest.utils.map;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Decorator of a {@link Map} instance
@@ -31,9 +32,15 @@ import java.util.Set;
  */
 public class MapDecorator<K, V> implements Map<K, V>
 {
-    protected Map<K, V> map;
+    protected Supplier<Map<K, V>> map;
 
     public MapDecorator(Map<K, V> map)
+    {
+        super();
+        this.map = () -> map;
+    }
+
+    public MapDecorator(Supplier<Map<K, V>> map)
     {
         super();
         this.map = map;
@@ -42,85 +49,99 @@ public class MapDecorator<K, V> implements Map<K, V>
     @Override
     public int size()
     {
-        return this.map.size();
+        return this.map.get()
+                       .size();
     }
 
     @Override
     public boolean isEmpty()
     {
-        return this.map.isEmpty();
+        return this.map.get()
+                       .isEmpty();
     }
 
     @Override
     public boolean containsKey(Object key)
     {
-        return this.map.containsKey(key);
+        return this.map.get()
+                       .containsKey(key);
     }
 
     @Override
     public boolean containsValue(Object value)
     {
-        return this.map.containsValue(value);
+        return this.map.get()
+                       .containsValue(value);
     }
 
     @Override
     public V get(Object key)
     {
-        return this.map.get(key);
+        return this.map.get()
+                       .get(key);
     }
 
     @Override
     public V put(K key, V value)
     {
-        return this.map.put(key, value);
+        return this.map.get()
+                       .put(key, value);
     }
 
     @Override
     public V remove(Object key)
     {
-        return this.map.remove(key);
+        return this.map.get()
+                       .remove(key);
     }
 
     @Override
     public void putAll(Map<? extends K, ? extends V> m)
     {
-        this.map.putAll(m);
+        this.map.get()
+                .putAll(m);
     }
 
     @Override
     public void clear()
     {
-        this.map.clear();
+        this.map.get()
+                .clear();
     }
 
     @Override
     public Set<K> keySet()
     {
-        return this.map.keySet();
+        return this.map.get()
+                       .keySet();
     }
 
     @Override
     public Collection<V> values()
     {
-        return this.map.values();
+        return this.map.get()
+                       .values();
     }
 
     @Override
     public Set<java.util.Map.Entry<K, V>> entrySet()
     {
-        return this.map.entrySet();
+        return this.map.get()
+                       .entrySet();
     }
 
     @Override
     public boolean equals(Object o)
     {
-        return this.map.equals(o);
+        return this.map.get()
+                       .equals(o);
     }
 
     @Override
     public int hashCode()
     {
-        return this.map.hashCode();
+        return this.map.get()
+                       .hashCode();
     }
 
 }
