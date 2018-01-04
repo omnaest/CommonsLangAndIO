@@ -35,8 +35,10 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.omnaest.utils.FileUtils.BatchFileReader.BatchFileReaderLoaded;
 
@@ -47,16 +49,132 @@ import org.omnaest.utils.FileUtils.BatchFileReader.BatchFileReaderLoaded;
  */
 public class FileUtils
 {
+
+    private static abstract class AbstractFileContentConsumer<E, FCC extends FileContentConsumer<E, FCC>> implements FileContentConsumer<E, FCC>
+    {
+        protected File    file;
+        protected Charset charset = StandardCharsets.UTF_8;
+
+        public AbstractFileContentConsumer(File file)
+        {
+            super();
+            this.file = file;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public FCC using(Charset charset)
+        {
+            this.charset = charset;
+            return (FCC) this;
+        }
+
+        @Override
+        public FCC usingUTF8()
+        {
+            return this.using(StandardCharsets.UTF_8);
+        }
+
+        @Override
+        public <T> Consumer<T> with(Function<T, E> serializer)
+        {
+            return serializationObject -> this.accept(serializer.apply(serializationObject));
+        }
+    }
+
+    private static class FileStringContentConsumerImpl extends AbstractFileContentConsumer<String, FileStringContentConsumer>
+            implements FileStringContentConsumer
+    {
+        private FileStringContentConsumerImpl(File file)
+        {
+            super(file);
+        }
+
+        @Override
+        public void accept(String data)
+        {
+            try
+            {
+                if (data != null)
+                {
+                    org.apache.commons.io.FileUtils.write(this.file, data, this.charset);
+                }
+                else
+                {
+                    org.apache.commons.io.FileUtils.deleteQuietly(this.file);
+                }
+            }
+            catch (IOException e)
+            {
+                throw new FileAccessException(e);
+            }
+
+        }
+
+    }
+
+    private static class FileStreamContentConsumerImpl extends AbstractFileContentConsumer<Stream<String>, FileStreamContentConsumer>
+            implements FileStreamContentConsumer
+    {
+        private FileStreamContentConsumerImpl(File file)
+        {
+            super(file);
+        }
+
+        @Override
+        public void accept(Stream<String> data)
+        {
+            try
+            {
+                if (data != null)
+                {
+                    org.apache.commons.io.FileUtils.writeLines(this.file, this.charset.toString(), data.collect(Collectors.toList()));
+                }
+                else
+                {
+                    org.apache.commons.io.FileUtils.deleteQuietly(this.file);
+                }
+            }
+            catch (IOException e)
+            {
+                throw new FileAccessException(e);
+            }
+
+        }
+
+    }
+
     /**
      * {@link Consumer} of {@link String} which will be written into the underlying {@link File}
      * 
      * @author omnaest
      */
-    public static interface FileStringContentConsumer extends Consumer<String>
+    public static interface FileStringContentConsumer extends FileContentConsumer<String, FileStringContentConsumer>
     {
-        public FileStringContentConsumer using(Charset charset);
 
-        public FileStringContentConsumer usingUTF8();
+    }
+
+    /**
+     * {@link Consumer} of a {@link Stream} of {@link String} lines which will write into an underlying {@link File}
+     * 
+     * @author omnaest
+     */
+    public static interface FileStreamContentConsumer extends FileContentConsumer<Stream<String>, FileStreamContentConsumer>
+    {
+
+    }
+
+    /**
+     * {@link Consumer} which writes into an underlying {@link File}
+     * 
+     * @author omnaest
+     * @param <E>
+     */
+    public static interface FileContentConsumer<E, FCC extends FileContentConsumer<E, FCC>> extends Consumer<E>
+    {
+        public FCC using(Charset charset);
+
+        public FCC usingUTF8();
 
         /**
          * Writes the given {@link String} to the underlying {@link File}.<br>
@@ -67,7 +185,7 @@ public class FileUtils
          *             for any {@link IOException}
          */
         @Override
-        public void accept(String data);
+        public void accept(E data);
 
         /**
          * Returns a {@link Consumer} which will consume the input of the given {@link Function} which produces the {@link String} result given to the current
@@ -76,7 +194,7 @@ public class FileUtils
          * @param serializer
          * @return
          */
-        public <T> Consumer<T> with(Function<T, String> serializer);
+        public <T> Consumer<T> with(Function<T, E> serializer);
     }
 
     /**
@@ -131,51 +249,18 @@ public class FileUtils
      */
     public static FileStringContentConsumer toConsumer(File file)
     {
-        return new FileStringContentConsumer()
-        {
-            private Charset charset = StandardCharsets.UTF_8;
+        return new FileStringContentConsumerImpl(file);
+    }
 
-            @Override
-            public FileStringContentConsumer using(Charset charset)
-            {
-                this.charset = charset;
-                return this;
-            }
-
-            @Override
-            public FileStringContentConsumer usingUTF8()
-            {
-                return this.using(StandardCharsets.UTF_8);
-            }
-
-            @Override
-            public void accept(String data)
-            {
-                try
-                {
-                    if (data != null)
-                    {
-                        org.apache.commons.io.FileUtils.write(file, data, this.charset);
-                    }
-                    else
-                    {
-                        org.apache.commons.io.FileUtils.deleteQuietly(file);
-                    }
-                }
-                catch (IOException e)
-                {
-                    throw new FileAccessException(e);
-                }
-
-            }
-
-            @Override
-            public <T> Consumer<T> with(Function<T, String> serializer)
-            {
-                return serializationObject -> this.accept(serializer.apply(serializationObject));
-            }
-
-        };
+    /**
+     * Returns a {@link FileStreamContentConsumer} for the given {@link File}
+     * 
+     * @param file
+     * @return
+     */
+    public static FileStreamContentConsumer toStreamConsumer(File file)
+    {
+        return new FileStreamContentConsumerImpl(file);
     }
 
     /**
@@ -436,5 +521,43 @@ public class FileUtils
         {
             return readerFunction.apply(reader);
         }
+    }
+
+    /**
+     * Returns the lines of a {@link File} as {@link Stream}
+     * 
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    public static Stream<String> toLineStream(File file) throws IOException
+    {
+        return toLineStream(file, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Returns a {@link Stream} of lines for the given {@link File}
+     * 
+     * @param file
+     * @param charset
+     * @return
+     * @throws IOException
+     */
+    public static Stream<String> toLineStream(File file, Charset charset) throws IOException
+    {
+        LineIterator iterator = org.apache.commons.io.FileUtils.lineIterator(file, charset.toString());
+        return StreamUtils.fromIterator(iterator)
+                          .onClose(() ->
+                          {
+                              try
+                              {
+                                  iterator.close();
+                              }
+                              catch (IOException e)
+                              {
+                                  throw new IllegalStateException(e);
+                              }
+                          });
+
     }
 }
