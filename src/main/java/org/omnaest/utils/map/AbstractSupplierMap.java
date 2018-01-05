@@ -72,6 +72,7 @@ public class AbstractSupplierMap<K, V, SK extends Supplier<K>, SV extends Suppli
                 v -> v);
     }
 
+    @Override
     public boolean isUsingSoftReferenceCache()
     {
         return this.usingSoftReferenceCache;
@@ -82,7 +83,8 @@ public class AbstractSupplierMap<K, V, SK extends Supplier<K>, SV extends Suppli
      * 
      * @return
      */
-    public AbstractSupplierMap<K, V, SK, SV> useSoftReferenceCache()
+    @Override
+    public SupplierMap<K, V, SK, SV> useSoftReferenceCache()
     {
         return this.useSoftReferenceCache(true);
     }
@@ -93,7 +95,8 @@ public class AbstractSupplierMap<K, V, SK extends Supplier<K>, SV extends Suppli
      * @param enabled
      * @return
      */
-    public AbstractSupplierMap<K, V, SK, SV> useSoftReferenceCache(boolean enabled)
+    @Override
+    public SupplierMap<K, V, SK, SV> useSoftReferenceCache(boolean enabled)
     {
         this.usingSoftReferenceCache = enabled;
         this.applySoftReferenceCache();

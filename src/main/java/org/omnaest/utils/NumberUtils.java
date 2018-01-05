@@ -56,16 +56,28 @@ public class NumberUtils
         public String format(double value);
 
         /**
-         * Formates the given {@link Float} value
+         * Formats the given {@link Float} value
          * 
          * @param value
          * @return
          */
         public String format(float value);
 
+        /**
+         * Formats the given {@link Long} value
+         * 
+         * @param value
+         * @return
+         */
+        public String format(long value);
+
         public NumberFormatter withMinimumFractionDigits(int minimumFractionDigits);
 
         public NumberFormatter withMaximumFractionDigits(int maximumFractionDigits);
+
+        public NumberFormatter withMaximumIntegerDigits(int maximumIntegerDigits);
+
+        public NumberFormatter withMinimumIntegerDigits(int minimumIntegerDigits);
 
         public NumberFormatter withThousandSeparator();
 
@@ -75,6 +87,7 @@ public class NumberUtils
          * @return
          */
         public NumberFormatter withPercentage();
+
     }
 
     /**
@@ -89,6 +102,8 @@ public class NumberUtils
             private Locale                         locale                = Locale.US;
             private Integer                        minimumFractionDigits = null;
             private Integer                        maximumFractionDigits = null;
+            private Integer                        minimumIntegerDigits  = null;
+            private Integer                        maximumIntegerDigits  = null;
             private boolean                        useThousandSeparator  = false;
             private Function<Locale, NumberFormat> formatterFactory      = locale ->
                                                                          {
@@ -122,6 +137,20 @@ public class NumberUtils
             }
 
             @Override
+            public NumberFormatter withMinimumIntegerDigits(int minimumIntegerDigits)
+            {
+                this.minimumIntegerDigits = minimumIntegerDigits;
+                return this;
+            }
+
+            @Override
+            public NumberFormatter withMaximumIntegerDigits(int maximumIntegerDigits)
+            {
+                this.maximumIntegerDigits = maximumIntegerDigits;
+                return this;
+            }
+
+            @Override
             public NumberFormatter withMinimumFractionDigits(int minimumFractionDigits)
             {
                 this.minimumFractionDigits = minimumFractionDigits;
@@ -142,12 +171,21 @@ public class NumberUtils
                            .format(value);
             }
 
+            @Override
+            public String format(long value)
+            {
+                return this.createNumberFormatInstance()
+                           .format(value);
+            }
+
             private NumberFormat createNumberFormatInstance()
             {
                 NumberFormat retval = this.formatterFactory.apply(this.locale);
 
                 retval.setMinimumFractionDigits(ObjectUtils.defaultIfNull(this.minimumFractionDigits, 0));
                 retval.setMaximumFractionDigits(ObjectUtils.defaultIfNull(this.maximumFractionDigits, 20));
+                retval.setMinimumIntegerDigits(ObjectUtils.defaultIfNull(this.minimumIntegerDigits, 0));
+                retval.setMaximumIntegerDigits(ObjectUtils.defaultIfNull(this.maximumIntegerDigits, Integer.MAX_VALUE));
                 retval.setGroupingUsed(this.useThousandSeparator);
                 return retval;
             }
