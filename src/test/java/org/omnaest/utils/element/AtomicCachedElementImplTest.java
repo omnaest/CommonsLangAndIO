@@ -27,18 +27,29 @@ import org.junit.Test;
 
 public class AtomicCachedElementImplTest
 {
-	private Iterator<String>		elements		= Arrays.asList("1", "2", "3")
-															.iterator();
-	private CachedElement<String>	cachedElement	= CachedElement.of(() -> this.elements.next());
+    private Iterator<String>      elements      = Arrays.asList("1", "2", "3")
+                                                        .iterator();
+    private CachedElement<String> cachedElement = CachedElement.of(() -> this.elements.next());
 
-	@Test
-	public void testGet() throws Exception
-	{
-		assertEquals("1", this.cachedElement.get());
-		assertEquals("1", this.cachedElement.get());
+    @Test
+    public void testGet() throws Exception
+    {
+        assertEquals("1", this.cachedElement.get());
+        assertEquals("1", this.cachedElement.get());
 
-		assertEquals("2", this.cachedElement.reset()
-											.get());
-	}
+        assertEquals("2", this.cachedElement.reset()
+                                            .get());
+    }
+
+    @Test
+    public void testGetSoftReference() throws Exception
+    {
+        CachedElement<String> softCachedElement = this.cachedElement.asSoftReferenceCachedElement();
+        assertEquals("1", softCachedElement.get());
+        assertEquals("1", softCachedElement.get());
+
+        assertEquals("2", softCachedElement.reset()
+                                           .get());
+    }
 
 }

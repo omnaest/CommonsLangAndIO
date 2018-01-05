@@ -18,7 +18,7 @@
 */
 package org.omnaest.utils.element;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.lang.ref.SoftReference;
 import java.util.function.Supplier;
 
 /**
@@ -26,12 +26,12 @@ import java.util.function.Supplier;
  * @author omnaest
  * @param <E>
  */
-public class AtomicCachedElementImpl<E> implements CachedElement<E>
+public class SoftCachedElementImpl<E> implements CachedElement<E>
 {
-    private AtomicReference<E> element = new AtomicReference<E>();
-    private Supplier<E>        supplier;
+    private volatile SoftReference<E> element = new SoftReference<E>(null);
+    private Supplier<E>               supplier;
 
-    public AtomicCachedElementImpl(Supplier<E> supplier)
+    public SoftCachedElementImpl(Supplier<E> supplier)
     {
         super();
         this.supplier = supplier;
@@ -49,7 +49,8 @@ public class AtomicCachedElementImpl<E> implements CachedElement<E>
     {
         if (retval == null)
         {
-            retval = this.element.updateAndGet(e -> e == null ? this.supplier.get() : e);
+            retval = this.supplier.get();
+            this.element = new SoftReference<E>(retval);
         }
         return retval;
     }
@@ -57,7 +58,8 @@ public class AtomicCachedElementImpl<E> implements CachedElement<E>
     @Override
     public E getAndReset()
     {
-        E retval = this.element.getAndSet(null);
+        E retval = this.element.get();
+        this.element.clear();
         retval = this.getFromSupplierIfNull(retval);
         return retval;
     }
@@ -65,20 +67,14 @@ public class AtomicCachedElementImpl<E> implements CachedElement<E>
     @Override
     public CachedElement<E> reset()
     {
-        this.element.set(null);
+        this.element.clear();
         return this;
     }
 
     @Override
     public String toString()
     {
-        return "AtomicCachedElementImpl [element=" + this.element + ", supplier=" + this.supplier + "]";
-    }
-
-    @Override
-    public Supplier<E> asNonCachedSupplier()
-    {
-        return this.supplier;
+        return "SoftCachedElementImpl [element=" + this.element + ", supplier=" + this.supplier + "]";
     }
 
 }

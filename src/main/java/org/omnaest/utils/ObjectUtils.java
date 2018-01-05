@@ -63,6 +63,7 @@ public class ObjectUtils
     /**
      * Returns the default object if the given primary object is null
      * 
+     * @see #defaultIfNull(Object, Supplier)
      * @param object
      * @param defaultObject
      * @return
@@ -70,6 +71,18 @@ public class ObjectUtils
     public static <E> E defaultIfNull(E object, E defaultObject)
     {
         return object != null ? object : defaultObject;
+    }
+
+    /**
+     * Returns the object if it is not null or the {@link Supplier#get()} object
+     * 
+     * @param object
+     * @param defaultObjectSupplier
+     * @return
+     */
+    public static <E> E defaultIfNull(E object, Supplier<E> defaultObjectSupplier)
+    {
+        return object != null ? object : defaultObjectSupplier.get();
     }
 
     /**
@@ -151,7 +164,8 @@ public class ObjectUtils
         try
         {
             retval = supplier.get();
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             if (exceptionHandler != null)
             {

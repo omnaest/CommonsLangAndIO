@@ -18,6 +18,7 @@
 */
 package org.omnaest.utils.element;
 
+import java.lang.ref.SoftReference;
 import java.util.function.Supplier;
 
 /**
@@ -29,34 +30,57 @@ import java.util.function.Supplier;
  */
 public interface CachedElement<E> extends Supplier<E>
 {
-	/**
-	 * Returns the cached element of if the cached element is null will resolve a new element from the {@link Supplier}
-	 */
-	@Override
-	public E get();
+    /**
+     * Returns the cached element of if the cached element is null will resolve a new element from the {@link Supplier}
+     */
+    @Override
+    public E get();
 
-	/**
-	 * Returns the cached element and {@link #reset()}s the cache
-	 * 
-	 * @return
-	 */
-	public E getAndReset();
+    /**
+     * Returns the cached element and {@link #reset()}s the cache
+     * 
+     * @return
+     */
+    public E getAndReset();
 
-	/**
-	 * Resets the cache, so that the next call to {@link #get()} will resolve a new element from the {@link Supplier}
-	 * 
-	 * @return
-	 */
-	public CachedElement<E> reset();
+    /**
+     * Resets the cache, so that the next call to {@link #get()} will resolve a new element from the {@link Supplier}
+     * 
+     * @return
+     */
+    public CachedElement<E> reset();
 
-	/**
-	 * Returns a new {@link CachedElement}
-	 * 
-	 * @param supplier
-	 * @return
-	 */
-	public static <E> CachedElement<E> of(Supplier<E> supplier)
-	{
-		return new AtomicCachedElementImpl<>(supplier);
-	}
+    /**
+     * Returns the underlying {@link Supplier} of the {@link CachedElement}
+     * 
+     * @return
+     */
+    public default Supplier<E> asNonCachedSupplier()
+    {
+        return () -> this.getAndReset();
+    }
+
+    /**
+     * Returns a new {@link CachedElement} which uses a {@link SoftReference} and is not {@link Thread}safe
+     * 
+     * @param supplier
+     * @return
+     */
+    public default CachedElement<E> asSoftReferenceCachedElement()
+    {
+        return new SoftCachedElementImpl<>(this.asNonCachedSupplier());
+    }
+
+    /**
+     * Returns a new {@link CachedElement} which is {@link Thread}safe
+     * 
+     * @see #softOf(Supplier)
+     * @param supplier
+     * @return
+     */
+    public static <E> CachedElement<E> of(Supplier<E> supplier)
+    {
+        return new AtomicCachedElementImpl<>(supplier);
+    }
+
 }

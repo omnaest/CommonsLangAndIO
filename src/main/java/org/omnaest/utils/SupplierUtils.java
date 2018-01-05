@@ -1,9 +1,12 @@
 package org.omnaest.utils;
 
+import java.lang.ref.SoftReference;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Supplier;
+
+import org.omnaest.utils.element.CachedElement;
 
 /**
  * Helper for operations regarding {@link Supplier}s
@@ -47,4 +50,19 @@ public class SupplierUtils
     {
         return () -> iterator.hasNext() ? iterator.next() : null;
     }
+
+    /**
+     * Returns a {@link Supplier} around the given {@link Supplier} where a {@link SoftReference} does cache the {@link Object} returned from
+     * {@link Supplier#get()}
+     * 
+     * @see CachedElement#asSoftReferenceCachedElement()
+     * @param supplier
+     * @return
+     */
+    public static <E> Supplier<E> toSoftReferenceCached(Supplier<E> supplier)
+    {
+        return CachedElement.of(supplier)
+                            .asSoftReferenceCachedElement();
+    }
+
 }

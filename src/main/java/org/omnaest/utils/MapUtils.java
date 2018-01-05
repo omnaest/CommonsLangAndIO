@@ -26,15 +26,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.omnaest.utils.element.ModifiableUnaryLeftAndRight;
 import org.omnaest.utils.element.UnaryLeftAndRight;
+import org.omnaest.utils.map.AbstractSupplierMap;
+import org.omnaest.utils.map.AbstractSupplierMap.KeySupplier;
 import org.omnaest.utils.map.CRUDMap;
 import org.omnaest.utils.map.SupplierMap;
-import org.omnaest.utils.map.SupplierMap.KeySupplier;
 
 public class MapUtils
 {
@@ -267,15 +269,18 @@ public class MapUtils
         return crudMap.toMap();
     }
 
-    public static <K, V> Map<? extends Supplier<K>, ? extends Supplier<V>> newConcurrentHashSupplierMap()
+    public static <K, V, SK extends Supplier<K>, SV extends Supplier<V>> SupplierMap<K, V, SK, SV> newConcurrentHashSupplierMap(Function<Supplier<K>, SK> keySupplierFunction,
+                                                                                                                                Function<Supplier<V>, SV> valueSupplierFunction)
     {
-        Map<SupplierMap.KeySupplier<K>, Supplier<V>> map = new ConcurrentHashMap<>();
-        return newSupplierMap(() -> map);
+        Map<AbstractSupplierMap.KeySupplier<K>, Supplier<V>> map = new ConcurrentHashMap<>();
+        return newSupplierMap(() -> map, keySupplierFunction, valueSupplierFunction);
     }
 
-    public static <K, V> Map<Supplier<K>, Supplier<V>> newSupplierMap(Supplier<Map<KeySupplier<K>, Supplier<V>>> mapFactory)
+    public static <K, V, SK extends Supplier<K>, SV extends Supplier<V>> SupplierMap<K, V, SK, SV> newSupplierMap(Supplier<Map<KeySupplier<K>, Supplier<V>>> mapFactory,
+                                                                                                                  Function<Supplier<K>, SK> keySupplierFunction,
+                                                                                                                  Function<Supplier<V>, SV> valueSupplierFunction)
     {
-        return new SupplierMap<>(mapFactory);
+        return new AbstractSupplierMap<>(mapFactory, keySupplierFunction, valueSupplierFunction);
     }
 
 }
