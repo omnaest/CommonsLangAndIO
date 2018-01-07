@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,6 +87,19 @@ public class StringUtilsTest
         assertEquals("def", ngrams.get(3));
         assertEquals("efg", ngrams.get(4));
         assertEquals("fgh", ngrams.get(5));
+    }
+
+    @Test
+    public void testRouteByMatch() throws Exception
+    {
+        List<String> result = StringUtils.routeByMatch(Arrays.asList("a", "b", "c", "a", "c", "d")
+                                                             .stream(),
+                                                       "a")
+                                         .map(tokens -> tokens.collect(Collectors.joining()))
+                                         .collect(Collectors.toList());
+        assertEquals(2, result.size());
+        assertEquals("abc", result.get(0));
+        assertEquals("acd", result.get(1));
     }
 
 }

@@ -482,4 +482,66 @@ public class StreamUtils
         return fromIterator(IteratorUtils.removeIterator(collection));
     }
 
+    private static class RoutedCollector<E> implements Predicate<E>, Function<E, Stream<E>>
+    {
+        private List<E>      tokens      = null;
+        private List<E>      readyTokens = null;
+        private Predicate<E> matcher;
+        private boolean      first       = true;
+
+        public RoutedCollector(Predicate<E> matcher)
+        {
+            super();
+            this.matcher = matcher;
+        }
+
+        @Override
+        public boolean test(E t)
+        {
+            boolean matches = this.matcher.test(t);
+            boolean test = !this.first && matches;
+
+            //
+            if (matches)
+            {
+                this.first = false;
+
+                this.readyTokens = this.tokens;
+                this.tokens = null;
+            }
+
+            //
+            if (this.tokens == null)
+            {
+                this.tokens = new ArrayList<>();
+            }
+            this.tokens.add(t);
+
+            //
+            return test;
+        }
+
+        @Override
+        public Stream<E> apply(E t)
+        {
+            Stream<E> stream = this.readyTokens.stream();
+            this.readyTokens = null;
+            return stream;
+        }
+
+        public Stream<Stream<E>> getUnreturned()
+        {
+            return this.tokens == null ? Stream.empty() : Stream.of(this.tokens.stream());
+        }
+    }
+
+    public static <E> Stream<Stream<E>> routeByMatch(Stream<E> stream, Predicate<E> matcher)
+    {
+        RoutedCollector<E> collector = new RoutedCollector<>(matcher);
+        return Stream.concat(stream.filter(collector)
+                                   .map(collector),
+                             Stream.of(1)
+                                   .flatMap(i -> collector.getUnreturned()));
+    }
+
 }

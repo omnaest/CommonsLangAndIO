@@ -208,4 +208,9 @@ public class StringUtils
                                                .collect(Collectors.joining()))
                           .filter(token -> token.length() == size);
     }
+
+    public static Stream<Stream<String>> routeByMatch(Stream<String> tokens, String regEx)
+    {
+        return StreamUtils.routeByMatch(tokens, token -> token.matches(regEx));
+    }
 }

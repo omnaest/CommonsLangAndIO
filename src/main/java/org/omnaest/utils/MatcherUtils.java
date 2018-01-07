@@ -37,208 +37,223 @@ import org.omnaest.utils.element.cached.CachedElement;
  */
 public class MatcherUtils
 {
-	/**
-	 * @see #of(Pattern)
-	 * @author omnaest
-	 */
-	public static interface MatchFinderBuilder
-	{
-		public MatchFinder of(Pattern pattern);
-	}
+    /**
+     * @see #of(Pattern)
+     * @author omnaest
+     */
+    public static interface MatchFinderBuilder
+    {
+        public MatchFinder of(Pattern pattern);
+    }
 
-	/**
-	 * @see #findIn(String)
-	 * @see #matchAgainst(String)
-	 * @author omnaest
-	 */
-	public static interface MatchFinder
-	{
-		public Optional<Stream<Match>> findIn(String input);
+    /**
+     * @see #findIn(String)
+     * @see #matchAgainst(String)
+     * @author omnaest
+     */
+    public static interface MatchFinder
+    {
+        public Optional<Stream<Match>> findIn(String input);
 
-		public Optional<Stream<Match>> matchAgainst(String input);
-	}
+        public Optional<Stream<Match>> matchAgainst(String input);
+    }
 
-	/**
-	 * @see #getStart()
-	 * @see #getEnd()
-	 * @see #getGroups()
-	 * @author omnaest
-	 */
-	public static interface Match
-	{
-		/**
-		 * Returns the index of the first matched character
-		 * 
-		 * @return
-		 */
-		public int getStart();
+    /**
+     * @see #getStart()
+     * @see #getEnd()
+     * @see #getGroups()
+     * @author omnaest
+     */
+    public static interface Match
+    {
+        /**
+         * Returns the index of the first matched character
+         * 
+         * @return
+         */
+        public int getStart();
 
-		/**
-		 * Returns the index of the last matched character
-		 * 
-		 * @return
-		 */
-		public int getEnd();
+        /**
+         * Returns the index of the last matched character
+         * 
+         * @return
+         */
+        public int getEnd();
 
-		/**
-		 * Returns a {@link String} where the matched area is replaced by the given replacement
-		 * 
-		 * @param replacement
-		 * @return
-		 */
-		public String replaceWith(String replacement);
+        /**
+         * Returns a {@link String} where the matched area is replaced by the given replacement
+         * 
+         * @param replacement
+         * @return
+         */
+        public String replaceWith(String replacement);
 
-		/**
-		 * Returns a {@link RegionReplacer} for the {@link Match#getStart()} and {@link Match#getEnd()} region
-		 * 
-		 * @param replacements
-		 * @return
-		 */
-		public RegionReplacer asReplacer(Supplier<String> replacements);
+        /**
+         * Returns a {@link RegionReplacer} for the {@link Match#getStart()} and {@link Match#getEnd()} region
+         * 
+         * @param replacements
+         * @return
+         */
+        public RegionReplacer asReplacer(Supplier<String> replacements);
 
-		/**
-		 * Returns a {@link Map} containing all the match groups. <br>
-		 * <br>
-		 * 0 = whole match group
-		 * 1,2,... specific match groups
-		 * 
-		 * @return
-		 */
-		public Map<Integer, String> getGroups();
+        /**
+         * Returns a {@link Map} containing all the match groups. <br>
+         * <br>
+         * 0 = whole match group
+         * 1,2,... specific match groups
+         * 
+         * @return
+         */
+        public Map<Integer, String> getGroups();
 
-		/**
-		 * Returns the input region between {@link #getStart()} and {@link #getEnd()} inclusive
-		 * 
-		 * @return
-		 */
-		public String getMatchRegion();
+        /**
+         * Returns the input region between {@link #getStart()} and {@link #getEnd()} inclusive
+         * 
+         * @return
+         */
+        public String getMatchRegion();
 
-	}
+        /**
+         * Returns the tokens of the matched subgroups
+         * 
+         * @return
+         */
+        public Stream<String> getSubGroupsAsStream();
 
-	/**
-	 * Replaces a start to end region for a given {@link String} by a replacement
-	 * 
-	 * @author omnaest
-	 */
-	public static interface RegionReplacer extends Function<String, String>
-	{
-	}
+    }
 
-	public static MatchFinderBuilder matcher()
-	{
-		return new MatchFinderBuilder()
-		{
-			@Override
-			public MatchFinder of(Pattern pattern)
-			{
-				return new MatchFinder()
-				{
-					@Override
-					public Optional<Stream<Match>> matchAgainst(String input)
-					{
-						Matcher matcher = pattern.matcher(input);
-						Supplier<Boolean> matcherAction = () -> matcher.matches();
-						return this.determineMatches(input, matcher, matcherAction);
-					}
+    /**
+     * Replaces a start to end region for a given {@link String} by a replacement
+     * 
+     * @author omnaest
+     */
+    public static interface RegionReplacer extends Function<String, String>
+    {
+    }
 
-					@Override
-					public Optional<Stream<Match>> findIn(String input)
-					{
-						Matcher matcher = pattern.matcher(input);
-						Supplier<Boolean> matcherAction = () -> matcher.find();
-						return this.determineMatches(input, matcher, matcherAction);
-					}
+    public static MatchFinderBuilder matcher()
+    {
+        return new MatchFinderBuilder()
+        {
+            @Override
+            public MatchFinder of(Pattern pattern)
+            {
+                return new MatchFinder()
+                {
+                    @Override
+                    public Optional<Stream<Match>> matchAgainst(String input)
+                    {
+                        Matcher matcher = pattern.matcher(input);
+                        Supplier<Boolean> matcherAction = () -> matcher.matches();
+                        return this.determineMatches(input, matcher, matcherAction);
+                    }
 
-					private Optional<Stream<Match>> determineMatches(String input, Matcher matcher, Supplier<Boolean> matcherAction)
-					{
-						Iterator<Match> iterator = new Iterator<Match>()
-						{
-							private CachedElement<Match> matchCache = CachedElement.of(() -> this.determineNextMatch());
+                    @Override
+                    public Optional<Stream<Match>> findIn(String input)
+                    {
+                        Matcher matcher = pattern.matcher(input);
+                        Supplier<Boolean> matcherAction = () -> matcher.find();
+                        return this.determineMatches(input, matcher, matcherAction);
+                    }
 
-							@Override
-							public boolean hasNext()
-							{
-								return this.matchCache.get() != null;
-							}
+                    private Optional<Stream<Match>> determineMatches(String input, Matcher matcher, Supplier<Boolean> matcherAction)
+                    {
+                        Iterator<Match> iterator = new Iterator<Match>()
+                        {
+                            private CachedElement<Match> matchCache = CachedElement.of(() -> this.determineNextMatch());
 
-							private Match determineNextMatch()
-							{
-								Match retval = null;
+                            @Override
+                            public boolean hasNext()
+                            {
+                                return this.matchCache.get() != null;
+                            }
 
-								if (matcherAction.get())
-								{
-									int start = matcher.start();
-									int end = matcher.end();
+                            private Match determineNextMatch()
+                            {
+                                Match retval = null;
 
-									Map<Integer, String> groups = new LinkedHashMap<>();
-									for (int ii = 0; ii <= matcher.groupCount(); ii++)
-									{
-										groups.put(ii, matcher.group(ii));
-									}
+                                if (matcherAction.get())
+                                {
+                                    int start = matcher.start();
+                                    int end = matcher.end();
 
-									retval = new Match()
-									{
-										@Override
-										public int getStart()
-										{
-											return start;
-										}
+                                    Map<Integer, String> groups = new LinkedHashMap<>();
+                                    for (int ii = 0; ii <= matcher.groupCount(); ii++)
+                                    {
+                                        groups.put(ii, matcher.group(ii));
+                                    }
 
-										@Override
-										public int getEnd()
-										{
-											return end - 1;
-										}
+                                    retval = new Match()
+                                    {
+                                        @Override
+                                        public int getStart()
+                                        {
+                                            return start;
+                                        }
 
-										@Override
-										public String getMatchRegion()
-										{
-											return input.substring(start, end);
-										}
+                                        @Override
+                                        public int getEnd()
+                                        {
+                                            return end - 1;
+                                        }
 
-										@Override
-										public Map<Integer, String> getGroups()
-										{
-											return groups;
-										}
+                                        @Override
+                                        public String getMatchRegion()
+                                        {
+                                            return input.substring(start, end);
+                                        }
 
-										@Override
-										public String replaceWith(String replacement)
-										{
-											return this	.asReplacer(() -> replacement)
-														.apply(input);
-										}
+                                        @Override
+                                        public Map<Integer, String> getGroups()
+                                        {
+                                            return groups;
+                                        }
 
-										@Override
-										public RegionReplacer asReplacer(Supplier<String> replacements)
-										{
-											return input -> StringUtils	.builder()
-																		.append(input.substring(0, start))
-																		.append(replacements.get())
-																		.append(input.substring(end))
-																		.toString();
-										}
+                                        @Override
+                                        public Stream<String> getSubGroupsAsStream()
+                                        {
+                                            return groups.values()
+                                                         .stream()
+                                                         .skip(1);
+                                        }
 
-									};
-								}
+                                        @Override
+                                        public String replaceWith(String replacement)
+                                        {
+                                            return this.asReplacer(() -> replacement)
+                                                       .apply(input);
+                                        }
 
-								return retval;
-							}
+                                        @Override
+                                        public RegionReplacer asReplacer(Supplier<String> replacements)
+                                        {
+                                            return input -> StringUtils.builder()
+                                                                       .append(input.substring(0, start))
+                                                                       .append(replacements.get())
+                                                                       .append(input.substring(end))
+                                                                       .toString();
+                                        }
 
-							@Override
-							public Match next()
-							{
-								return this.matchCache.getAndReset();
-							}
+                                    };
+                                }
 
-						};
+                                return retval;
+                            }
 
-						Stream<Match> matches = StreamUtils.fromIterator(iterator);
-						return Optional.of(matches);
-					}
-				};
-			}
+                            @Override
+                            public Match next()
+                            {
+                                return this.matchCache.getAndReset();
+                            }
 
-		};
-	}
+                        };
+
+                        Stream<Match> matches = StreamUtils.fromIterator(iterator);
+                        return Optional.of(matches);
+                    }
+                };
+            }
+
+        };
+    }
 }
