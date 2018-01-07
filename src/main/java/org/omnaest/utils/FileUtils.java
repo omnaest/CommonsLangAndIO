@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.omnaest.utils.FileUtils.BatchFileReader.BatchFileReaderLoaded;
+import org.omnaest.utils.functional.Accessor;
 
 /**
  * Utils regarding {@link File} operations
@@ -559,5 +560,20 @@ public class FileUtils
                               }
                           });
 
+    }
+
+    /**
+     * Returns an {@link Accessor} of the given {@link File}
+     * 
+     * @see #toConsumer(File)
+     * @see #toSupplier(File)
+     * @param file
+     * @return
+     */
+    public static Accessor<String> toAccessor(File file)
+    {
+        Consumer<String> consumer = toConsumer(file);
+        Supplier<String> supplier = toSupplier(file);
+        return Accessor.of(supplier, consumer);
     }
 }
