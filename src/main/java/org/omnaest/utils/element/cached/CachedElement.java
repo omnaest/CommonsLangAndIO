@@ -16,9 +16,11 @@
 
 
 */
-package org.omnaest.utils.element;
+package org.omnaest.utils.element.cached;
 
+import java.io.File;
 import java.lang.ref.SoftReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -61,6 +63,14 @@ public interface CachedElement<E> extends Supplier<E>
     }
 
     /**
+     * Sets a new {@link Supplier} for the cached elements
+     * 
+     * @param supplier
+     * @return
+     */
+    public CachedElement<E> setSupplier(Supplier<E> supplier);
+
+    /**
      * Returns a new {@link CachedElement} which uses a {@link SoftReference} and is not {@link Thread}safe
      * 
      * @param supplier
@@ -69,6 +79,20 @@ public interface CachedElement<E> extends Supplier<E>
     public default CachedElement<E> asSoftReferenceCachedElement()
     {
         return new SoftCachedElementImpl<>(this.asNonCachedSupplier());
+    }
+
+    /**
+     * Adds another cache into the {@link Supplier} source chain.
+     * 
+     * @param file
+     * @param serializer
+     * @param deserializer
+     * @return
+     */
+    public default CachedElement<E> withFileCache(File file, Function<E, String> serializer, Function<String, E> deserializer)
+    {
+        this.setSupplier(new FileCachedElementImpl<E>(this.asNonCachedSupplier(), file, serializer, deserializer));
+        return this;
     }
 
     /**

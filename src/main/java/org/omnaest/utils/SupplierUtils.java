@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Supplier;
 
-import org.omnaest.utils.element.CachedElement;
+import org.omnaest.utils.element.cached.CachedElement;
 
 /**
  * Helper for operations regarding {@link Supplier}s

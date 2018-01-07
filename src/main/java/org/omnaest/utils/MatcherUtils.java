@@ -28,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.omnaest.utils.element.CachedElement;
+import org.omnaest.utils.element.cached.CachedElement;
 
 /**
  * Helper for {@link MatchFinderBuilder} operations

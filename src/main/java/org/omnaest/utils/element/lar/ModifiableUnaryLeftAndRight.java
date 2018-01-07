@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.utils.element;
+package org.omnaest.utils.element.lar;
 
 public class ModifiableUnaryLeftAndRight<E> extends UnaryLeftAndRight<E>
 {

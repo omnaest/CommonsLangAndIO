@@ -31,8 +31,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.omnaest.utils.element.ModifiableUnaryLeftAndRight;
-import org.omnaest.utils.element.UnaryLeftAndRight;
+import org.omnaest.utils.element.lar.ModifiableUnaryLeftAndRight;
+import org.omnaest.utils.element.lar.UnaryLeftAndRight;
 import org.omnaest.utils.map.AbstractSupplierMap;
 import org.omnaest.utils.map.AbstractSupplierMap.KeySupplier;
 import org.omnaest.utils.map.CRUDMap;

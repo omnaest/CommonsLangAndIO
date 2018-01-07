@@ -99,6 +99,17 @@ public class StringUtils
     }
 
     /**
+     * Splits a {@link String} into line tokens
+     * 
+     * @param str
+     * @return
+     */
+    public static Stream<String> splitToStreamByLineSeparator(String str)
+    {
+        return splitToStreamByRegEx(str, "[\n\r]+");
+    }
+
+    /**
      * Returns token frames with a fixed frame size from the original text. E.g. "abcdefghi" -> "abc","def","ghi" for a frame size of 3.
      * 
      * @param frameSize
@@ -165,7 +176,7 @@ public class StringUtils
         return MatcherUtils.matcher()
                            .of(Pattern.compile(regex))
                            .findIn(str)
-                           .get()
+                           .orElse(Stream.empty())
                            .map(match -> match.getMatchRegion());
     }
 
@@ -182,5 +193,19 @@ public class StringUtils
     public static String toString(InputStream inputStream, Charset charset) throws IOException
     {
         return IOUtils.toString(inputStream, charset);
+    }
+
+    public static Stream<String> splitToStreamByMaxLength(String str, int maxLength)
+    {
+        return splitToStreamByRegExFind(str, ".{0," + maxLength + "}").filter(token -> !org.apache.commons.lang3.StringUtils.isEmpty(token));
+    }
+
+    public static Stream<String> splitToNGramsStream(String str, int size)
+    {
+        return StreamUtils.windowed(splitToStream(str), size / 2, size / 2)
+                          .map(window -> window.getAll()
+                                               .stream()
+                                               .collect(Collectors.joining()))
+                          .filter(token -> token.length() == size);
     }
 }

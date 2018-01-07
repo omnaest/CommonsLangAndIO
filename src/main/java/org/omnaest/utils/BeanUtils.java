@@ -34,7 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import org.omnaest.utils.ProxyUtils.MethodAndHandler;
 import org.omnaest.utils.ProxyUtils.MethodHandler;
 import org.omnaest.utils.ReflectionUtils.Method;
-import org.omnaest.utils.element.CachedElement;
+import org.omnaest.utils.element.cached.CachedElement;
 import org.omnaest.utils.map.MapDecorator;
 
 public class BeanUtils

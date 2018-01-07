@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
 import java.util.Arrays;
@@ -254,6 +255,18 @@ public class StreamUtilsTest
                 : null)
                                        .collect(Collectors.toList());
         assertEquals(Arrays.asList("1", "2", "1"), list);
+    }
+
+    @Test
+    public void testRemoveStream() throws Exception
+    {
+        List<String> sourceList = Arrays.asList("a", "b", "c")
+                                        .stream()
+                                        .collect(Collectors.toList());
+        List<String> result = StreamUtils.removeStream(sourceList)
+                                         .collect(Collectors.toList());
+        assertEquals(Arrays.asList("a", "b", "c"), result);
+        assertTrue(sourceList.isEmpty());
     }
 
 }

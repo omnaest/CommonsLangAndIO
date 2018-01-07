@@ -16,37 +16,33 @@
 
 
 */
-package org.omnaest.utils.element;
+package org.omnaest.utils.element.lar;
 
 /**
- * @see LeftAndRight
  * @see IntegerLeftAndRight
- * @see ModifiableUnaryLeftAndRight
  * @author omnaest
- * @param <E>
  */
-public class UnaryLeftAndRight<E> extends LeftAndRight<E, E>
+public class ModifiableIntegerLeftAndRight extends IntegerLeftAndRight
 {
-	public UnaryLeftAndRight(E left, E right)
+	public ModifiableIntegerLeftAndRight()
+	{
+		this(null, null);
+	}
+
+	public ModifiableIntegerLeftAndRight(Integer left, Integer right)
 	{
 		super(left, right);
 	}
 
 	@Override
-	public String toString()
-	{
-		return "UnaryLeftAndRight [left=" + this.left + ", right=" + this.right + "]";
-	}
-
-	@Override
-	protected UnaryLeftAndRight<E> setLeft(E left)
+	public ModifiableIntegerLeftAndRight setLeft(Integer left)
 	{
 		super.setLeft(left);
 		return this;
 	}
 
 	@Override
-	protected UnaryLeftAndRight<E> setRight(E right)
+	public ModifiableIntegerLeftAndRight setRight(Integer right)
 	{
 		super.setRight(right);
 		return this;

@@ -28,6 +28,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -47,7 +48,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.omnaest.utils.element.LeftAndRight;
+import org.omnaest.utils.element.lar.LeftAndRight;
 
 public class StreamUtils
 {
@@ -468,6 +469,17 @@ public class StreamUtils
     public static <E> Stream<E> fromStreamSupplier(Supplier<Stream<E>> supplier)
     {
         return fromSupplier(supplier, s -> s == null).flatMap(stream -> stream != null ? stream : Stream.empty());
+    }
+
+    /**
+     * Returns a {@link Stream} which removes elements from the given {@link Collection} one by one
+     * 
+     * @param collection
+     * @return
+     */
+    public static <E> Stream<E> removeStream(Collection<E> collection)
+    {
+        return fromIterator(IteratorUtils.removeIterator(collection));
     }
 
 }

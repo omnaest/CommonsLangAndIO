@@ -27,7 +27,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
-import org.omnaest.utils.element.UnaryLeftAndRight;
+import org.omnaest.utils.element.lar.UnaryLeftAndRight;
 
 /**
  * @see MapUtils

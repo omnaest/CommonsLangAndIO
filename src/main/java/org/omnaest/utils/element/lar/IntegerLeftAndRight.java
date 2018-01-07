@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.utils.element;
+package org.omnaest.utils.element.lar;
 
 /**
  * @see UnaryLeftAndRight

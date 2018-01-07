@@ -16,7 +16,7 @@
 
 
 */
-package org.omnaest.utils.element;
+package org.omnaest.utils.element.cached;
 
 import static org.junit.Assert.assertEquals;
 

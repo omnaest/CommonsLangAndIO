@@ -16,9 +16,9 @@
 
 
 */
-package org.omnaest.utils.element;
+package org.omnaest.utils.element.cached;
 
-import java.lang.ref.SoftReference;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
@@ -26,15 +26,15 @@ import java.util.function.Supplier;
  * @author omnaest
  * @param <E>
  */
-public class SoftCachedElementImpl<E> implements CachedElement<E>
+public class AtomicCachedElementImpl<E> implements CachedElement<E>
 {
-    private volatile SoftReference<E> element = new SoftReference<E>(null);
-    private Supplier<E>               supplier;
+    private AtomicReference<E>           element  = new AtomicReference<E>();
+    private AtomicReference<Supplier<E>> supplier = new AtomicReference<>();
 
-    public SoftCachedElementImpl(Supplier<E> supplier)
+    public AtomicCachedElementImpl(Supplier<E> supplier)
     {
         super();
-        this.supplier = supplier;
+        this.supplier.set(supplier);
     }
 
     @Override
@@ -49,8 +49,9 @@ public class SoftCachedElementImpl<E> implements CachedElement<E>
     {
         if (retval == null)
         {
-            retval = this.supplier.get();
-            this.element = new SoftReference<E>(retval);
+            retval = this.element.updateAndGet(e -> e == null ? this.supplier.get()
+                                                                             .get()
+                    : e);
         }
         return retval;
     }
@@ -58,8 +59,7 @@ public class SoftCachedElementImpl<E> implements CachedElement<E>
     @Override
     public E getAndReset()
     {
-        E retval = this.element.get();
-        this.element.clear();
+        E retval = this.element.getAndSet(null);
         retval = this.getFromSupplierIfNull(retval);
         return retval;
     }
@@ -67,14 +67,27 @@ public class SoftCachedElementImpl<E> implements CachedElement<E>
     @Override
     public CachedElement<E> reset()
     {
-        this.element.clear();
+        this.element.set(null);
+        return this;
+    }
+
+    @Override
+    public CachedElement<E> setSupplier(Supplier<E> supplier)
+    {
+        this.supplier.set(supplier);
         return this;
     }
 
     @Override
     public String toString()
     {
-        return "SoftCachedElementImpl [element=" + this.element + ", supplier=" + this.supplier + "]";
+        return "AtomicCachedElementImpl [element=" + this.element + ", supplier=" + this.supplier + "]";
+    }
+
+    @Override
+    public Supplier<E> asNonCachedSupplier()
+    {
+        return this.supplier.get();
     }
 
 }

@@ -16,12 +16,13 @@
 
 
 */
-package org.omnaest.utils.element;
+package org.omnaest.utils.element.lar;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
+import org.omnaest.utils.element.lar.IntegerLeftAndRight;
 
 public class IntegerLeftAndRightTest
 {
