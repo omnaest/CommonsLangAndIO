@@ -25,80 +25,132 @@ package org.omnaest.utils;
  */
 public class ExceptionUtils
 {
-	public static interface Operation<R>
-	{
-		public R execute();
-	}
+    public static interface Operation<R>
+    {
+        public R execute();
+    }
 
-	public static interface OperationWithException<R>
-	{
-		public R execute() throws Exception;
-	}
+    public static interface VoidOperationWithException
+    {
+        public void execute() throws Exception;
+    }
 
-	public static interface ExceptionHandler
-	{
-		public void handle(Exception e) throws Exception;
-	}
+    public static interface OperationWithException<R>
+    {
+        public R execute() throws Exception;
+    }
 
-	public static interface RuntimeExceptionHandler
-	{
-		public void handle(RuntimeException e);
-	}
+    public static interface ExceptionHandler
+    {
+        public void handle(Exception e) throws Exception;
+    }
 
-	/**
-	 * Similar to {@link #executeSilent(Operation, RuntimeExceptionHandler...)} but throwing an {@link Exception}
-	 * 
-	 * @param operation
-	 * @param exceptionHandlers
-	 * @return
-	 * @throws Exception
-	 */
-	public static <R> R execute(OperationWithException<R> operation, ExceptionHandler... exceptionHandlers) throws Exception
-	{
-		R retval = null;
+    public static interface RuntimeExceptionHandler
+    {
+        public void handle(RuntimeException e);
+    }
 
-		try
-		{
-			retval = operation.execute();
-		} catch (Exception e)
-		{
-			if (exceptionHandlers != null)
-			{
-				for (ExceptionHandler exceptionHandler : exceptionHandlers)
-				{
-					exceptionHandler.handle(e);
-				}
-			}
-		}
+    /**
+     * Similar to {@link #executeSilent(Operation, RuntimeExceptionHandler...)} but throwing an {@link Exception}
+     * 
+     * @param operation
+     * @param exceptionHandlers
+     * @return
+     * @throws Exception
+     */
+    public static <R> R execute(OperationWithException<R> operation, ExceptionHandler... exceptionHandlers) throws Exception
+    {
+        R retval = null;
 
-		return retval;
-	}
+        try
+        {
+            retval = operation.execute();
+        }
+        catch (Exception e)
+        {
+            if (exceptionHandlers != null)
+            {
+                for (ExceptionHandler exceptionHandler : exceptionHandlers)
+                {
+                    exceptionHandler.handle(e);
+                }
+            }
+        }
 
-	/**
-	 * Executes the given {@link Operation} using the given {@link RuntimeExceptionHandler} to handle any exception
-	 * 
-	 * @param operation
-	 * @param exceptionHandlers
-	 * @return
-	 */
-	public static <R> R executeSilent(Operation<R> operation, RuntimeExceptionHandler... exceptionHandlers)
-	{
-		R retval = null;
+        return retval;
+    }
 
-		try
-		{
-			retval = operation.execute();
-		} catch (RuntimeException e)
-		{
-			if (exceptionHandlers != null)
-			{
-				for (RuntimeExceptionHandler exceptionHandler : exceptionHandlers)
-				{
-					exceptionHandler.handle(e);
-				}
-			}
-		}
+    /**
+     * Similar to {@link #executeSilent(Operation, RuntimeExceptionHandler...)}
+     * 
+     * @param operation
+     * @param exceptionHandlers
+     * @return
+     */
+    public static void executeSilentVoid(VoidOperationWithException operation, ExceptionHandler... exceptionHandlers)
+    {
+        executeSilent((OperationWithException<Void>) () ->
+        {
+            operation.execute();
+            return null;
+        }, exceptionHandlers);
+    }
 
-		return retval;
-	}
+    /**
+     * Executes the given {@link Operation} using the given {@link RuntimeExceptionHandler} to handle any exception
+     * 
+     * @param operation
+     * @param exceptionHandlers
+     * @return
+     */
+    public static <R> R executeSilent(Operation<R> operation, RuntimeExceptionHandler... exceptionHandlers)
+    {
+        R retval = null;
+
+        try
+        {
+            retval = operation.execute();
+        }
+        catch (RuntimeException e)
+        {
+            if (exceptionHandlers != null)
+            {
+                for (RuntimeExceptionHandler exceptionHandler : exceptionHandlers)
+                {
+                    exceptionHandler.handle(e);
+                }
+            }
+        }
+
+        return retval;
+    }
+
+    public static <R> R executeSilent(OperationWithException<R> operation, ExceptionHandler... exceptionHandlers)
+    {
+        R retval = null;
+
+        try
+        {
+            retval = operation.execute();
+        }
+        catch (Exception e)
+        {
+            if (exceptionHandlers != null)
+            {
+                for (ExceptionHandler exceptionHandler : exceptionHandlers)
+                {
+                    try
+                    {
+                        exceptionHandler.handle(e);
+                    }
+                    catch (Exception e1)
+                    {
+                        throw new RuntimeException(e1);
+                    }
+                }
+            }
+        }
+
+        return retval;
+    }
 }

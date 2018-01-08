@@ -22,49 +22,49 @@ import org.junit.Test;
 
 public class ExceptionUtilsTest
 {
-	@Test(expected = Exception.class)
-	public void testExecuteUncatched() throws Exception
-	{
-		ExceptionUtils.execute(() ->
-		{
-			throw new Exception("test");
-		}, e ->
-		{
-			throw e;
-		});
-	}
+    @Test(expected = Exception.class)
+    public void testExecuteUncatched() throws Exception
+    {
+        ExceptionUtils.execute(() ->
+        {
+            throw new Exception("test");
+        }, e ->
+        {
+            throw e;
+        });
+    }
 
-	@Test
-	public void testExcecuteCatched() throws Exception
-	{
-		ExceptionUtils.execute(() ->
-		{
-			throw new Exception("test");
-		}, e ->
-		{
-		});
-	}
+    @Test
+    public void testExcecuteCatched() throws Exception
+    {
+        ExceptionUtils.execute(() ->
+        {
+            throw new Exception("test");
+        }, e ->
+        {
+        });
+    }
 
-	@Test(expected = RuntimeException.class)
-	public void testExecuteSilentUncatched() throws Exception
-	{
-		ExceptionUtils.executeSilent(() ->
-		{
-			throw new RuntimeException("test");
-		}, e ->
-		{
-			throw e;
-		});
-	}
+    @Test(expected = RuntimeException.class)
+    public void testExecuteSilentVoidUncatched() throws Exception
+    {
+        ExceptionUtils.executeSilentVoid(() ->
+        {
+            throw new RuntimeException("test");
+        }, e ->
+        {
+            throw e;
+        });
+    }
 
-	@Test
-	public void testExecuteSilentCatched() throws Exception
-	{
-		ExceptionUtils.executeSilent(() ->
-		{
-			throw new RuntimeException("test");
-		}, e ->
-		{
-		});
-	}
+    @Test
+    public void testExecuteSilentVoidCatched() throws Exception
+    {
+        ExceptionUtils.executeSilentVoid(() ->
+        {
+            throw new RuntimeException("test");
+        }, e ->
+        {
+        });
+    }
 }
