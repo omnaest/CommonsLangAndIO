@@ -56,11 +56,21 @@ public class AtomicCachedElementImpl<E> implements CachedElement<E>
         return retval;
     }
 
+    private E getFromSupplierIfNullWithoutCacheUpdate(E retval)
+    {
+        if (retval == null)
+        {
+            retval = this.supplier.get()
+                                  .get();
+        }
+        return retval;
+    }
+
     @Override
     public E getAndReset()
     {
         E retval = this.element.getAndSet(null);
-        retval = this.getFromSupplierIfNull(retval);
+        retval = this.getFromSupplierIfNullWithoutCacheUpdate(retval);
         return retval;
     }
 
