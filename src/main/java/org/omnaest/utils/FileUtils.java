@@ -316,12 +316,32 @@ public class FileUtils
         };
     }
 
+    /**
+     * Creates a random temp {@link File}
+     * 
+     * @return
+     * @throws IOException
+     */
     public static File createRandomTempFile() throws IOException
     {
         File tempFile = Files.createTempFile("", "")
                              .toFile();
         tempFile.deleteOnExit();
         return tempFile;
+    }
+
+    /**
+     * Creates a random temporary {@link File} directory
+     * 
+     * @return
+     * @throws IOException
+     */
+    public static File createRandomTempDirectory() throws IOException
+    {
+        File tempDirectory = Files.createTempDirectory("")
+                                  .toFile();
+        tempDirectory.deleteOnExit();
+        return tempDirectory;
     }
 
     public static interface BatchFileReader

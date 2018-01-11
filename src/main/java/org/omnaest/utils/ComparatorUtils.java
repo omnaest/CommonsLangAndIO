@@ -250,7 +250,7 @@ public class ComparatorUtils
      */
     public static interface ComparatorBuilder
     {
-        public <T> TypedComparatorBuilder<T> of(Class<T> type);
+        public <T> TypedComparatorBuilder<T> of(Class<? super T> type);
 
         public <T> ExecutableComparatorBuilder<T> of(T o1, T o2);
     }
@@ -322,7 +322,7 @@ public class ComparatorUtils
         return new ComparatorBuilder()
         {
             @Override
-            public <T> TypedComparatorBuilder<T> of(Class<T> type)
+            public <T> TypedComparatorBuilder<T> of(Class<? super T> type)
             {
                 return new TypedComparatorBuilderImpl<>();
             }
@@ -388,6 +388,11 @@ public class ComparatorUtils
                 };
             }
         };
+    }
+
+    public static <E> Comparator<E> reverse(Comparator<E> comparator)
+    {
+        return (e1, e2) -> -1 * comparator.compare(e1, e2);
     }
 
 }
