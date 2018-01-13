@@ -231,4 +231,11 @@ public class MediatedMap<K, V, KS, VS> implements Map<K, V>
         return this.map.hashCode();
     }
 
+    @Override
+    public String toString()
+    {
+        return "MediatedMap [map=" + this.map + ", keyWriteMapper=" + this.keyWriteMapper + ", keyReadMapper=" + this.keyReadMapper + ", valueWriteMapper="
+                + this.valueWriteMapper + ", valueReadMapper=" + this.valueReadMapper + "]";
+    }
+
 }
