@@ -118,18 +118,13 @@ public class MediatedMap<K, V, KS, VS> implements Map<K, V>
     {
         V retval = null;
 
-        try
-        {
-            retval = this.valueReadMapper.backward()
-                                         .apply(this.map.put(this.keyWriteMapper.forward()
-                                                                                .apply(key),
-                                                             this.valueWriteMapper.forward()
-                                                                                  .apply(value)));
-        }
-        catch (ClassCastException e)
-        {
-            //ignore
-        }
+        KS sourceKey = this.keyWriteMapper.forward()
+                                          .apply(key);
+        VS sourceValue = this.valueWriteMapper.forward()
+                                              .apply(value);
+        VS removed = this.map.put(sourceKey, sourceValue);
+        retval = this.valueReadMapper.backward()
+                                     .apply(removed);
 
         return retval;
     }
