@@ -7,25 +7,31 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Wrapper around a {@link ExecutorService} which does {@link #execute()} a given {@link Runnable} only one time if it is multiple times invoked
+ * Wrapper around a {@link ExecutorService} which does {@link #fire()} a given {@link Runnable} only one time if {@link #fire()} is multiple times invoked
  * 
+ * @see #fire()
  * @author omnaest
  */
-public class SynchronizedOnlyOneTimeExecutor
+public class SynchronizedAtLeastOneTimeExecutor
 {
     private AtomicInteger   barrierCounter = new AtomicInteger();
     private Lock            lock           = new ReentrantLock();
     private ExecutorService executorService;
     private Runnable        runnable;
 
-    public SynchronizedOnlyOneTimeExecutor(ExecutorService executorService, Runnable runnable)
+    public SynchronizedAtLeastOneTimeExecutor(ExecutorService executorService, Runnable runnable)
     {
         super();
         this.executorService = executorService;
         this.runnable = runnable;
     }
 
-    public SynchronizedOnlyOneTimeExecutor execute()
+    /**
+     * Fires the execution of the {@link Runnable}
+     * 
+     * @return
+     */
+    public SynchronizedAtLeastOneTimeExecutor fire()
     {
         if (this.barrierCounter.get() <= 0)
         {
@@ -33,10 +39,9 @@ public class SynchronizedOnlyOneTimeExecutor
             {
                 this.barrierCounter.incrementAndGet();
                 this.lock.lock();
+                this.barrierCounter.decrementAndGet();
                 try
                 {
-                    this.barrierCounter.decrementAndGet();
-
                     this.runnable.run();
                 }
                 finally
@@ -49,7 +54,7 @@ public class SynchronizedOnlyOneTimeExecutor
         return this;
     }
 
-    public SynchronizedOnlyOneTimeExecutor shutdown()
+    public SynchronizedAtLeastOneTimeExecutor shutdown()
     {
         this.executorService.shutdown();
         return this;
