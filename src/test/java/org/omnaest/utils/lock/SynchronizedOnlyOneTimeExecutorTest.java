@@ -8,14 +8,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
 
-public class OnlyOneTimeExecutorTest
+public class SynchronizedOnlyOneTimeExecutorTest
 {
 
     @Test
     public void testExecute() throws Exception
     {
         AtomicBoolean state = new AtomicBoolean(false);
-        OnlyOneTimeExecutor executor = new OnlyOneTimeExecutor(Executors.newCachedThreadPool(), () -> state.set(true));
+        SynchronizedOnlyOneTimeExecutor executor = new SynchronizedOnlyOneTimeExecutor(Executors.newCachedThreadPool(), () -> state.set(true));
 
         executor.execute()
                 .shutdown()

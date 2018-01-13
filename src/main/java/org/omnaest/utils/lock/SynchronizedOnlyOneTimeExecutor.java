@@ -11,42 +11,45 @@ import java.util.concurrent.locks.ReentrantLock;
  * 
  * @author omnaest
  */
-public class OnlyOneTimeExecutor
+public class SynchronizedOnlyOneTimeExecutor
 {
     private AtomicInteger   barrierCounter = new AtomicInteger();
     private Lock            lock           = new ReentrantLock();
     private ExecutorService executorService;
     private Runnable        runnable;
 
-    public OnlyOneTimeExecutor(ExecutorService executorService, Runnable runnable)
+    public SynchronizedOnlyOneTimeExecutor(ExecutorService executorService, Runnable runnable)
     {
         super();
         this.executorService = executorService;
         this.runnable = runnable;
     }
 
-    public OnlyOneTimeExecutor execute()
+    public SynchronizedOnlyOneTimeExecutor execute()
     {
         if (this.barrierCounter.get() <= 0)
         {
-            this.barrierCounter.incrementAndGet();
-            this.lock.lock();
-            try
+            this.executorService.submit(() ->
             {
-                this.barrierCounter.decrementAndGet();
+                this.barrierCounter.incrementAndGet();
+                this.lock.lock();
+                try
+                {
+                    this.barrierCounter.decrementAndGet();
 
-                this.executorService.submit(this.runnable);
-            }
-            finally
-            {
-                this.lock.unlock();
-            }
+                    this.runnable.run();
+                }
+                finally
+                {
+                    this.lock.unlock();
+                }
+            });
         }
 
         return this;
     }
 
-    public OnlyOneTimeExecutor shutdown()
+    public SynchronizedOnlyOneTimeExecutor shutdown()
     {
         this.executorService.shutdown();
         return this;
