@@ -33,9 +33,11 @@ import java.util.stream.Stream;
 
 import org.omnaest.utils.element.lar.ModifiableUnaryLeftAndRight;
 import org.omnaest.utils.element.lar.UnaryLeftAndRight;
+import org.omnaest.utils.functional.BidirectionalFunction;
 import org.omnaest.utils.map.AbstractSupplierMap;
 import org.omnaest.utils.map.AbstractSupplierMap.KeySupplier;
 import org.omnaest.utils.map.CRUDMap;
+import org.omnaest.utils.map.MediatedMap;
 import org.omnaest.utils.map.SupplierMap;
 
 public class MapUtils
@@ -267,6 +269,38 @@ public class MapUtils
     public static <K, V> Map<K, V> toMap(CRUDMap<K, V> crudMap)
     {
         return crudMap.toMap();
+    }
+
+    /**
+     * Returns a {@link MediatedMap}
+     * 
+     * @see BidirectionalFunction
+     * @param map
+     * @param keyMapper
+     * @param valueMapper
+     * @return
+     */
+    public static <K, V, KS, VS> Map<K, V> toMediatedMap(Map<KS, VS> map, BidirectionalFunction<K, KS> keyMapper, BidirectionalFunction<V, VS> valueMapper)
+    {
+        return new MediatedMap<>(map, keyMapper, valueMapper);
+    }
+
+    /**
+     * Returns a {@link MediatedMap}
+     * 
+     * @see BidirectionalFunction
+     * @param map
+     * @param keyWriteMapper
+     * @param keyReadMapper
+     * @param valueWriteMapper
+     * @param valueReadMapper
+     * @return
+     */
+    public static <K, V, KS, VS> Map<K, V> toMediatedMap(Map<KS, VS> map, BidirectionalFunction<K, KS> keyWriteMapper,
+                                                         BidirectionalFunction<K, KS> keyReadMapper, BidirectionalFunction<V, VS> valueWriteMapper,
+                                                         BidirectionalFunction<V, VS> valueReadMapper)
+    {
+        return new MediatedMap<>(map, keyWriteMapper, keyReadMapper, valueWriteMapper, valueReadMapper);
     }
 
     public static <K, V, SK extends Supplier<K>, SV extends Supplier<V>> SupplierMap<K, V, SK, SV> newConcurrentHashSupplierMap(Function<Supplier<K>, SK> keySupplierFunction,
