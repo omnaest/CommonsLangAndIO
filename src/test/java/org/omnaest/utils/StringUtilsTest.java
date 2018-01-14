@@ -21,6 +21,7 @@ package org.omnaest.utils;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -100,6 +101,19 @@ public class StringUtilsTest
         assertEquals(2, result.size());
         assertEquals("abc", result.get(0));
         assertEquals("acd", result.get(1));
+    }
+
+    @Test
+    public void testSplitToframedStream() throws Exception
+    {
+        List<String> tokens = StringUtils.splitToframedStream(3, "abcdefghijklm")
+                                         .collect(Collectors.toList());
+        Iterator<String> iterator = tokens.iterator();
+        assertEquals("abc", iterator.next());
+        assertEquals("def", iterator.next());
+        assertEquals("ghi", iterator.next());
+        assertEquals("jkl", iterator.next());
+        assertEquals("m", iterator.next());
     }
 
 }

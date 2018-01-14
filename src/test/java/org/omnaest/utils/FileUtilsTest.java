@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.omnaest.utils.FileUtils.FileStringContentConsumer;
 import org.omnaest.utils.FileUtils.FileStringContentSupplier;
@@ -77,7 +78,8 @@ public class FileUtilsTest
             try
             {
                 writer.write("test");
-            } catch (IOException e)
+            }
+            catch (IOException e)
             {
                 throw new IllegalStateException(e);
             }
@@ -88,12 +90,22 @@ public class FileUtilsTest
             try
             {
                 return reader.readLine();
-            } catch (IOException e)
+            }
+            catch (IOException e)
             {
                 throw new IllegalStateException(e);
             }
         });
         assertEquals("test", object);
+    }
+
+    @Test
+    @Ignore
+    public void testFindFilesOfDirectoryByName() throws Exception
+    {
+        FileUtils.findFilesOfDirectoryByName(new File("C:\\Z\\databases\\genomes_reference\\hg19\\Primary_Assembly\\assembled_chromosomes\\FASTA"),
+                                             "chr[0-9XY]+\\.fa\\.gz")
+                 .forEach(System.out::println);
     }
 
 }

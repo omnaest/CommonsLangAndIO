@@ -22,9 +22,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -122,10 +125,52 @@ public class MapUtils
         /**
          * Defines the {@link Map} factory used to build the {@link Map}
          * 
+         * @see #useMap(Map)
          * @param mapFactory
          * @return
          */
-        public <K2, V2> MapBuilder<K2, V2> useFactory(Supplier<Map<K2, V2>> mapFactory);
+        public <K2, V2> MapBuilder<K2, V2> useFactory(Supplier<? extends Map<K2, V2>> mapFactory);
+
+        /**
+         * Similar to {@link #useFactory(Supplier)} but for {@link SortedMap}s
+         * 
+         * @param mapFactory
+         * @return
+         */
+        public <K2, V2> SortedMapBuilder<K2, V2> useFactoryOfSortedMap(Supplier<SortedMap<K2, V2>> mapFactory);
+
+        /**
+         * Uses the given {@link Map} instance to build the result
+         * 
+         * @see #useFactory(Supplier)
+         * @param map
+         * @return
+         */
+        public <K2, V2> MapBuilder<K2, V2> useMap(Map<K2, V2> map);
+
+        /**
+         * Similar to {@link #useMap(Map)} but for {@link SortedMap}s
+         * 
+         * @param map
+         * @return
+         */
+        public <K2, V2> SortedMapBuilder<K2, V2> useMap(SortedMap<K2, V2> map);
+
+        /**
+         * Similar to {@link #useMap(SortedMap)} with a {@link TreeMap} instance
+         * 
+         * @return
+         */
+        public <K2, V2> SortedMapBuilder<K2, V2> useSortedMap();
+
+        /**
+         * Similar to {@link #useSortedMap()} with a given {@link Comparator}
+         * 
+         * @see ComparatorUtils#builder()
+         * @param comparator
+         * @return
+         */
+        public <K2, V2> SortedMapBuilder<K2, V2> useSortedMap(Comparator<K> comparator);
 
         /**
          * Builds the {@link Map}
@@ -136,71 +181,190 @@ public class MapUtils
 
     }
 
+    public static interface SortedMapBuilder<K, V> extends MapBuilder<K, V>
+    {
+
+        @Override
+        public <K2 extends K, V2 extends V> SortedMap<K2, V2> build();
+    }
+
     @SuppressWarnings("unchecked")
+    private static class MapBuilderImpl implements MapBuilder<Object, Object>
+    {
+        private Map<Object, Object>           map        = new LinkedHashMap<>();
+        private Supplier<Map<Object, Object>> mapFactory = null;
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> put(K2 key, V2 value)
+        {
+            this.map.put(key, value);
+            return (MapBuilder<K2, V2>) this;
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> putAll(Map<K2, V2> map)
+        {
+            if (map != null)
+            {
+                this.map.putAll(map);
+            }
+            return (MapBuilder<K2, V2>) this;
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> putAll(List<K2> keyList, List<V2> valueList)
+        {
+            return this.putAll(keyList.stream(), valueList.stream());
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> putAll(Stream<K2> keys, Stream<V2> values)
+        {
+            StreamUtils.merge(keys, values)
+                       .forEach(lar -> this.put(lar.getLeft(), lar.getRight()));
+            return (MapBuilder<K2, V2>) this;
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> useFactory(Supplier<? extends Map<K2, V2>> mapFactory)
+        {
+            this.mapFactory = () -> (Map<Object, Object>) mapFactory.get();
+            return (MapBuilder<K2, V2>) this;
+        }
+
+        @Override
+        public <K2, V2> SortedMapBuilder<K2, V2> useFactoryOfSortedMap(Supplier<SortedMap<K2, V2>> mapFactory)
+        {
+            this.useFactory(mapFactory);
+            return new SortedMapBuilderImpl<K2, V2>((MapBuilder<K2, V2>) this);
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> useMap(Map<K2, V2> map)
+        {
+            return this.useFactory(() -> map);
+        }
+
+        @Override
+        public <K2, V2> SortedMapBuilder<K2, V2> useMap(SortedMap<K2, V2> map)
+        {
+            return this.useFactoryOfSortedMap(() -> map);
+        }
+
+        @Override
+        public <K2, V2> SortedMapBuilder<K2, V2> useSortedMap()
+        {
+            return this.useFactoryOfSortedMap(() -> new TreeMap<>());
+        }
+
+        @Override
+        public <K2, V2> SortedMapBuilder<K2, V2> useSortedMap(Comparator<Object> comparator)
+        {
+            return this.useFactoryOfSortedMap(() -> new TreeMap<>(comparator));
+        }
+
+        @Override
+        public <K2, V2> Map<K2, V2> build()
+        {
+            Map<K2, V2> retmap;
+
+            if (this.mapFactory != null)
+            {
+                retmap = (Map<K2, V2>) this.mapFactory.get();
+                retmap.putAll((Map<? extends K2, ? extends V2>) this.map);
+            }
+            else
+            {
+                retmap = (Map<K2, V2>) this.map;
+            }
+
+            return retmap;
+        }
+    }
+
+    private static class SortedMapBuilderImpl<K, V> implements SortedMapBuilder<K, V>
+    {
+        private MapBuilder<K, V> builder;
+
+        public SortedMapBuilderImpl(MapBuilder<K, V> builder)
+        {
+            super();
+            this.builder = builder;
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> put(K2 key, V2 value)
+        {
+            return this.builder.put(key, value);
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> putAll(Map<K2, V2> map)
+        {
+            return this.builder.putAll(map);
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> putAll(List<K2> keys, List<V2> values)
+        {
+            return this.builder.putAll(keys, values);
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> putAll(Stream<K2> keys, Stream<V2> values)
+        {
+            return this.builder.putAll(keys, values);
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> useFactory(Supplier<? extends Map<K2, V2>> mapFactory)
+        {
+            return this.builder.useFactory(mapFactory);
+        }
+
+        @Override
+        public <K2, V2> SortedMapBuilder<K2, V2> useFactoryOfSortedMap(Supplier<SortedMap<K2, V2>> mapFactory)
+        {
+            return this.builder.useFactoryOfSortedMap(mapFactory);
+        }
+
+        @Override
+        public <K2, V2> MapBuilder<K2, V2> useMap(Map<K2, V2> map)
+        {
+            return this.builder.useMap(map);
+        }
+
+        @Override
+        public <K2, V2> SortedMapBuilder<K2, V2> useMap(SortedMap<K2, V2> map)
+        {
+            return this.builder.useMap(map);
+        }
+
+        @Override
+        public <K2, V2> SortedMapBuilder<K2, V2> useSortedMap()
+        {
+            return this.builder.useSortedMap();
+        }
+
+        @Override
+        public <K2, V2> SortedMapBuilder<K2, V2> useSortedMap(Comparator<K> comparator)
+        {
+            return this.builder.useSortedMap(comparator);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <K2 extends K, V2 extends V> SortedMap<K2, V2> build()
+        {
+            SortedMap<K2, V2> map = (SortedMap<K2, V2>) this.builder.build();
+            return map;
+        }
+
+    }
+
     public static MapBuilder<?, ?> builder()
     {
-        return new MapBuilder<Object, Object>()
-        {
-            private Map<Object, Object>           map        = new LinkedHashMap<>();
-            private Supplier<Map<Object, Object>> mapFactory = null;
-
-            @Override
-            public <K2, V2> MapBuilder<K2, V2> put(K2 key, V2 value)
-            {
-                this.map.put(key, value);
-                return (MapBuilder<K2, V2>) this;
-            }
-
-            @Override
-            public <K2, V2> MapBuilder<K2, V2> putAll(Map<K2, V2> map)
-            {
-                if (map != null)
-                {
-                    this.map.putAll(map);
-                }
-                return (MapBuilder<K2, V2>) this;
-            }
-
-            @Override
-            public <K2, V2> MapBuilder<K2, V2> putAll(List<K2> keyList, List<V2> valueList)
-            {
-                return this.putAll(keyList.stream(), valueList.stream());
-            }
-
-            @Override
-            public <K2, V2> MapBuilder<K2, V2> putAll(Stream<K2> keys, Stream<V2> values)
-            {
-                StreamUtils.merge(keys, values)
-                           .forEach(lar -> this.put(lar.getLeft(), lar.getRight()));
-                return (MapBuilder<K2, V2>) this;
-            }
-
-            @Override
-            public <K2, V2> MapBuilder<K2, V2> useFactory(Supplier<Map<K2, V2>> mapFactory)
-            {
-                this.mapFactory = () -> (Map<Object, Object>) mapFactory.get();
-                return (MapBuilder<K2, V2>) this;
-            }
-
-            @Override
-            public <K2, V2> Map<K2, V2> build()
-            {
-                Map<K2, V2> retmap;
-
-                if (this.mapFactory != null)
-                {
-                    retmap = (Map<K2, V2>) this.mapFactory.get();
-                    retmap.putAll((Map<? extends K2, ? extends V2>) this.map);
-                }
-                else
-                {
-                    retmap = (Map<K2, V2>) this.map;
-                }
-
-                return retmap;
-            }
-
-        };
+        return new MapBuilderImpl();
     }
 
     @SuppressWarnings("unchecked")

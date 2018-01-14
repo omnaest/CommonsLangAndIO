@@ -1,9 +1,12 @@
 package org.omnaest.utils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+
+import org.omnaest.utils.collectors.ResultMappedCollector;
 
 /**
  * Helper around {@link Collector}s
@@ -20,5 +23,13 @@ public class CollectorUtils
     public static <K, V> Collector<Map.Entry<K, V>, ?, Map<K, V>> appendToMap(Map<K, V> map)
     {
         return Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue(), (e1, e2) -> e1, () -> map);
+    }
+
+    public static <E, K> Collector<E, ?, Map<K, E>> groupingByUnique(Function<E, K> classifier)
+    {
+        Function<Map<K, List<E>>, Map<K, E>> mapper = result -> result.entrySet()
+                                                                      .stream()
+                                                                      .collect(toValueMappedMap(entry -> ListUtils.first(entry.getValue())));
+        return new ResultMappedCollector<>(Collectors.groupingBy(classifier), mapper);
     }
 }

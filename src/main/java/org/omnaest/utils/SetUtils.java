@@ -68,4 +68,22 @@ public class SetUtils
         retset.add(element);
         return retset;
     }
+
+    /**
+     * Makes a copy of the given {@link Set} and removes the provided elements from the new {@link Set}
+     * 
+     * @param set
+     * @param elements
+     * @return new {@link LinkedHashSet}
+     */
+    @SafeVarargs
+    public static <E> Set<E> copyAndRemove(Set<E> set, E... elements)
+    {
+        Set<E> retset = set != null ? new LinkedHashSet<>(set) : new LinkedHashSet<>();
+        if (elements != null)
+        {
+            retset.removeAll(Arrays.asList(elements));
+        }
+        return retset;
+    }
 }

@@ -192,6 +192,12 @@ public class ComparatorUtils
         }
 
         @Override
+        public <C extends Comparable<C>> ComparatorBuilderLoaded<T> withIdentity()
+        {
+            return this.with(i -> i);
+        }
+
+        @Override
         public <C extends Comparable<C>, I> ComparatorBuilderLoaded<T> with(Function<T, I> compareFunction, Function<I, C> mapFunction)
         {
             return this.with(compareFunction.andThen(mapFunction));
@@ -224,6 +230,12 @@ public class ComparatorUtils
                 {
                     return this.and((Comparator<T>) (o1, o2) -> compareFunction.apply(o1)
                                                                                .compareTo(compareFunction.apply(o2)));
+                }
+
+                @Override
+                public <C extends Comparable<C>> ComparatorBuilderLoaded<T> andIdentity()
+                {
+                    return this.and(i -> i);
                 }
 
                 @Override
@@ -261,6 +273,8 @@ public class ComparatorUtils
 
         public <C extends Comparable<C>> ComparatorBuilderLoaded<T> with(Function<T, C> compareFunction);
 
+        public <C extends Comparable<C>> ComparatorBuilderLoaded<T> withIdentity();
+
         public <C extends Comparable<C>, I> ComparatorBuilderLoaded<T> with(Function<T, I> compareFunction, Function<I, C> mapFunction);
 
     }
@@ -270,6 +284,8 @@ public class ComparatorUtils
         public ExecutableComparatorBuilderLoaded<T> with(Comparator<T> comparator);
 
         public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> with(Function<T, C> compareFunction);
+
+        public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> withIdentity();
 
         public <C extends Comparable<C>, I> ExecutableComparatorBuilderLoaded<T> with(Function<T, I> compareFunction, Function<I, C> mapFunction);
     }
@@ -290,6 +306,8 @@ public class ComparatorUtils
         public ComparatorBuilderLoaded<T> and(Comparator<T> comparator);
 
         public <C extends Comparable<C>> ComparatorBuilderLoaded<T> and(Function<T, C> compareFunction);
+
+        public <C extends Comparable<C>> ComparatorBuilderLoaded<T> andIdentity();
 
         public <C extends Comparable<C>, I> ComparatorBuilderLoaded<T> and(Function<T, I> compareFunction, Function<I, C> mapFunction);
 
@@ -378,6 +396,12 @@ public class ComparatorUtils
                     {
                         return this.with((Comparator<T>) (o1, o2) -> compareFunction.apply(o1)
                                                                                     .compareTo(compareFunction.apply(o2)));
+                    }
+
+                    @Override
+                    public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> withIdentity()
+                    {
+                        return this.with(i -> i);
                     }
 
                     @Override

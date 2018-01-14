@@ -29,14 +29,27 @@ import org.junit.Test;
 public class SetUtilsTest
 {
 
-	@Test
-	public void testMerge() throws Exception
-	{
-		Set<String> merge = SetUtils.merge(Arrays.asList("a", "b"), Arrays.asList("b", "c"));
-		assertEquals(	Arrays.asList("a", "b", "c")
-							.stream()
-							.collect(Collectors.toSet()),
-						merge);
-	}
+    @Test
+    public void testMerge() throws Exception
+    {
+        Set<String> merge = SetUtils.merge(Arrays.asList("a", "b"), Arrays.asList("b", "c"));
+        assertEquals(Arrays.asList("a", "b", "c")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     merge);
+    }
+
+    @Test
+    public void testCopyAndRemove() throws Exception
+    {
+        Set<String> result = SetUtils.copyAndRemove(Arrays.asList("a", "b", "c")
+                                                          .stream()
+                                                          .collect(Collectors.toSet()),
+                                                    "b");
+        assertEquals(Arrays.asList("a", "c")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     result);
+    }
 
 }

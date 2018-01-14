@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -596,4 +597,22 @@ public class FileUtils
         Supplier<String> supplier = toSupplier(file);
         return Accessor.of(supplier, consumer);
     }
+
+    /**
+     * Returns all {@link File}s of a given directory which {@link File#getName()} do match the given regex {@link Pattern}
+     * 
+     * @param directory
+     * @param regEx
+     * @return
+     * @throws IOException
+     */
+    public static Stream<File> findFilesOfDirectoryByName(File directory, String regEx) throws IOException
+    {
+        Pattern pattern = Pattern.compile(regEx, Pattern.CASE_INSENSITIVE);
+        return Files.list(directory.toPath())
+                    .map(path -> path.toFile())
+                    .filter(file -> pattern.matcher(file.getName())
+                                           .matches());
+    }
+
 }

@@ -30,93 +30,102 @@ import java.util.function.Function;
  * @author omnaest
  * @param <E>
  */
-public class CompressableEnumList<E extends Enum<?>> extends EnumListDecorator<E> implements EnumList<E>
+public class CompressableEnumList<E extends Enum<E>> extends EnumListDecorator<E> implements EnumList<E>
 {
-	private boolean		inMemoryCompression	= false;
-	private Class<E>	enumType;
+    private boolean  inMemoryCompression = false;
+    private Class<E> enumType;
 
-	private Function<EnumList<E>, EnumList<E>>	compressFunction	= list -> new EnumBitSetList<>(this.enumType, list);
-	private Function<EnumList<E>, EnumList<E>>	unCompressFunction	= list -> new EnumArrayList<>(list);
+    private Function<EnumList<E>, EnumList<E>> compressFunction   = list -> new EnumBitSetList<>(this.enumType, list);
+    private Function<EnumList<E>, EnumList<E>> unCompressFunction = list -> new EnumArrayList<>(list);
 
-	public CompressableEnumList(Class<E> enumType)
-	{
-		super(new EnumArrayList<>());
-		this.enumType = enumType;
-	}
+    public CompressableEnumList(Class<E> enumType)
+    {
+        super(new EnumArrayList<>());
+        this.enumType = enumType;
+    }
 
-	/**
-	 * Activates or deactivates the in memory compression
-	 * 
-	 * @param active
-	 * @return
-	 */
-	public CompressableEnumList<E> usingInMemoryCompression(boolean active)
-	{
-		if (active && !this.inMemoryCompression)
-		{
-			this.compress();
-		}
-		else if (!active && this.inMemoryCompression)
-		{
-			this.uncompress();
-		}
-		return this;
-	}
+    /**
+     * Activates or deactivates the in memory compression
+     * 
+     * @param active
+     * @return
+     */
+    public CompressableEnumList<E> usingInMemoryCompression(boolean active)
+    {
+        if (active && !this.inMemoryCompression)
+        {
+            this.compress();
+        }
+        else if (!active && this.inMemoryCompression)
+        {
+            this.uncompress();
+        }
+        return this;
+    }
 
-	/**
-	 * Returns if the in memory compression is active or not
-	 * 
-	 * @return
-	 */
-	public boolean isInMemoryCompressionActive()
-	{
-		return this.inMemoryCompression;
-	}
+    /**
+     * Returns if the in memory compression is active or not
+     * 
+     * @return
+     */
+    public boolean isInMemoryCompressionActive()
+    {
+        return this.inMemoryCompression;
+    }
 
-	private void uncompress()
-	{
-		this.list = this.unCompressFunction.apply(this.list);
-	}
+    protected void uncompress()
+    {
+        this.list = this.unCompressFunction.apply(this.list);
+    }
 
-	private void compress()
-	{
-		this.list = this.compressFunction.apply(this.list);
-	}
+    protected void compress()
+    {
+        this.list = this.compressFunction.apply(this.list);
+    }
 
-	/**
-	 * Sets the compress {@link Function}. As default an {@link EnumBitSetList} is used.
-	 * 
-	 * @param compressFunction
-	 * @return
-	 */
-	public CompressableEnumList<E> setCompressFunction(Function<EnumList<E>, EnumList<E>> compressFunction)
-	{
-		this.compressFunction = compressFunction;
+    /**
+     * Sets the compress {@link Function}. As default an {@link EnumBitSetList} is used.
+     * 
+     * @param compressFunction
+     * @return
+     */
+    public CompressableEnumList<E> setCompressFunction(Function<EnumList<E>, EnumList<E>> compressFunction)
+    {
+        this.compressFunction = compressFunction;
 
-		if (this.inMemoryCompression)
-		{
-			this.compress();
-		}
+        if (this.inMemoryCompression)
+        {
+            this.compress();
+        }
 
-		return this;
-	}
+        return this;
+    }
 
-	/**
-	 * Sets the uncompress {@link Function}. As default an {@link EnumArrayList} is used.
-	 * 
-	 * @param unCompressFunction
-	 * @return
-	 */
-	public CompressableEnumList<E> setUnCompressFunction(Function<EnumList<E>, EnumList<E>> unCompressFunction)
-	{
-		this.unCompressFunction = unCompressFunction;
+    /**
+     * Sets the uncompress {@link Function}. As default an {@link EnumArrayList} is used.
+     * 
+     * @param unCompressFunction
+     * @return
+     */
+    public CompressableEnumList<E> setUnCompressFunction(Function<EnumList<E>, EnumList<E>> unCompressFunction)
+    {
+        this.unCompressFunction = unCompressFunction;
 
-		if (!this.inMemoryCompression)
-		{
-			this.uncompress();
-		}
+        if (!this.inMemoryCompression)
+        {
+            this.uncompress();
+        }
 
-		return this;
-	}
+        return this;
+    }
 
+    /**
+     * Returns a {@link ConstantCompressableEnumList} based on this {@link EnumList}
+     * 
+     * @return
+     */
+    public ConstantCompressableEnumList<E> toConstantCompressableEnumList()
+    {
+        return new ConstantCompressableEnumList<>(this.enumType, this).usingInMemoryCompression(this.inMemoryCompression);
+    }
 }
