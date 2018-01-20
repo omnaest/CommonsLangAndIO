@@ -184,7 +184,7 @@ public class NumberUtils
 
                 retval.setMinimumFractionDigits(ObjectUtils.defaultIfNull(this.minimumFractionDigits, 0));
                 retval.setMaximumFractionDigits(ObjectUtils.defaultIfNull(this.maximumFractionDigits, 20));
-                retval.setMinimumIntegerDigits(ObjectUtils.defaultIfNull(this.minimumIntegerDigits, 0));
+                retval.setMinimumIntegerDigits(ObjectUtils.defaultIfNull(this.minimumIntegerDigits, 1));
                 retval.setMaximumIntegerDigits(ObjectUtils.defaultIfNull(this.maximumIntegerDigits, Integer.MAX_VALUE));
                 retval.setGroupingUsed(this.useThousandSeparator);
                 return retval;
