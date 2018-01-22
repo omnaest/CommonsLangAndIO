@@ -203,13 +203,47 @@ public class StringUtils
         return splitToStreamByRegExFind(str, ".{0," + maxLength + "}").filter(token -> !org.apache.commons.lang3.StringUtils.isEmpty(token));
     }
 
+    /**
+     * Returns the ngrams of the given {@link String} with the given size
+     * 
+     * @param str
+     * @param size
+     * @return
+     */
     public static Stream<String> splitToNGramsStream(String str, int size)
     {
-        return StreamUtils.windowed(splitToStream(str), size / 2, size / 2)
+        return splitToNGramsStream(splitToStream(str), size);
+    }
+
+    /**
+     * Returns the ngrams of the given {@link String} {@link Stream} tokens
+     * 
+     * @see #splitToNGramsStream(String, int)
+     * @param stream
+     * @param size
+     * @return
+     */
+    public static Stream<String> splitToNGramsStream(Stream<String> stream, int size)
+    {
+        return windowed(stream, size / 2, size / 2).filter(token -> token.length() == size);
+    }
+
+    /**
+     * Returns a window around the given {@link String} {@link Stream} tokens containing the previous tokens and tokens coming after.
+     * 
+     * @param stream
+     * @param before
+     *            number of tokens before the current element
+     * @param after
+     *            number of tokens after the current element
+     * @return
+     */
+    public static Stream<String> windowed(Stream<String> stream, int before, int after)
+    {
+        return StreamUtils.windowed(stream, before, after)
                           .map(window -> window.getAll()
                                                .stream()
-                                               .collect(Collectors.joining()))
-                          .filter(token -> token.length() == size);
+                                               .collect(Collectors.joining()));
     }
 
     public static Stream<Stream<String>> routeByMatch(Stream<String> tokens, String regEx)
