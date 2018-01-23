@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -48,11 +47,23 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.omnaest.utils.buffer.CyclicBuffer;
 import org.omnaest.utils.element.lar.LeftAndRight;
 
+/**
+ * Utils around {@link Stream}s
+ * 
+ * @author omnaest
+ */
 public class StreamUtils
 {
 
+    /**
+     * Concatenades two or more {@link Stream}s
+     * 
+     * @param streams
+     * @return
+     */
     @SafeVarargs
     public static <E> Stream<E> concat(Stream<E>... streams)
     {
@@ -60,6 +71,12 @@ public class StreamUtils
                             .stream());
     }
 
+    /**
+     * Concats a {@link Stream} of {@link Stream}s
+     * 
+     * @param streams
+     * @return
+     */
     public static <E> Stream<E> concat(Stream<Stream<E>> streams)
     {
         return streams.reduce(Stream::concat)
@@ -89,11 +106,25 @@ public class StreamUtils
         return fromIterator(IteratorUtils.from(queue, elementDrainFunction));
     }
 
+    /**
+     * Returns a {@link Stream} from a given {@link Iterator}
+     * 
+     * @param iterator
+     * @return
+     */
     public static <E> Stream<E> fromIterator(Iterator<E> iterator)
     {
-        return StreamSupport.stream(((Iterable<E>) () -> iterator).spliterator(), false);
+        return StreamSupport.stream(((Iterable<E>) () -> iterator).spliterator(), false)
+                            .sequential();
     }
 
+    /**
+     * Returns a {@link Stream} based on the given {@link Supplier} where the given {@link Predicate} does return true at the end element of the {@link Stream}
+     * 
+     * @param supplier
+     * @param terminateMatcher
+     * @return
+     */
     public static <E> Stream<E> fromSupplier(Supplier<E> supplier, Predicate<E> terminateMatcher)
     {
         return fromIterator(new Iterator<E>()
@@ -119,7 +150,8 @@ public class StreamUtils
             {
                 this.takenElement.getAndUpdate(e -> e != null ? e : supplier.get());
             }
-        }).filter(terminateMatcher.negate());
+        }).filter(terminateMatcher.negate())
+          .sequential();
 
     }
 
@@ -342,96 +374,38 @@ public class StreamUtils
 
     public static <E> Stream<Window<E>> windowed(Stream<E> stream, int before, int after, int step)
     {
-        List<E> elementsBefore = new LinkedList<>();
-        List<E> elementsAfter = new LinkedList<>();
-        AtomicReference<E> currentElement = new AtomicReference<>();
-        AtomicBoolean first = new AtomicBoolean(true);
-        AtomicLong stepCounter = new AtomicLong();
 
-        Supplier<Boolean> stepTest = () ->
-        {
-            return stepCounter.incrementAndGet() % step == 0;
-        };
+        CyclicBuffer<E> cyclicBuffer = new CyclicBuffer<E>(1 + before + after + 2).withSource(stream);
 
-        Function<? super E, ? extends Window<E>> mapper = element ->
-        {
-            List<E> localElementsBefore = new ArrayList<>(elementsBefore);
-            List<E> localElementsAfter = new ArrayList<>(elementsAfter);
-            E localCurrentElement = currentElement.get();
+        return cyclicBuffer.asStream()
+                           .filter(PredicateUtils.modulo(step)
+                                                 .equalsZero())
+                           .map(window -> new Window<E>()
+                           {
+                               @Override
+                               public List<E> getBefore()
+                               {
+                                   return window.getBefore(before);
+                               }
 
-            return new Window<E>()
-            {
-                @Override
-                public List<E> getBefore()
-                {
-                    return localElementsBefore;
-                }
+                               @Override
+                               public List<E> getAfter()
+                               {
+                                   return window.getAfter(after);
+                               }
 
-                @Override
-                public List<E> getAfter()
-                {
-                    return localElementsAfter;
-                }
+                               @Override
+                               public E get()
+                               {
+                                   return window.get();
+                               }
 
-                @Override
-                public E get()
-                {
-                    return localCurrentElement;
-                }
-
-                @Override
-                public List<E> getAll()
-                {
-                    return ListUtils.mergedList(localElementsBefore, Arrays.asList(localCurrentElement), localElementsAfter);
-                }
-
-            };
-        };
-
-        Stream<Window<E>> primaryStream = stream.filter(element ->
-        {
-
-            elementsAfter.add(element);
-
-            while (elementsAfter.size() > after)
-            {
-                E next = elementsAfter.remove(0);
-                E last = currentElement.getAndSet(next);
-                if (!first.getAndSet(false))
-                {
-                    elementsBefore.add(last);
-                }
-            }
-
-            while (elementsBefore.size() > before)
-            {
-                elementsBefore.remove(0);
-            }
-
-            boolean isStep = stepTest.get();
-            return isStep && elementsAfter.size() >= after && !first.get();
-        })
-                                                .map(mapper);
-        Stream<Window<E>> secondaryStream = Stream.of(1)
-                                                  .flatMap(i -> elementsAfter.stream()
-                                                                             .collect(Collectors.toList())
-                                                                             .stream()
-                                                                             .filter(e -> stepTest.get())
-                                                                             .peek(element ->
-                                                                             {
-                                                                                 E next = elementsAfter.remove(0);
-                                                                                 E last = currentElement.getAndSet(next);
-                                                                                 elementsBefore.add(last);
-
-                                                                                 while (elementsBefore.size() > before)
-                                                                                 {
-                                                                                     elementsBefore.remove(0);
-                                                                                 }
-                                                                             })
-                                                                             .map(mapper));
-
-        return Stream.concat(primaryStream, secondaryStream);
-
+                               @Override
+                               public List<E> getAll()
+                               {
+                                   return window.getWindow(before, after);
+                               }
+                           });
     }
 
     /**

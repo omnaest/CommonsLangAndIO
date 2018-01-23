@@ -18,6 +18,7 @@
 */
 package org.omnaest.utils;
 
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 /**
@@ -27,13 +28,47 @@ import java.util.function.Predicate;
  */
 public class PredicateUtils
 {
-	/**
-	 * Returns a {@link Predicate} that returns true if the given test object is not null
-	 * 
-	 * @return
-	 */
-	public static <E> Predicate<E> notNull()
-	{
-		return t -> t != null;
-	}
+    /**
+     * Returns a {@link Predicate} that returns true if the given test object is not null
+     * 
+     * @return
+     */
+    public static <E> Predicate<E> notNull()
+    {
+        return t -> t != null;
+    }
+
+    public static interface ModuloPredicateBuilder<E>
+    {
+        public Predicate<E> equals(int value);
+
+        public Predicate<E> equalsZero();
+    }
+
+    public static <E> ModuloPredicateBuilder<E> modulo(int modulo)
+    {
+        return new ModuloPredicateBuilder<E>()
+        {
+            @Override
+            public Predicate<E> equals(int value)
+            {
+                return new Predicate<E>()
+                {
+                    private AtomicLong counter = new AtomicLong();
+
+                    @Override
+                    public boolean test(E t)
+                    {
+                        return this.counter.getAndIncrement() % modulo == value;
+                    }
+                };
+            }
+
+            @Override
+            public Predicate<E> equalsZero()
+            {
+                return this.equals(0);
+            }
+        };
+    }
 }
