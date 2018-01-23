@@ -20,10 +20,10 @@ package org.omnaest.utils.list.projection;
 
 import java.util.List;
 
-import org.omnaest.utils.list.projection.ListProjectionBuilder.UnaryElementsSource;
+import org.omnaest.utils.list.projection.ListAggregationBuilder.UnaryElementsSource;
 
 /**
- * @see ListProjectionBuilder.UnaryElementsSource
+ * @see ListAggregationBuilder.UnaryElementsSource
  * @see List
  * @author omnaest
  * @param <E>

@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -45,10 +46,10 @@ import org.omnaest.utils.list.ComparableListDecorator;
 import org.omnaest.utils.list.crud.CRUDList;
 import org.omnaest.utils.list.crud.CRUDListToListAdapter;
 import org.omnaest.utils.list.crud.ReadList;
-import org.omnaest.utils.list.projection.DefaultListProjectionBuilder;
-import org.omnaest.utils.list.projection.ListProjectionBuilder;
-import org.omnaest.utils.list.projection.ListProjectionBuilder.QualifiedProjectionBuilder;
-import org.omnaest.utils.list.projection.ListProjectionBuilder.UnaryElementsSource;
+import org.omnaest.utils.list.projection.DefaultListAggregationBuilder;
+import org.omnaest.utils.list.projection.ListAggregationBuilder;
+import org.omnaest.utils.list.projection.ListAggregationBuilder.QualifiedAggregationBuilder;
+import org.omnaest.utils.list.projection.ListAggregationBuilder.UnaryElementsSource;
 
 public class ListUtils
 {
@@ -224,11 +225,31 @@ public class ListUtils
         return list;
     }
 
+    /**
+     * Fills a {@link List} up to the given size with null entries
+     * 
+     * @param list
+     * @param size
+     * @return
+     */
     public static <E> List<E> ensureSize(List<E> list, int size)
+    {
+        return ensureSize(list, size, () -> null);
+    }
+
+    /**
+     * Ensures the size of a given {@link List} using the given {@link Supplier} to generate elements to fill up the {@link List} if necessary
+     * 
+     * @param list
+     * @param size
+     * @param elementSupplier
+     * @return
+     */
+    public static <E> List<E> ensureSize(List<E> list, int size, Supplier<E> elementSupplier)
     {
         while (list.size() < size)
         {
-            list.add(null);
+            list.add(elementSupplier.get());
         }
         return list;
     }
@@ -297,12 +318,12 @@ public class ListUtils
     }
 
     /**
-     * @see QualifiedProjectionBuilder
+     * @see QualifiedAggregationBuilder
      * @return
      */
-    public static ListProjectionBuilder projection()
+    public static ListAggregationBuilder aggregation()
     {
-        return new DefaultListProjectionBuilder();
+        return new DefaultListAggregationBuilder();
     }
 
     private static class BreakFunctionImpl<E> implements Function<E, List<Object>>
@@ -451,10 +472,10 @@ public class ListUtils
                       .map(ilist -> Arrays.asList(ilist.toArray()))
                       .collect(Collectors.toList());
         Function<UnaryElementsSource<Object>, E> readProjection = sources -> mergeFunction.apply(sources.toList());
-        return projection().withUnarySource()
-                           .withReadProjection(readProjection)
-                           .usingSources(finalizedRawSourceLists)
-                           .build();
+        return aggregation().withUnarySource()
+                            .withReadProjection(readProjection)
+                            .usingSources(finalizedRawSourceLists)
+                            .build();
     }
 
     /**

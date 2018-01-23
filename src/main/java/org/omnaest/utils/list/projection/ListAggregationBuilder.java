@@ -24,7 +24,7 @@ import java.util.function.Function;
 import org.omnaest.utils.ListUtils;
 import org.omnaest.utils.list.crud.ReadList;
 
-public interface ListProjectionBuilder
+public interface ListAggregationBuilder
 {
 	public static interface ElementsSource<E1, E2>
 	{
@@ -52,7 +52,7 @@ public interface ListProjectionBuilder
 		}
 	}
 
-	public static interface UnaryProjectionBuilder
+	public static interface UnaryAggregationBuilder
 	{
 		public <T, E> Readonly<T, E> withReadProjection(Function<UnaryElementsSource<E>, T> readProjection);
 
@@ -83,11 +83,11 @@ public interface ListProjectionBuilder
 		}
 	}
 
-	public static interface QualifiedProjectionBuilder
+	public static interface QualifiedAggregationBuilder
 	{
-		public <T, E1, E2> Readonly<T, E1, E2> withReadProjection(Function<ElementsSource<E1, E2>, T> readProjection);
+		public <T, E1, E2> Readonly<T, E1, E2> withReadAggregation(Function<ElementsSource<E1, E2>, T> readAggregation);
 
-		public <T, E1, E2> Writeonly<T, E1, E2> withWriteProjection(Function<T, ElementsSource<E1, E2>> writeProjection);
+		public <T, E1, E2> Writeonly<T, E1, E2> withWriteAggregation(Function<T, ElementsSource<E1, E2>> writeAggregation);
 
 		public static interface Base<T, E1, E2>
 		{
@@ -98,12 +98,12 @@ public interface ListProjectionBuilder
 
 		public static interface Readonly<T, E1, E2> extends Base<T, E1, E2>
 		{
-			public ReadAndWrite<T, E1, E2> andWriteProjection(Function<T, ElementsSource<E1, E2>> writeProjection);
+			public ReadAndWrite<T, E1, E2> andWriteAggregation(Function<T, ElementsSource<E1, E2>> writeAggregation);
 		}
 
 		public static interface Writeonly<T, E1, E2> extends Base<T, E1, E2>
 		{
-			public ReadAndWrite<T, E1, E2> andReadProjection(Function<ElementsSource<E1, E2>, T> readProjection);
+			public ReadAndWrite<T, E1, E2> andReadAggregation(Function<ElementsSource<E1, E2>, T> readAggregation);
 		}
 
 		public static interface ReadAndWrite<T, E1, E2> extends Base<T, E1, E2>
@@ -116,7 +116,7 @@ public interface ListProjectionBuilder
 		}
 	}
 
-	public UnaryProjectionBuilder withUnarySource();
+	public UnaryAggregationBuilder withUnarySource();
 
-	public QualifiedProjectionBuilder withQualifiedSource();
+	public QualifiedAggregationBuilder withQualifiedSource();
 }

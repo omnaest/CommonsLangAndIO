@@ -26,16 +26,16 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
-public class DefaultListProjectionBuilderTest
+public class DefaultListAggregationBuilderTest
 {
 	@Test
 	public void testQualified()
 	{
-		ListProjectionBuilder builder = new DefaultListProjectionBuilder();
+		ListAggregationBuilder builder = new DefaultListAggregationBuilder();
 
 		List<String> result = builder	.withQualifiedSource()
-										.withReadProjection(elements -> elements.getFirstElement() + "" + elements.getSecondElement())
-										.andWriteProjection(element -> null)
+										.withReadAggregation(elements -> elements.getFirstElement() + "" + elements.getSecondElement())
+										.andWriteAggregation(element -> null)
 										.usingSources(Arrays.asList("A", "B"), Arrays.asList(1, 2))
 										.build();
 		assertEquals("A1,B2", result.stream()
@@ -45,7 +45,7 @@ public class DefaultListProjectionBuilderTest
 	@Test
 	public void testUnary()
 	{
-		ListProjectionBuilder builder = new DefaultListProjectionBuilder();
+		ListAggregationBuilder builder = new DefaultListAggregationBuilder();
 
 		List<String> result = builder	.withUnarySource()
 										.withReadProjection(elements -> elements.get(0) + "" + elements.get(1))
