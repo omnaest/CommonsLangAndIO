@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -249,5 +250,30 @@ public class StringUtils
     public static Stream<Stream<String>> routeByMatch(Stream<String> tokens, String regEx)
     {
         return StreamUtils.routeByMatch(tokens, token -> token.matches(regEx));
+    }
+
+    /**
+     * Returns a concatenated {@link String} based on repeated calls to {@link Supplier#get()}
+     * 
+     * @param supplier
+     * @param repeat
+     *            number of repeats
+     * @return
+     */
+    public static String repeat(Supplier<String> supplier, int repeat)
+    {
+        StringBuilder sb = new StringBuilder();
+        if (supplier != null)
+        {
+            for (int ii = 0; ii < repeat; ii++)
+            {
+                String str = supplier.get();
+                if (str != null)
+                {
+                    sb.append(str);
+                }
+            }
+        }
+        return sb.toString();
     }
 }

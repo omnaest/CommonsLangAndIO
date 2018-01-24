@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
@@ -114,6 +115,22 @@ public class StringUtilsTest
         assertEquals("ghi", iterator.next());
         assertEquals("jkl", iterator.next());
         assertEquals("m", iterator.next());
+    }
+
+    @Test
+    public void testFromSupplier() throws Exception
+    {
+        assertEquals("abc", StringUtils.repeat(new Supplier<String>()
+        {
+            private int    pos  = 0;
+            private String text = "abc";
+
+            @Override
+            public String get()
+            {
+                return this.text.substring(this.pos++, this.pos);
+            }
+        }, 3));
     }
 
 }

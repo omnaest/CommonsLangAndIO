@@ -27,7 +27,6 @@ import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -49,6 +48,8 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.ArrayUtils;
 import org.omnaest.utils.buffer.CyclicBuffer;
 import org.omnaest.utils.element.lar.LeftAndRight;
+import org.omnaest.utils.stream.DefaultSupplierStream;
+import org.omnaest.utils.stream.SupplierStream;
 
 /**
  * Utils around {@link Stream}s
@@ -59,7 +60,7 @@ public class StreamUtils
 {
 
     /**
-     * Concatenades two or more {@link Stream}s
+     * Concatenates two or more {@link Stream}s
      * 
      * @param streams
      * @return
@@ -67,12 +68,11 @@ public class StreamUtils
     @SafeVarargs
     public static <E> Stream<E> concat(Stream<E>... streams)
     {
-        return concat(Arrays.asList(streams)
-                            .stream());
+        return concat(Stream.of(streams));
     }
 
     /**
-     * Concats a {@link Stream} of {@link Stream}s
+     * Concatenates a {@link Stream} of {@link Stream}s
      * 
      * @param streams
      * @return
@@ -119,39 +119,46 @@ public class StreamUtils
     }
 
     /**
-     * Returns a {@link Stream} based on the given {@link Supplier} where the given {@link Predicate} does return true at the end element of the {@link Stream}
+     * Returns a {@link SupplierStream} based on the given {@link Supplier} where the given {@link Predicate} does return true at the end element of the
+     * {@link Stream}
      * 
      * @param supplier
-     * @param terminateMatcher
+     * @param terminationMatcher
      * @return
      */
-    public static <E> Stream<E> fromSupplier(Supplier<E> supplier, Predicate<E> terminateMatcher)
+    public static <E> SupplierStream<E> fromSupplier(Supplier<E> supplier, Predicate<E> terminationMatcher)
     {
-        return fromIterator(new Iterator<E>()
-        {
-            private AtomicReference<E> takenElement = new AtomicReference<>();
+        return fromSupplier(supplier).withTerminationMatcher(terminationMatcher);
+    }
 
-            @Override
-            public boolean hasNext()
-            {
-                this.takeOneElement();
-                return terminateMatcher.negate()
-                                       .test(this.takenElement.get());
-            }
-
-            @Override
-            public E next()
-            {
-                this.takeOneElement();
-                return this.takenElement.getAndSet(null);
-            }
-
-            private void takeOneElement()
-            {
-                this.takenElement.getAndUpdate(e -> e != null ? e : supplier.get());
-            }
-        }).filter(terminateMatcher.negate())
-          .sequential();
+    public static <E> SupplierStream<E> fromSupplier(Supplier<E> supplier)
+    {
+        return new DefaultSupplierStream<>(supplier);
+        //                fromIterator(new Iterator<E>()
+        //        {
+        //            private AtomicReference<E> takenElement = new AtomicReference<>();
+        //
+        //            @Override
+        //            public boolean hasNext()
+        //            {
+        //                this.takeOneElement();
+        //                return terminateMatcher.negate()
+        //                                       .test(this.takenElement.get());
+        //            }
+        //
+        //            @Override
+        //            public E next()
+        //            {
+        //                this.takeOneElement();
+        //                return this.takenElement.getAndSet(null);
+        //            }
+        //
+        //            private void takeOneElement()
+        //            {
+        //                this.takenElement.getAndUpdate(e -> e != null ? e : supplier.get());
+        //            }
+        //        }).filter(terminateMatcher.negate())
+        //          .sequential();
 
     }
 
