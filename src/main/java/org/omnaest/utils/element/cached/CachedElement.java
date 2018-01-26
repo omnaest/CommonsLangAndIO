@@ -102,7 +102,7 @@ public interface CachedElement<E> extends Supplier<E>
      * @param supplier
      * @return
      */
-    public static <E> CachedElement<E> of(Supplier<E> supplier)
+    public static <E> CachedElement<E> of(Supplier<? extends E> supplier)
     {
         return new AtomicCachedElementImpl<>(supplier);
     }

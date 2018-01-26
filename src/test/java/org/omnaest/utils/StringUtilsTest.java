@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
+import org.omnaest.utils.element.bi.BiElement;
 
 public class StringUtilsTest
 {
@@ -92,6 +93,19 @@ public class StringUtilsTest
     }
 
     @Test
+    public void testSplitToNGramsEvenStream() throws Exception
+    {
+        List<String> ngrams = StringUtils.splitToNGramsStream("abcdefgh", 4)
+                                         .collect(Collectors.toList());
+        assertEquals(5, ngrams.size());
+        assertEquals("abcd", ngrams.get(0));
+        assertEquals("bcde", ngrams.get(1));
+        assertEquals("cdef", ngrams.get(2));
+        assertEquals("defg", ngrams.get(3));
+        assertEquals("efgh", ngrams.get(4));
+    }
+
+    @Test
     public void testRouteByMatch() throws Exception
     {
         List<String> result = StringUtils.routeByMatch(Arrays.asList("a", "b", "c", "a", "c", "d")
@@ -131,6 +145,20 @@ public class StringUtilsTest
                 return this.text.substring(this.pos++, this.pos);
             }
         }, 3));
+    }
+
+    @Test
+    public void testSplitToNGramsPositionStreamStringInt() throws Exception
+    {
+        List<BiElement<Long, String>> positionAndNgrams = StringUtils.splitToNGramsPositionStream("abcdefghi", 5)
+                                                                     .collect(Collectors.toList());
+        assertEquals(5, positionAndNgrams.size());
+        assertEquals(Arrays.asList("abcde", "bcdef", "cdefg", "defgh", "efghi"), positionAndNgrams.stream()
+                                                                                                  .map(pan -> pan.getSecond())
+                                                                                                  .collect(Collectors.toList()));
+        assertEquals(Arrays.asList(2l, 3l, 4l, 5l, 6l), positionAndNgrams.stream()
+                                                                         .map(pan -> pan.getFirst())
+                                                                         .collect(Collectors.toList()));
     }
 
 }

@@ -50,6 +50,7 @@ import org.omnaest.utils.buffer.CyclicBuffer;
 import org.omnaest.utils.element.lar.LeftAndRight;
 import org.omnaest.utils.stream.DefaultSupplierStream;
 import org.omnaest.utils.stream.SupplierStream;
+import org.omnaest.utils.supplier.OptionalSupplier;
 
 /**
  * Utils around {@link Stream}s
@@ -116,6 +117,18 @@ public class StreamUtils
     {
         return StreamSupport.stream(((Iterable<E>) () -> iterator).spliterator(), false)
                             .sequential();
+    }
+
+    /**
+     * Returns a {@link Stream} from an {@link OptionalSupplier}
+     * 
+     * @param optionalSupplier
+     * @return
+     */
+    public static <E> Stream<E> fromOptionalSupplier(Supplier<Optional<E>> optionalSupplier)
+    {
+        return fromSupplier(optionalSupplier).withTerminationMatcher(optional -> !optional.isPresent())
+                                             .map(optional -> optional.get());
     }
 
     /**
@@ -371,6 +384,8 @@ public class StreamUtils
         public E get();
 
         public List<E> getAll();
+
+        public long getPosition();
     }
 
     public static <E> Stream<Window<E>> windowed(Stream<E> stream, int before, int after)
@@ -411,6 +426,12 @@ public class StreamUtils
                                public List<E> getAll()
                                {
                                    return window.getWindow(before, after);
+                               }
+
+                               @Override
+                               public long getPosition()
+                               {
+                                   return window.getPosition();
                                }
                            });
     }

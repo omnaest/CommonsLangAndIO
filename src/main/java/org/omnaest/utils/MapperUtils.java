@@ -3,6 +3,7 @@ package org.omnaest.utils;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.LongFunction;
+import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -75,6 +76,16 @@ public class MapperUtils
      * @return
      */
     public static ToLongFunction<Long> identitiyForLongAsUnboxed()
+    {
+        return i -> i;
+    }
+
+    /**
+     * Returns an {@link ToIntFunction} which maps to the identity
+     * 
+     * @return
+     */
+    public static ToIntFunction<Integer> identitiyForIntegerAsUnboxed()
     {
         return i -> i;
     }

@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
+import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.iterator.StringIterator;
 
 /**
@@ -217,6 +218,18 @@ public class StringUtils
     }
 
     /**
+     * Similar to {@link #splitToNGramsStream(String, int)} but returns a {@link BiElement} with the read position as {@link BiElement#getFirst()}
+     * 
+     * @param str
+     * @param size
+     * @return
+     */
+    public static Stream<BiElement<Long, String>> splitToNGramsPositionStream(String str, int size)
+    {
+        return splitToNGramsPositionStream(splitToStream(str), size);
+    }
+
+    /**
      * Returns the ngrams of the given {@link String} {@link Stream} tokens
      * 
      * @see #splitToNGramsStream(String, int)
@@ -226,7 +239,20 @@ public class StringUtils
      */
     public static Stream<String> splitToNGramsStream(Stream<String> stream, int size)
     {
-        return windowed(stream, size / 2, size / 2).filter(token -> token.length() == size);
+        return windowed(stream, (size - 1) / 2, size / 2).filter(token -> token.length() == size);
+    }
+
+    /**
+     * Similar to {@link #splitToNGramsStream(Stream, int)} but return a {@link BiElement} with the read position as first {@link BiElement#getFirst()}
+     * 
+     * @param stream
+     * @param size
+     * @return
+     */
+    public static Stream<BiElement<Long, String>> splitToNGramsPositionStream(Stream<String> stream, int size)
+    {
+        return windowedAndPositioned(stream, (size - 1) / 2, size / 2).filter(token -> token.getSecond()
+                                                                                            .length() == size);
     }
 
     /**
@@ -245,6 +271,22 @@ public class StringUtils
                           .map(window -> window.getAll()
                                                .stream()
                                                .collect(Collectors.joining()));
+    }
+
+    /**
+     * Similar to {@link #windowed(Stream, int, int)} but returns a {@link BiElement} containing the read position as first argument
+     * 
+     * @param stream
+     * @param before
+     * @param after
+     * @return
+     */
+    public static Stream<BiElement<Long, String>> windowedAndPositioned(Stream<String> stream, int before, int after)
+    {
+        return StreamUtils.windowed(stream, before, after)
+                          .map(window -> BiElement.of(window.getPosition(), window.getAll()
+                                                                                  .stream()
+                                                                                  .collect(Collectors.joining())));
     }
 
     public static Stream<Stream<String>> routeByMatch(Stream<String> tokens, String regEx)

@@ -31,10 +31,11 @@ public class AtomicCachedElementImpl<E> implements CachedElement<E>
     private AtomicReference<E>           element  = new AtomicReference<E>();
     private AtomicReference<Supplier<E>> supplier = new AtomicReference<>();
 
-    public AtomicCachedElementImpl(Supplier<E> supplier)
+    @SuppressWarnings("unchecked")
+    public AtomicCachedElementImpl(Supplier<? extends E> supplier)
     {
         super();
-        this.supplier.set(supplier);
+        this.supplier.set((Supplier<E>) supplier);
     }
 
     @Override
