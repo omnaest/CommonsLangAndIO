@@ -8,6 +8,8 @@ import java.util.function.ToLongFunction;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import org.omnaest.utils.element.bi.BiElement;
+
 /**
  * Utils around {@link Stream#map(java.util.function.Function)}
  * 
@@ -88,5 +90,15 @@ public class MapperUtils
     public static ToIntFunction<Integer> identitiyForIntegerAsUnboxed()
     {
         return i -> i;
+    }
+
+    /**
+     * Returns a {@link Function} which maps a {@link Map.Entry} to a {@link BiElement}
+     * 
+     * @return
+     */
+    public static <K, V> Function<Map.Entry<K, V>, BiElement<K, V>> mapEntryToBiElement()
+    {
+        return entry -> BiElement.of(entry.getKey(), entry.getValue());
     }
 }

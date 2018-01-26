@@ -27,6 +27,7 @@ import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -334,6 +335,18 @@ public class StreamUtils
     public static Stream<int[]> framed(int frameSize, IntStream stream)
     {
         return framed(frameSize, stream.mapToObj(Integer::valueOf)).map(array -> ArrayUtils.toPrimitive(array));
+    }
+
+    /**
+     * Similar to {@link #framed(int, Stream)} but returns a {@link List} wrapper
+     * 
+     * @param frameSize
+     * @param stream
+     * @return
+     */
+    public static <E> Stream<List<E>> framedAsList(int frameSize, Stream<E> stream)
+    {
+        return framed(frameSize, stream).map(frame -> Arrays.asList(frame));
     }
 
     /**
