@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
+import org.omnaest.utils.SetUtils.SetDelta;
 
 public class SetUtilsTest
 {
@@ -50,6 +51,24 @@ public class SetUtilsTest
                            .stream()
                            .collect(Collectors.toSet()),
                      result);
+    }
+
+    @Test
+    public void testDelta() throws Exception
+    {
+        SetDelta<String> delta = SetUtils.delta(Arrays.asList("a", "b"), Arrays.asList("b", "c"));
+        assertEquals(Arrays.asList("a")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     delta.getRemoved());
+        assertEquals(Arrays.asList("c")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     delta.getAdded());
+        assertEquals(Arrays.asList("b")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     delta.getShared());
     }
 
 }

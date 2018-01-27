@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -85,5 +86,88 @@ public class SetUtils
             retset.removeAll(Arrays.asList(elements));
         }
         return retset;
+    }
+
+    /**
+     * @see #getAdded()
+     * @see #getRemoved()
+     * @see #getShared()
+     * @author omnaest
+     * @param <E>
+     */
+    public static class SetDelta<E>
+    {
+        private Set<E> added;
+        private Set<E> removed;
+        private Set<E> shared;
+
+        public SetDelta(Set<E> added, Set<E> removed, Set<E> shared)
+        {
+            super();
+            this.added = added;
+            this.removed = removed;
+            this.shared = shared;
+        }
+
+        /**
+         * Returns a {@link Set} of elements added between the previous and after {@link Set}s
+         * 
+         * @return
+         */
+        public Set<E> getAdded()
+        {
+            return this.added;
+        }
+
+        /**
+         * Returns a {@link Set} of elements removed between the previous and after {@link Set}s
+         * 
+         * @return
+         */
+        public Set<E> getRemoved()
+        {
+            return this.removed;
+        }
+
+        /**
+         * Returns a {@link Set} of elements shared between the previous and after {@link Set}s
+         * 
+         * @return
+         */
+        public Set<E> getShared()
+        {
+            return this.shared;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "SetDelta [added=" + this.added + ", removed=" + this.removed + ", shared=" + this.shared + "]";
+        }
+
+    }
+
+    /**
+     * Returns a {@link SetDelta} of two given {@link Set}s
+     * 
+     * @param previous
+     * @param after
+     * @return
+     */
+    public static <E> SetDelta<E> delta(Collection<E> previous, Collection<E> after)
+    {
+        Set<E> added = new HashSet<>(after);
+        added.removeAll(previous);
+
+        Set<E> removed = new HashSet<>(previous);
+        removed.removeAll(after);
+
+        Set<E> shared = new HashSet<>();
+        shared.addAll(previous);
+        shared.addAll(after);
+        shared.removeAll(added);
+        shared.removeAll(removed);
+
+        return new SetDelta<>(added, removed, shared);
     }
 }
