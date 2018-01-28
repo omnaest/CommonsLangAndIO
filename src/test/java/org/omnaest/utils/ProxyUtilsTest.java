@@ -26,25 +26,25 @@ import org.junit.Test;
 
 public class ProxyUtilsTest
 {
-	protected static interface TestType
-	{
-		public String getValue();
+    protected static interface TestType
+    {
+        public String getValue();
 
-		public void setValue(String value);
-	}
+        public void setValue(String value);
+    }
 
-	@Test
-	public void testBuilder() throws Exception
-	{
-		AtomicReference<String> content = new AtomicReference<>();
-		TestType testType = ProxyUtils	.builder()
-										.of(TestType.class)
-										.withHandlers(builder -> builder.setHandler(args -> content.getAndSet(args	.at(0)
-																													.get()))
-																		.build())
-										.build();
-		testType.setValue("value1");
-		assertEquals("value1", testType.getValue());
-	}
+    @Test
+    public void testBuilder() throws Exception
+    {
+        AtomicReference<String> content = new AtomicReference<>();
+        TestType testType = ProxyUtils.builder()
+                                      .of(TestType.class)
+                                      .withHandlers(builder -> builder.setHandler(args -> content.getAndSet(args.at(0)
+                                                                                                                .get()))
+                                                                      .build())
+                                      .build();
+        testType.setValue("value1");
+        assertEquals("value1", testType.getValue());
+    }
 
 }

@@ -1,6 +1,8 @@
 package org.omnaest.utils;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.LongFunction;
 import java.util.function.ToIntFunction;
@@ -13,6 +15,7 @@ import org.omnaest.utils.element.bi.BiElement;
 /**
  * Utils around {@link Stream#map(java.util.function.Function)}
  * 
+ * @see CollectorUtils
  * @author omnaest
  */
 public class MapperUtils
@@ -101,4 +104,27 @@ public class MapperUtils
     {
         return entry -> BiElement.of(entry.getKey(), entry.getValue());
     }
+
+    /**
+     * Returns a {@link Function} which adds a count to the given element
+     * 
+     * @return
+     */
+    public static <E> Function<E, BiElement<E, Long>> withLongCounter()
+    {
+        AtomicLong counter = new AtomicLong();
+        return element -> BiElement.of(element, counter.getAndIncrement());
+    }
+
+    /**
+     * Returns a {@link Function} which adds a count to the given element
+     * 
+     * @return
+     */
+    public static <E> Function<E, BiElement<E, Integer>> withIntCounter()
+    {
+        AtomicInteger counter = new AtomicInteger();
+        return element -> BiElement.of(element, counter.getAndIncrement());
+    }
+
 }

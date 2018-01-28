@@ -23,28 +23,39 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.omnaest.utils.MatcherUtils.MatchFinderBuilder;
+
 public class PatternUtils
 {
-	/**
-	 * Returns the {@link Matcher#group(int)} as {@link Map}
-	 * 
-	 * @param pattern
-	 * @param text
-	 * @return
-	 */
-	public static Map<Integer, String> matchToGroups(Pattern pattern, String text)
-	{
-		Map<Integer, String> retmap = new LinkedHashMap<>();
+    /**
+     * Returns the {@link Matcher#group(int)} as {@link Map}
+     * 
+     * @param pattern
+     * @param text
+     * @return
+     */
+    public static Map<Integer, String> matchToGroups(Pattern pattern, String text)
+    {
+        Map<Integer, String> retmap = new LinkedHashMap<>();
 
-		Matcher matcher = pattern.matcher(text);
-		if (matcher.matches())
-		{
-			for (int ii = 0; ii <= matcher.groupCount(); ii++)
-			{
-				retmap.put(ii, matcher.group(ii));
-			}
-		}
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.matches())
+        {
+            for (int ii = 0; ii <= matcher.groupCount(); ii++)
+            {
+                retmap.put(ii, matcher.group(ii));
+            }
+        }
 
-		return retmap;
-	}
+        return retmap;
+    }
+
+    /**
+     * @see MatcherUtils#matcher()
+     * @return
+     */
+    public static MatchFinderBuilder matcher()
+    {
+        return MatcherUtils.matcher();
+    }
 }

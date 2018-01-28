@@ -7,10 +7,12 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.omnaest.utils.collectors.ResultMappedCollector;
+import org.omnaest.utils.element.bi.BiElement;
 
 /**
  * Helper around {@link Collector}s
  * 
+ * @see MapperUtils
  * @author omnaest
  */
 public class CollectorUtils
@@ -31,5 +33,10 @@ public class CollectorUtils
                                                                       .stream()
                                                                       .collect(toValueMappedMap(entry -> ListUtils.first(entry.getValue())));
         return new ResultMappedCollector<>(Collectors.groupingBy(classifier), mapper);
+    }
+
+    public static <E1, E2> Collector<BiElement<E1, E2>, ?, Map<E1, E2>> toMapByBiElement()
+    {
+        return Collectors.toMap(biElement -> biElement.getFirst(), biElement -> biElement.getSecond());
     }
 }

@@ -18,6 +18,7 @@
 */
 package org.omnaest.utils;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.cached.CachedElement;
 
 /**
@@ -53,9 +55,15 @@ public class MatcherUtils
      */
     public static interface MatchFinder
     {
+        /**
+         * Returns an {@link Optional} of {@link Match} elements representing all matching regions found in the given input
+         * 
+         * @param input
+         * @return
+         */
         public Optional<Stream<Match>> findIn(String input);
 
-        public Optional<Stream<Match>> matchAgainst(String input);
+        public Optional<Match> matchAgainst(String input);
     }
 
     /**
@@ -120,6 +128,23 @@ public class MatcherUtils
          */
         public Stream<String> getSubGroupsAsStream();
 
+        /**
+         * Replaces the groups with the given replacements in the given order. If any replacement is null, the group at that position is unchanged.
+         * 
+         * @param groups
+         * @return
+         */
+        public String replaceGroupsWith(String... replacements);
+
+        /**
+         * Replaces the groups with the given replacements. The keys of the given {@link Map} indicates the group index. The group index = 1,2,3,...
+         * 
+         * @see #getGroups()
+         * @param groups
+         * @return
+         */
+        public String replaceGroupsWith(Map<Integer, String> replacements);
+
     }
 
     /**
@@ -141,11 +166,13 @@ public class MatcherUtils
                 return new MatchFinder()
                 {
                     @Override
-                    public Optional<Stream<Match>> matchAgainst(String input)
+                    public Optional<Match> matchAgainst(String input)
                     {
                         Matcher matcher = pattern.matcher(input);
                         Supplier<Boolean> matcherAction = () -> matcher.matches();
-                        return this.determineMatches(input, matcher, matcherAction);
+                        return this.determineMatches(input, matcher, matcherAction)
+                                   .orElseGet(() -> Stream.empty())
+                                   .findFirst();
                     }
 
                     @Override
@@ -178,9 +205,12 @@ public class MatcherUtils
                                     int end = matcher.end();
 
                                     Map<Integer, String> groups = new LinkedHashMap<>();
+                                    Map<Integer, BiElement<Integer, Integer>> groupToRegion = new LinkedHashMap<>();
                                     for (int ii = 0; ii <= matcher.groupCount(); ii++)
                                     {
                                         groups.put(ii, matcher.group(ii));
+                                        groupToRegion.put(ii, BiElement.of(matcher.start(ii), matcher.end(ii)));
+
                                     }
 
                                     retval = new Match()
@@ -215,6 +245,52 @@ public class MatcherUtils
                                             return groups.values()
                                                          .stream()
                                                          .skip(1);
+                                        }
+
+                                        @Override
+                                        public String replaceGroupsWith(String... replacements)
+                                        {
+                                            Map<Integer, String> map = new HashMap<>(this.getGroups());
+                                            map.remove(0);
+                                            if (replacements != null)
+                                            {
+                                                for (int ii = 0; ii < replacements.length; ii++)
+                                                {
+                                                    String replacement = replacements[ii];
+                                                    if (replacement != null)
+                                                    {
+                                                        map.put(ii + 1, replacement);
+                                                    }
+                                                }
+                                            }
+                                            return this.replaceGroupsWith(map);
+                                        }
+
+                                        @Override
+                                        public String replaceGroupsWith(Map<Integer, String> replacements)
+                                        {
+                                            StringBuilder sb = new StringBuilder(this.getMatchRegion());
+
+                                            replacements.entrySet()
+                                                        .stream()
+                                                        .sorted(ComparatorUtils.builder()
+                                                                               .of(Map.Entry.class)
+                                                                               .with(entry -> entry.getKey())
+                                                                               .reverse()
+                                                                               .build())
+                                                        .forEach(entry ->
+                                                        {
+                                                            Integer group = entry.getKey();
+                                                            String replacement = entry.getValue();
+
+                                                            BiElement<Integer, Integer> startAndEnd = groupToRegion.get(group);
+                                                            if (startAndEnd != null)
+                                                            {
+                                                                sb.replace(startAndEnd.getFirst(), startAndEnd.getSecond(), replacement);
+                                                            }
+                                                        });
+
+                                            return sb.toString();
                                         }
 
                                         @Override

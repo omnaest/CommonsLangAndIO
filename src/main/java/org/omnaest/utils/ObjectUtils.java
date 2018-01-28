@@ -123,6 +123,20 @@ public class ObjectUtils
     }
 
     /**
+     * Forwards the test {@link Object} to the {@link Consumer} if it is not null
+     * 
+     * @param testObject
+     * @param consumer
+     */
+    public static <T> void ifNotNull(T testObject, Consumer<T> consumer)
+    {
+        if (testObject != null)
+        {
+            consumer.accept(testObject);
+        }
+    }
+
+    /**
      * If the given test object is not null the supplier {@link Function} is called otherwise the default supplier {@link Function}
      * 
      * @param testObject
