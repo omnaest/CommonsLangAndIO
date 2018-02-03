@@ -1,8 +1,13 @@
 package org.omnaest.utils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -35,8 +40,31 @@ public class CollectorUtils
         return new ResultMappedCollector<>(Collectors.groupingBy(classifier), mapper);
     }
 
+    public static <K, V> Collector<Entry<K, V>, ?, Map<K, V>> toMap()
+    {
+        return appendToMap(new HashMap<>());
+    }
+
     public static <E1, E2> Collector<BiElement<E1, E2>, ?, Map<E1, E2>> toMapByBiElement()
     {
         return Collectors.toMap(biElement -> biElement.getFirst(), biElement -> biElement.getSecond());
     }
+
+    public static <E1, E2> Collector<BiElement<E1, E2>, ?, Map<E1, E2>> toMapByBiElement(BinaryOperator<E2> mergeFunction)
+    {
+        return Collectors.toMap(biElement -> biElement.getFirst(), biElement -> biElement.getSecond(), mergeFunction);
+    }
+
+    public static <T, K, V> Collector<T, ?, Map<K, V>> toMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier)
+    {
+        return Collectors.toMap(keyMapper, valueMapper, (v1, v2) ->
+        {
+            if (!Objects.equals(v1, v2))
+            {
+                throw new IllegalStateException(String.format("Duplicate key %s", v1));
+            }
+            return v1;
+        }, mapSupplier);
+    }
+
 }

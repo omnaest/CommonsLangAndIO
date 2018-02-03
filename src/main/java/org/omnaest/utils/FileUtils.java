@@ -19,12 +19,17 @@
 package org.omnaest.utils;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +37,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -615,4 +621,99 @@ public class FileUtils
                                            .matches());
     }
 
+    public static Reader toReader(File file, Charset charset)
+    {
+        try
+        {
+            return new InputStreamReader(new BufferedInputStream(new FileInputStream(file)), charset);
+        }
+        catch (FileNotFoundException e)
+        {
+            return null;
+        }
+    }
+
+    public static interface FileReaderSupplier extends Supplier<Reader>
+    {
+        public <E> Supplier<E> toSupplier(Function<Reader, E> acceptor);
+    }
+
+    public static FileReaderSupplier toReaderSupplierUTF8(File file)
+    {
+        return toReaderSupplier(file, StandardCharsets.UTF_8);
+    }
+
+    public static FileReaderSupplier toReaderSupplier(File file, Charset charset)
+    {
+        return new FileReaderSupplier()
+        {
+            private Supplier<Reader> supplier = () ->
+            {
+                return toReader(file, charset);
+            };
+
+            @Override
+            public Reader get()
+            {
+                return this.supplier.get();
+            }
+
+            @Override
+            public <E> Supplier<E> toSupplier(Function<Reader, E> acceptor)
+            {
+                return () -> acceptor.apply(this.get());
+            }
+        };
+
+    }
+
+    public static Writer toWriter(File file, Charset charset) throws FileNotFoundException
+    {
+        return new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), charset);
+    }
+
+    public static interface FileWriterSupplier extends Supplier<Writer>
+    {
+        public <E> Consumer<E> toConsumerWith(BiConsumer<E, Writer> acceptor);
+    }
+
+    public static FileWriterSupplier toWriterSupplierUTF8(File file)
+    {
+        return toWriterSupplier(file, StandardCharsets.UTF_8);
+    }
+
+    public static FileWriterSupplier toWriterSupplier(File file, Charset charset)
+    {
+        return new FileWriterSupplier()
+        {
+            private Supplier<Writer> supplier = () ->
+            {
+                try
+                {
+                    return toWriter(file, charset);
+                }
+                catch (FileNotFoundException e)
+                {
+                    throw new IllegalStateException(e);
+                }
+            };
+
+            @Override
+            public Writer get()
+            {
+                return this.supplier.get();
+            }
+
+            @Override
+            public <E> Consumer<E> toConsumerWith(BiConsumer<E, Writer> acceptor)
+            {
+                return t ->
+                {
+                    Writer writer = this.get();
+                    acceptor.accept(t, writer);
+                };
+            }
+        };
+
+    }
 }

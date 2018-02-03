@@ -19,7 +19,10 @@
 package org.omnaest.utils.element.cached;
 
 import java.io.File;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -47,6 +50,18 @@ public class FileCachedElementImpl<E> implements CachedElement<E>
 
         this.fromFileSupplier = FileUtils.toSupplier(file)
                                          .with(deserializer);
+        this.supplier.set(supplier);
+    }
+
+    public FileCachedElementImpl(Supplier<E> supplier, File file, BiConsumer<E, Writer> serializer, Function<Reader, E> deserializer)
+    {
+        super();
+        this.file = file;
+        this.toFileConsumer = FileUtils.toWriterSupplierUTF8(file)
+                                       .toConsumerWith(serializer);
+
+        this.fromFileSupplier = FileUtils.toReaderSupplierUTF8(file)
+                                         .toSupplier(deserializer);
         this.supplier.set(supplier);
     }
 

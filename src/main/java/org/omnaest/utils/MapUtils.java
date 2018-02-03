@@ -23,9 +23,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -479,6 +481,71 @@ public class MapUtils
                                                                                                                   Function<Supplier<V>, SV> valueSupplierFunction)
     {
         return new AbstractSupplierMap<>(mapFactory, keySupplierFunction, valueSupplierFunction);
+    }
+
+    /**
+     * Returns a new {@link Map} with the values of the given {@link Map} for each of the given filter keys
+     * 
+     * @param map
+     * @param filterKeys
+     * @return
+     */
+    public static <K, V> Map<K, V> toKeyFilteredMap(Map<K, V> map, Collection<K> filterKeys)
+    {
+        Map<K, V> retmap = new HashMap<>();
+        for (K key : filterKeys)
+        {
+            retmap.put(key, map.get(key));
+        }
+        return retmap;
+    }
+
+    public static <K, V> boolean containsAll(Map<K, V> map, Map<K, V> subMap)
+    {
+        boolean retval = true;
+
+        if (subMap != null)
+        {
+            if (map != null)
+            {
+                for (K key : subMap.keySet())
+                {
+                    retval &= map.containsKey(key) && Objects.equals(map.get(key), subMap.get(key));
+
+                    if (!retval)
+                    {
+                        break;
+                    }
+                }
+            }
+            else if (!subMap.isEmpty())
+            {
+                retval = false;
+            }
+        }
+
+        return retval;
+    }
+
+    /**
+     * Returns a new {@link Map} with the entries of the given {@link Map} but all keys filtered which have a null value
+     * 
+     * @param map
+     * @return
+     */
+    public static <K, V> Map<K, V> toMapWithFilteredKeysHavingNullValue(Map<K, V> map)
+    {
+        Map<K, V> retmap = new HashMap<>();
+
+        for (K key : map.keySet())
+        {
+            V value = map.get(key);
+            if (value != null)
+            {
+                retmap.put(key, value);
+            }
+        }
+        return retmap;
     }
 
 }

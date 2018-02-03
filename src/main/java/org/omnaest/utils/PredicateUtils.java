@@ -20,6 +20,9 @@ package org.omnaest.utils;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import org.omnaest.utils.stream.FirstElementFilterCapture;
 
 /**
  * Utils regarding {@link Predicate} logic
@@ -71,4 +74,15 @@ public class PredicateUtils
             }
         };
     }
+
+    /**
+     * Returns a {@link FirstElementFilterCapture} which can be used in combination with {@link Stream#filter(Predicate)}
+     * 
+     * @return
+     */
+    public static <E> FirstElementFilterCapture<E> firstElementFilterCapture()
+    {
+        return new FirstElementFilterCapture<>();
+    }
+
 }

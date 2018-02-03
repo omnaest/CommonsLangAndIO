@@ -19,6 +19,8 @@
 package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
@@ -173,5 +175,36 @@ public class MapUtilsTest
         assertEquals(Arrays.asList("key3", "key2", "key1"), map.keySet()
                                                                .stream()
                                                                .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testToKeyFilteredMap() throws Exception
+    {
+        Map<String, String> map = MapUtils.toKeyFilteredMap(MapUtils.builder()
+                                                                    .put("key1", "value1")
+                                                                    .put("key2", "value2")
+                                                                    .build(),
+                                                            Arrays.asList("key2"));
+        assertEquals(1, map.size());
+        assertEquals("value2", map.get("key2"));
+    }
+
+    @Test
+    public void testContainsAll() throws Exception
+    {
+        assertTrue(MapUtils.containsAll(MapUtils.builder()
+                                                .put("key1", "value1")
+                                                .put("key2", "value2")
+                                                .build(),
+                                        MapUtils.builder()
+                                                .put("key1", "value1")
+                                                .build()));
+
+        assertFalse(MapUtils.containsAll(MapUtils.builder()
+                                                 .put("key2", "value2")
+                                                 .build(),
+                                         MapUtils.builder()
+                                                 .put("key1", "value1")
+                                                 .build()));
     }
 }
