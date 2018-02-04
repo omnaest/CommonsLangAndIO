@@ -86,7 +86,7 @@ public class NumberUtils
          * 
          * @return
          */
-        public NumberFormatter withPercentage();
+        public NumberFormatter asPercentage();
 
     }
 
@@ -119,7 +119,7 @@ public class NumberUtils
             }
 
             @Override
-            public NumberFormatter withPercentage()
+            public NumberFormatter asPercentage()
             {
                 this.formatterFactory = locale -> locale != null ? NumberFormat.getPercentInstance(locale) : NumberFormat.getPercentInstance();
                 if (this.maximumFractionDigits == null)
@@ -154,6 +154,10 @@ public class NumberUtils
             public NumberFormatter withMinimumFractionDigits(int minimumFractionDigits)
             {
                 this.minimumFractionDigits = minimumFractionDigits;
+                if (this.maximumFractionDigits != null && this.maximumFractionDigits < minimumFractionDigits)
+                {
+                    this.maximumFractionDigits = minimumFractionDigits;
+                }
                 return this;
             }
 

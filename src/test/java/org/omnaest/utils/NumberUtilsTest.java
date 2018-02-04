@@ -25,29 +25,39 @@ import org.junit.Test;
 public class NumberUtilsTest
 {
 
-	@Test
-	public void testFormatter() throws Exception
-	{
-		String result = NumberUtils	.formatter()
-									.format(1.00001);
-		assertEquals("1.00001", result);
-	}
+    @Test
+    public void testFormatter() throws Exception
+    {
+        String result = NumberUtils.formatter()
+                                   .format(1.00001);
+        assertEquals("1.00001", result);
+    }
 
-	@Test
-	public void testFormatter2() throws Exception
-	{
-		String result = NumberUtils	.formatter()
-									.format(100001);
-		assertEquals("100001", result);
-	}
+    @Test
+    public void testFormatter2() throws Exception
+    {
+        String result = NumberUtils.formatter()
+                                   .format(100001);
+        assertEquals("100001", result);
+    }
 
-	@Test
-	public void testFormatterWithPercentage() throws Exception
-	{
-		String result = NumberUtils	.formatter()
-									.withPercentage()
-									.format(0.05);
-		assertEquals("5%", result);
-	}
+    @Test
+    public void testFormatterWithPercentage() throws Exception
+    {
+        String result = NumberUtils.formatter()
+                                   .asPercentage()
+                                   .format(0.05);
+        assertEquals("5%", result);
+    }
+
+    @Test
+    public void testFormatterWithPercentage2() throws Exception
+    {
+        String result = NumberUtils.formatter()
+                                   .asPercentage()
+                                   .withMinimumFractionDigits(3)
+                                   .format(0.00005);
+        assertEquals("0.005%", result);
+    }
 
 }
