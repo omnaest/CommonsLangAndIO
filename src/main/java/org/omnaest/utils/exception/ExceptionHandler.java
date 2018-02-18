@@ -29,4 +29,13 @@ import org.omnaest.utils.events.EventHandler;
 public interface ExceptionHandler extends EventHandler<Exception>
 {
 
+    /**
+     * Returns a {@link NoOperationExceptionHandler}
+     * 
+     * @return
+     */
+    public static ExceptionHandler noOperationExceptionHandler()
+    {
+        return new NoOperationExceptionHandler();
+    }
 }

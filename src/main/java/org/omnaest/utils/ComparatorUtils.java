@@ -191,10 +191,11 @@ public class ComparatorUtils
                                                                         .compareTo(compareFunction.apply(o2)));
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public <C extends Comparable<C>> ComparatorBuilderLoaded<T> withIdentity()
+        public ComparatorBuilderLoaded<T> withIdentity()
         {
-            return this.with(i -> i);
+            return this.with((T i) -> (Comparable) i);
         }
 
         @Override
@@ -232,10 +233,11 @@ public class ComparatorUtils
                                                                                .compareTo(compareFunction.apply(o2)));
                 }
 
+                @SuppressWarnings({ "rawtypes", "unchecked" })
                 @Override
-                public <C extends Comparable<C>> ComparatorBuilderLoaded<T> andIdentity()
+                public ComparatorBuilderLoaded<T> andIdentity()
                 {
-                    return this.and(i -> i);
+                    return this.and(i -> (Comparable) i);
                 }
 
                 @Override
@@ -273,7 +275,7 @@ public class ComparatorUtils
 
         public <C extends Comparable<C>> ComparatorBuilderLoaded<T> with(Function<T, C> compareFunction);
 
-        public <C extends Comparable<C>> ComparatorBuilderLoaded<T> withIdentity();
+        public ComparatorBuilderLoaded<T> withIdentity();
 
         public <C extends Comparable<C>, I> ComparatorBuilderLoaded<T> with(Function<T, I> compareFunction, Function<I, C> mapFunction);
 
@@ -285,7 +287,7 @@ public class ComparatorUtils
 
         public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> with(Function<T, C> compareFunction);
 
-        public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> withIdentity();
+        public ExecutableComparatorBuilderLoaded<T> withIdentity();
 
         public <C extends Comparable<C>, I> ExecutableComparatorBuilderLoaded<T> with(Function<T, I> compareFunction, Function<I, C> mapFunction);
     }
@@ -307,7 +309,7 @@ public class ComparatorUtils
 
         public <C extends Comparable<C>> ComparatorBuilderLoaded<T> and(Function<T, C> compareFunction);
 
-        public <C extends Comparable<C>> ComparatorBuilderLoaded<T> andIdentity();
+        public ComparatorBuilderLoaded<T> andIdentity();
 
         public <C extends Comparable<C>, I> ComparatorBuilderLoaded<T> and(Function<T, I> compareFunction, Function<I, C> mapFunction);
 
@@ -398,10 +400,11 @@ public class ComparatorUtils
                                                                                     .compareTo(compareFunction.apply(o2)));
                     }
 
+                    @SuppressWarnings({ "rawtypes", "unchecked" })
                     @Override
-                    public <C extends Comparable<C>> ExecutableComparatorBuilderLoaded<T> withIdentity()
+                    public ExecutableComparatorBuilderLoaded<T> withIdentity()
                     {
-                        return this.with(i -> i);
+                        return this.with(i -> (Comparable) i);
                     }
 
                     @Override

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -55,6 +56,18 @@ public class CollectorUtils
         return Collectors.toMap(biElement -> biElement.getFirst(), biElement -> biElement.getSecond(), mergeFunction);
     }
 
+    public static <E1, E2> Collector<BiElement<E1, E2>, ?, Map<E1, E2>> toMapByBiElement(Supplier<Map<E1, E2>> mapFactory)
+    {
+        return Collectors.toMap(biElement -> biElement.getFirst(), biElement -> biElement.getSecond(), (v1, v2) ->
+        {
+            if (!Objects.equals(v1, v2))
+            {
+                throw new IllegalStateException(String.format("Duplicate key %s", v1));
+            }
+            return v1;
+        }, mapFactory);
+    }
+
     public static <T, K, V> Collector<T, ?, Map<K, V>> toMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier)
     {
         return Collectors.toMap(keyMapper, valueMapper, (v1, v2) ->
@@ -65,6 +78,16 @@ public class CollectorUtils
             }
             return v1;
         }, mapSupplier);
+    }
+
+    public static <E> Collector<E, ?, Set<E>> toSet(Set<E> set)
+    {
+        return toSet(() -> set);
+    }
+
+    public static <E> Collector<E, ?, Set<E>> toSet(Supplier<Set<E>> factory)
+    {
+        return Collectors.toCollection(factory);
     }
 
 }

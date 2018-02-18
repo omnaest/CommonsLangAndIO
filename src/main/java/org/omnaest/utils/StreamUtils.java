@@ -48,6 +48,7 @@ import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.omnaest.utils.buffer.CyclicBuffer;
+import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.lar.LeftAndRight;
 import org.omnaest.utils.stream.DefaultSupplierStream;
 import org.omnaest.utils.stream.SupplierStream;
@@ -459,6 +460,11 @@ public class StreamUtils
     public static <L, R> Stream<LeftAndRight<L, R>> merge(Stream<L> stream1, Stream<R> stream2)
     {
         return StreamUtils.fromIterator(IteratorUtils.merge(stream1.iterator(), stream2.iterator()));
+    }
+
+    public static <L, R> Stream<BiElement<L, R>> merge2(Stream<L> stream1, Stream<R> stream2)
+    {
+        return merge(stream1, stream2).map(lar -> BiElement.of(lar.getLeft(), lar.getRight()));
     }
 
     public static <E> Stream<List<E>> chop(Stream<E> stream, Predicate<E> chopStartMatcher)

@@ -275,7 +275,7 @@ public class MatcherUtils
                                                         .stream()
                                                         .sorted(ComparatorUtils.builder()
                                                                                .of(Map.Entry.class)
-                                                                               .with(entry -> entry.getKey())
+                                                                               .with(entry -> (Integer) entry.getKey())
                                                                                .reverse()
                                                                                .build())
                                                         .forEach(entry ->
