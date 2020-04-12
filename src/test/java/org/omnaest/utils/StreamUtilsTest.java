@@ -26,8 +26,10 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -104,7 +106,7 @@ public class StreamUtilsTest
     @Test
     public void testFromInputStream() throws Exception
     {
-        assertEquals(Arrays.asList("one", "two"), StreamUtils.fromReader(new StringReader("one\ntwo"))
+        assertEquals(Arrays.asList("one", "two"), StreamUtils.fromReaderAsLines(new StringReader("one\ntwo"))
                                                              .collect(Collectors.toList()));
     }
 
@@ -269,4 +271,35 @@ public class StreamUtilsTest
         assertTrue(sourceList.isEmpty());
     }
 
+    @Test
+    public void testWithCounter()
+    {
+        List<String> elements = StreamUtils.withIntCounter(Arrays.asList("a", "b")
+                                                                 .stream())
+                                           .map(be -> be.getFirst() + be.getSecond())
+                                           .collect(Collectors.toList());
+        assertEquals("a0", elements.get(0));
+        assertEquals("b1", elements.get(1));
+    }
+
+    @Test
+    public void testLast() throws Exception
+    {
+        assertEquals(2, StreamUtils.last(Arrays.asList(1, 2)
+                                               .stream())
+                                   .intValue());
+    }
+
+    @Test
+    public void testParallel()
+    {
+        Set<String> result = StreamUtils.parallel(IntStream.range(0, 10000)
+                                                           .boxed(),
+                                                  i -> "value" + i)
+                                        .collect(Collectors.toSet());
+
+        assertEquals(result.size(), 10000);
+        assertTrue(result.contains("value0"));
+        assertTrue(result.contains("value9999"));
+    }
 }

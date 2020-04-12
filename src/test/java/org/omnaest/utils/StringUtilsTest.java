@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -159,6 +160,25 @@ public class StringUtilsTest
         assertEquals(Arrays.asList(2l, 3l, 4l, 5l, 6l), positionAndNgrams.stream()
                                                                          .map(pan -> pan.getFirst())
                                                                          .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testDistinctCount() throws Exception
+    {
+        Map<String, Integer> distinctCount = StringUtils.distinctCount("aaaabbcccc");
+        assertEquals(3, distinctCount.size());
+        assertEquals(4, distinctCount.get("a")
+                                     .intValue());
+        assertEquals(2, distinctCount.get("b")
+                                     .intValue());
+        assertEquals(4, distinctCount.get("c")
+                                     .intValue());
+    }
+
+    @Test
+    public void testLastFromBack() throws Exception
+    {
+        assertEquals("ef", StringUtils.lastFromBack("abcdef", 2));
     }
 
 }

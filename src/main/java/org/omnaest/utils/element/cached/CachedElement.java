@@ -124,4 +124,13 @@ public interface CachedElement<E> extends Supplier<E>
         return new AtomicCachedElementImpl<>(supplier);
     }
 
+    /**
+     * Returns a synchronized {@link CachedElement}
+     * 
+     * @return
+     */
+    public default CachedElement<E> asSynchronized()
+    {
+        return new SynchronizedCachedElementWrapper(this);
+    }
 }

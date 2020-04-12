@@ -20,12 +20,15 @@ package org.omnaest.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -200,6 +203,17 @@ public class StringUtils
         return IOUtils.toString(inputStream, charset);
     }
 
+    /**
+     * @see IOUtils#toString(Reader)
+     * @param reader
+     * @return
+     * @throws IOException
+     */
+    public static String toString(Reader reader) throws IOException
+    {
+        return IOUtils.toString(reader);
+    }
+
     public static Stream<String> splitToStreamByMaxLength(String str, int maxLength)
     {
         return splitToStreamByRegExFind(str, ".{0," + maxLength + "}").filter(token -> !org.apache.commons.lang3.StringUtils.isEmpty(token));
@@ -317,5 +331,52 @@ public class StringUtils
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * Similar to {@link #repeat(Supplier, int)}
+     * 
+     * @param str
+     * @param repeat
+     * @return
+     */
+    public static String repeat(String str, int repeat)
+    {
+        return repeat(() -> str, repeat);
+    }
+
+    /**
+     * Returns a map with distinct characters of the given {@link String} and their counts
+     * 
+     * @param str
+     * @return
+     */
+    public static Map<String, Integer> distinctCount(String str)
+    {
+        Map<String, Integer> retmap = new LinkedHashMap<>();
+        splitToStream(str).forEach(character ->
+        {
+            int count = retmap.getOrDefault(character, 0);
+            count++;
+            retmap.put(character, count);
+        });
+        return retmap;
+    }
+
+    /**
+     * Returns the last part of a given {@link String}. If null is given as {@link String} null is returned.
+     * 
+     * @param str
+     * @param lengthFromBack
+     * @return
+     */
+    public static String lastFromBack(String str, int lengthFromBack)
+    {
+        String retval = null;
+        if (str != null)
+        {
+            retval = org.apache.commons.lang3.StringUtils.substring(str, str.length() - lengthFromBack, str.length());
+        }
+        return retval;
     }
 }

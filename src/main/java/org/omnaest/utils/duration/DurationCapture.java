@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
- * @see #newInstanc()
+ * @see #newInstance()
  * @see #measure(MeasuredOperation)
  * @author omnaest
  */
@@ -64,7 +64,7 @@ public interface DurationCapture
 
 	public <R> MeasurementResultWithReturnValue<R> measure(MeasuredOperation<R> operation);
 
-	public static DurationCapture newInstanc()
+	public static DurationCapture newInstance()
 	{
 		return new DefaultDurationCapture();
 	}

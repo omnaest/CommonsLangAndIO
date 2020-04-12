@@ -511,6 +511,7 @@ public class FileUtils
      */
     public static void writeTo(File file, Charset encoding, Consumer<Writer> writeOperation) throws IOException
     {
+        org.apache.commons.io.FileUtils.forceMkdirParent(file);
         try (Writer writer = new FileWriterWithEncoding(file, encoding))
         {
             writeOperation.accept(writer);
@@ -669,7 +670,20 @@ public class FileUtils
 
     public static Writer toWriter(File file, Charset charset) throws FileNotFoundException
     {
+        ensureParentFolderExists(file);
         return new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), charset);
+    }
+
+    private static void ensureParentFolderExists(File file)
+    {
+        try
+        {
+            org.apache.commons.io.FileUtils.forceMkdirParent(file);
+        }
+        catch (IOException e)
+        {
+            throw new IllegalStateException(e);
+        }
     }
 
     public static interface FileWriterSupplier extends Supplier<Writer>

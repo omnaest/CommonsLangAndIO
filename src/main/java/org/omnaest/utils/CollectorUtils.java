@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -85,7 +87,22 @@ public class CollectorUtils
         return toSet(() -> set);
     }
 
+    public static <E> Collector<E, ?, SortedSet<E>> toSortedSet(SortedSet<E> set)
+    {
+        return toSortedSet(() -> set);
+    }
+
+    public static <E> Collector<E, ?, SortedSet<E>> toSortedSet()
+    {
+        return toSortedSet(() -> new TreeSet<>());
+    }
+
     public static <E> Collector<E, ?, Set<E>> toSet(Supplier<Set<E>> factory)
+    {
+        return Collectors.toCollection(factory);
+    }
+
+    public static <E> Collector<E, ?, SortedSet<E>> toSortedSet(Supplier<SortedSet<E>> factory)
     {
         return Collectors.toCollection(factory);
     }

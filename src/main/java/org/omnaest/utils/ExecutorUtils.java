@@ -105,9 +105,7 @@ public class ExecutorUtils
             @Override
             public ParallelExecution withNumberOfThreadsPerCPUCore(double numberOfThreadsPerCPUCore)
             {
-                int numberOfThreads = (int) Math.max(1, Math.round(Runtime.getRuntime()
-                                                                          .availableProcessors()
-                        * numberOfThreadsPerCPUCore));
+                int numberOfThreads = calculateNumberOfThreadsByPerCPU(numberOfThreadsPerCPUCore);
                 return this.withNumberOfThreads(numberOfThreads);
             }
 
@@ -245,5 +243,26 @@ public class ExecutorUtils
             }
 
         };
+    }
+
+    /**
+     * Returns an {@link ExecutorService} with a fixed number of threads per available CPU core
+     * 
+     * @param numberOfThreadsPerCPUCore
+     * @return
+     */
+    public static ExecutorService newFixedThreadPoolWithNumberOfThreadsPerCPUCore(double numberOfThreadsPerCPUCore)
+    {
+        int availableProcessors = Runtime.getRuntime()
+                                         .availableProcessors();
+        int numberOfThreads = (int) (1 + Math.round(availableProcessors * numberOfThreadsPerCPUCore));
+        return Executors.newFixedThreadPool(numberOfThreads);
+    }
+
+    public static int calculateNumberOfThreadsByPerCPU(double numberOfThreadsPerCPUCore)
+    {
+        return (int) Math.max(1, Math.round(Runtime.getRuntime()
+                                                   .availableProcessors()
+                * numberOfThreadsPerCPUCore));
     }
 }

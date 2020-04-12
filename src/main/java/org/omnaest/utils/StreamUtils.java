@@ -35,7 +35,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Spliterator;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -47,6 +49,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.omnaest.utils.ExecutorUtils.ParallelExecution;
 import org.omnaest.utils.buffer.CyclicBuffer;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.lar.LeftAndRight;
@@ -207,7 +210,7 @@ public class StreamUtils
     }
 
     /**
-     * Similar to {@link #fromReader(Reader)} using a given {@link InputStream} and a the given {@link Charset}
+     * Similar to {@link #fromReaderAsLines(Reader)} using a given {@link InputStream} and a the given {@link Charset}
      * 
      * @see StandardCharsets
      * @param inputStream
@@ -216,7 +219,7 @@ public class StreamUtils
      */
     public static Stream<String> fromInputStream(InputStream inputStream, Charset charset)
     {
-        return fromReader(new InputStreamReader(inputStream, charset));
+        return fromReaderAsLines(new InputStreamReader(inputStream, charset));
     }
 
     /**
@@ -225,7 +228,7 @@ public class StreamUtils
      * @param reader
      * @return
      */
-    public static Stream<String> fromReader(Reader reader)
+    public static Stream<String> fromReaderAsLines(Reader reader)
     {
         BufferedReader bufferedReader = new BufferedReader(reader);
         return fromSupplier(() ->
@@ -467,6 +470,31 @@ public class StreamUtils
         return merge(stream1, stream2).map(lar -> BiElement.of(lar.getLeft(), lar.getRight()));
     }
 
+    /**
+     * Similar to {@link #withIntCounter(Stream, int)} with seed = 0
+     * 
+     * @param stream
+     * @return
+     */
+    public static <E> Stream<BiElement<E, Integer>> withIntCounter(Stream<E> stream)
+    {
+        int seed = 0;
+        return withIntCounter(stream, seed);
+    }
+
+    /**
+     * Returns a {@link Stream} with {@link BiElement} based on the elements of the given {@link Stream} and a counter starting with the given seed value.
+     * 
+     * @param stream
+     * @param seed
+     * @return
+     */
+    public static <E> Stream<BiElement<E, Integer>> withIntCounter(Stream<E> stream, int seed)
+    {
+        AtomicInteger counter = new AtomicInteger(seed);
+        return stream.map(element -> BiElement.of(element, counter.getAndIncrement()));
+    }
+
     public static <E> Stream<List<E>> chop(Stream<E> stream, Predicate<E> chopStartMatcher)
     {
         AtomicReference<List<E>> chunk = new AtomicReference<>();
@@ -563,6 +591,83 @@ public class StreamUtils
                                    .map(collector),
                              Stream.of(1)
                                    .flatMap(i -> collector.getUnreturned()));
+    }
+
+    /**
+     * Returns the last element of a {@link Stream}
+     * 
+     * @param stream
+     * @return
+     */
+    public static <E> E last(Stream<E> stream)
+    {
+        E retval = null;
+
+        for (E element : IterableUtils.from(stream))
+        {
+            retval = element;
+        }
+
+        return retval;
+    }
+
+    public static class Parallelism
+    {
+        private int numberOfThreads;
+
+        public Parallelism()
+        {
+            super();
+            this.withNumberOfThreadsPerCPUCore(4);
+        }
+
+        public int getNumberOfThreads()
+        {
+            return this.numberOfThreads;
+        }
+
+        public Parallelism withNumberOfThreads(int numberOfThreads)
+        {
+            this.numberOfThreads = numberOfThreads;
+            return this;
+        }
+
+        public Parallelism withNumberOfThreadsPerCPUCore(double numberOfThreadsPerCPUCore)
+        {
+            this.numberOfThreads = ExecutorUtils.calculateNumberOfThreadsByPerCPU(numberOfThreadsPerCPUCore);
+            return this;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "Parallelism [numberOfThreads=" + this.numberOfThreads + "]";
+        }
+
+    }
+
+    public static <T, R> Stream<R> parallel(Stream<T> stream, Function<T, R> mappingFunction)
+    {
+        return parallel(stream, mappingFunction, new Parallelism());
+    }
+
+    public static <T, R> Stream<R> parallel(Stream<T> stream, Function<T, R> mappingFunction, Parallelism parallelism)
+    {
+        ParallelExecution parallelExecution = ExecutorUtils.parallel()
+                                                           .withNumberOfThreads(parallelism.getNumberOfThreads());
+
+        return framedAsList(parallelism.getNumberOfThreads(), stream).flatMap(elements -> parallelExecution.executeTasks(elements.stream()
+                                                                                                                                 .map(element -> new Callable<R>()
+                                                                                                                                 {
+                                                                                                                                     @Override
+                                                                                                                                     public R call()
+                                                                                                                                             throws Exception
+                                                                                                                                     {
+                                                                                                                                         return mappingFunction.apply(element);
+                                                                                                                                     }
+                                                                                                                                 }))
+                                                                                                           .get());
+
     }
 
 }

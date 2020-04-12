@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 /**
  * Combination of a {@link Supplier} and {@link Consumer}
  * 
+ * @see #get()
+ * @see #accept(Object)
  * @author omnaest
  * @param <E>
  */

@@ -28,7 +28,7 @@ public class DefaultDurationCaptureTest
 	@Test
 	public void testMeasure() throws Exception
 	{
-		DurationCapture	.newInstanc()
+		DurationCapture	.newInstance()
 						.measure(() ->
 						{
 							try

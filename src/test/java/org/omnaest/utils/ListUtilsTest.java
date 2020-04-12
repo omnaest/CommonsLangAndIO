@@ -170,7 +170,7 @@ public class ListUtilsTest
         }
 
         System.out.println("Collecting");
-        List<TestElement> list = DurationCapture.newInstanc()
+        List<TestElement> list = DurationCapture.newInstance()
                                                 .measure(() -> ListUtils.toMemoryOptimizedList(TestElement.class, sourceList))
                                                 .doWithResult(System.out::println)
                                                 .getReturnValue();
@@ -254,5 +254,15 @@ public class ListUtilsTest
         List<String> source = Arrays.asList("a", "b", "c");
         String[] array = ListUtils.toArray(source, String.class);
         assertEquals(Arrays.asList(array), source);
+    }
+
+    @Test
+    public void testLast()
+    {
+        assertEquals(Arrays.asList("2", "3", "4"), ListUtils.last(3, Arrays.asList("1", "2", "3", "4")));
+        assertEquals(Arrays.asList(), ListUtils.last(0, Arrays.asList("1", "2", "3", "4")));
+        assertEquals(Arrays.asList("3", "4"), ListUtils.last(3, Arrays.asList("3", "4")));
+        assertEquals(Arrays.asList(), ListUtils.last(3, Arrays.asList()));
+        assertEquals(Arrays.asList(), ListUtils.last(3, null));
     }
 }

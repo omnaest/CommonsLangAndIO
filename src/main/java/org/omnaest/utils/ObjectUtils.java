@@ -86,7 +86,7 @@ public class ObjectUtils
     }
 
     /**
-     * Returns the element from the {@link Supplier#get()} if the test object is not null
+     * Returns the element from the {@link Supplier#get()} if the test object is not null, otherwise null is returned
      * 
      * @param testObject
      * @param supplier

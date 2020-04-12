@@ -422,4 +422,10 @@ public class ComparatorUtils
         return (e1, e2) -> -1 * comparator.compare(e1, e2);
     }
 
+    public static <T, C extends Comparable<C>> Comparator<T> comparatorFunction(Function<T, C> extractFunction)
+    {
+        return (o1, o2) -> extractFunction.apply(o1)
+                                          .compareTo(extractFunction.apply(o2));
+    }
+
 }

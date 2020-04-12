@@ -65,6 +65,29 @@ public class ListUtils
         return retval;
     }
 
+    /**
+     * Returns the last number of elements of the given {@link List}
+     * 
+     * @param numberOfElements
+     * @param list
+     * @return always a new {@link List} but never null
+     */
+    public static <E> List<E> last(int numberOfElements, List<E> list)
+    {
+        List<E> result = new ArrayList<>();
+
+        if (list != null && !list.isEmpty())
+        {
+            int numberOfEffectiveElements = Math.min(numberOfElements, list.size());
+            if (numberOfEffectiveElements > 0)
+            {
+                result.addAll(list.subList(list.size() - numberOfEffectiveElements, list.size()));
+            }
+        }
+
+        return result;
+    }
+
     public static <E> E first(List<E> list)
     {
         E retval = null;
@@ -91,7 +114,7 @@ public class ListUtils
         List<E> retlist = new ArrayList<>();
         if (collection != null)
         {
-            collection.addAll(collection);
+            retlist.addAll(collection);
         }
         Collections.shuffle(retlist);
         return retlist;

@@ -115,6 +115,17 @@ public class MatcherUtils
         public Map<Integer, String> getGroups();
 
         /**
+         * Returns a match group with the given index.<br>
+         * <br>
+         * 0 = whole match group
+         * 1,2,... specific match groups
+         * 
+         * @param index
+         * @return
+         */
+        public String getGroup(int index);
+
+        /**
          * Returns the input region between {@link #getStart()} and {@link #getEnd()} inclusive
          * 
          * @return
@@ -168,19 +179,37 @@ public class MatcherUtils
                     @Override
                     public Optional<Match> matchAgainst(String input)
                     {
-                        Matcher matcher = pattern.matcher(input);
-                        Supplier<Boolean> matcherAction = () -> matcher.matches();
-                        return this.determineMatches(input, matcher, matcherAction)
-                                   .orElseGet(() -> Stream.empty())
-                                   .findFirst();
+                        Optional<Match> retval;
+                        if (input != null)
+                        {
+                            Matcher matcher = pattern.matcher(input);
+                            Supplier<Boolean> matcherAction = () -> matcher.matches();
+                            retval = this.determineMatches(input, matcher, matcherAction)
+                                         .orElseGet(() -> Stream.empty())
+                                         .findFirst();
+                        }
+                        else
+                        {
+                            retval = Optional.empty();
+                        }
+                        return retval;
                     }
 
                     @Override
                     public Optional<Stream<Match>> findIn(String input)
                     {
-                        Matcher matcher = pattern.matcher(input);
-                        Supplier<Boolean> matcherAction = () -> matcher.find();
-                        return this.determineMatches(input, matcher, matcherAction);
+                        Optional<Stream<Match>> retval;
+                        if (input != null)
+                        {
+                            Matcher matcher = pattern.matcher(input);
+                            Supplier<Boolean> matcherAction = () -> matcher.find();
+                            retval = this.determineMatches(input, matcher, matcherAction);
+                        }
+                        else
+                        {
+                            retval = Optional.empty();
+                        }
+                        return retval;
                     }
 
                     private Optional<Stream<Match>> determineMatches(String input, Matcher matcher, Supplier<Boolean> matcherAction)
@@ -237,6 +266,13 @@ public class MatcherUtils
                                         public Map<Integer, String> getGroups()
                                         {
                                             return groups;
+                                        }
+
+                                        @Override
+                                        public String getGroup(int index)
+                                        {
+                                            return this.getGroups()
+                                                       .get(index);
                                         }
 
                                         @Override

@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.LongFunction;
+import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 import java.util.function.UnaryOperator;
@@ -91,6 +92,11 @@ public class MapperUtils
      * @return
      */
     public static ToIntFunction<Integer> identitiyForIntegerAsUnboxed()
+    {
+        return i -> i;
+    }
+
+    public static ToDoubleFunction<? super Double> identitiyForDoubleAsUnboxed()
     {
         return i -> i;
     }

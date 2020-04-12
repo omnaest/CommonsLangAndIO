@@ -18,10 +18,12 @@
 */
 package org.omnaest.utils;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.omnaest.utils.stream.FirstElementFilterCapture;
 
 /**
@@ -38,7 +40,7 @@ public class PredicateUtils
      */
     public static <E> Predicate<E> notNull()
     {
-        return t -> t != null;
+        return Objects::nonNull;
     }
 
     public static interface ModuloPredicateBuilder<E>
@@ -83,6 +85,35 @@ public class PredicateUtils
     public static <E> FirstElementFilterCapture<E> firstElementFilterCapture()
     {
         return new FirstElementFilterCapture<>();
+    }
+
+    /**
+     * @see StringUtils#isNotBlank(CharSequence)
+     * @return
+     */
+    public static Predicate<? super String> notBlank()
+    {
+        return str -> StringUtils.isNotBlank(str);
+    }
+
+    /**
+     * @see StringUtils#isNotEmpty(CharSequence)
+     * @return
+     */
+    public static Predicate<? super String> notEmpty()
+    {
+        return str -> StringUtils.isNotEmpty(str);
+    }
+
+    /**
+     * Returns true if the tested element does not match the given
+     * 
+     * @param gene
+     * @return
+     */
+    public static <T> Predicate<T> notEqueals(T object)
+    {
+        return t -> !Objects.equals(t, object);
     }
 
 }
