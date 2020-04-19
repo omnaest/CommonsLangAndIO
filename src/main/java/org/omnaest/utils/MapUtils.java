@@ -98,6 +98,19 @@ public class MapUtils
         return retmap;
     }
 
+    /**
+     * Inverts the key and value column and assumes that the values are unique in the source map.
+     * 
+     * @param map
+     * @return
+     */
+    public static <K, V> Map<V, K> invertUnique(Map<K, V> map)
+    {
+        return invert(map).entrySet()
+                          .stream()
+                          .collect(Collectors.toMap(e -> e.getKey(), e -> ListUtils.first(e.getValue())));
+    }
+
     public static interface MapBuilder<K, V>
     {
         public <K2, V2> MapBuilder<K2, V2> put(K2 key, V2 value);

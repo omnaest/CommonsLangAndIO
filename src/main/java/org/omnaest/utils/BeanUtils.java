@@ -18,11 +18,13 @@
 */
 package org.omnaest.utils;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -34,6 +36,7 @@ import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.omnaest.utils.ProxyUtils.MethodAndHandler;
 import org.omnaest.utils.ProxyUtils.MethodHandler;
+import org.omnaest.utils.ReflectionUtils.Field;
 import org.omnaest.utils.ReflectionUtils.Method;
 import org.omnaest.utils.element.cached.CachedElement;
 import org.omnaest.utils.map.MapDecorator;
@@ -156,6 +159,8 @@ public class BeanUtils
         public Class<?> getType();
 
         public boolean hasPrimitiveType();
+
+        public <A extends Annotation> Stream<A> getAnnotations(Class<A> annotationType);
     }
 
     public static interface FlattenedProperty
@@ -294,6 +299,15 @@ public class BeanUtils
         public T newProxy(Consumer<BeanPropertyAccessorRegistry> registerStream);
 
         public MapProxyFactory<T> toMapProxyFactory();
+
+        public <A extends Annotation> Stream<A> resolveTypeAnnotation(Class<A> annotationType);
+
+        /**
+         * Returns the underlying {@link Class} type
+         * 
+         * @return
+         */
+        public Class<T> getType();
     }
 
     public static interface MapProxyFactory<T> extends Function<Map<String, ? extends Object>, T>
@@ -464,6 +478,18 @@ public class BeanUtils
             return this.analyzer.toMapProxyFactory();
         }
 
+        @Override
+        public <A extends Annotation> Stream<A> resolveTypeAnnotation(Class<A> annotationType)
+        {
+            return this.analyzer.resolveTypeAnnotation(annotationType);
+        }
+
+        @Override
+        public Class<T> getType()
+        {
+            return this.analyzer.getType();
+        }
+
     }
 
     public static <T> BeanAnalyzer<T> analyze(Class<T> type)
@@ -591,8 +617,16 @@ public class BeanUtils
                                                                                 .collect(Collectors.groupingBy(method -> this.determinePropertyName(method.getName())));
                 return propertyToMethods.entrySet()
                                         .stream()
-                                        .map(entry -> this.wrapMethodAsProperty(entry.getKey(), this.determineReadMethod(entry.getValue()),
+                                        .map(entry -> this.wrapMethodAsProperty(entry.getKey(), this.determineField(entry.getKey()),
+                                                                                this.determineReadMethod(entry.getValue()),
                                                                                 this.determineWriteMethod(entry.getValue())));
+            }
+
+            private Field<T> determineField(String fieldName)
+            {
+                return ReflectionUtils.of(type)
+                                      .getField(fieldName)
+                                      .orElse(null);
             }
 
             @Override
@@ -616,7 +650,9 @@ public class BeanUtils
                 boolean isSetter = StringUtils.startsWithAny(method.getName(), new String[] { "set" }) && method.getParameterTypes()
                                                                                                                 .size() == 1;
 
-                return isGetter || isSetter;
+                boolean isJavaInternalMethod = method.getName()
+                                                     .equals("getClass");
+                return !isJavaInternalMethod && (isGetter || isSetter);
             }
 
             private Method<T> determineWriteMethod(List<Method<T>> methods)
@@ -646,7 +682,7 @@ public class BeanUtils
                                                           .replaceFirst("set", ""));
             }
 
-            private Property<T> wrapMethodAsProperty(String property, Method<T> readMethod, Method<T> writeMethod)
+            private Property<T> wrapMethodAsProperty(String property, Field<T> field, Method<T> readMethod, Method<T> writeMethod)
             {
                 return new Property<T>()
                 {
@@ -745,6 +781,24 @@ public class BeanUtils
                     public <E> PropertyAccessor<E> access(Class<E> propertyType, T instance)
                     {
                         return this.access(propertyType, () -> instance);
+                    }
+
+                    @Override
+                    public <A extends Annotation> Stream<A> getAnnotations(Class<A> annotationType)
+                    {
+                        return StreamUtils.concat(Optional.ofNullable(field)
+                                                          .map(field ->
+                                                          {
+                                                              return field.getAnnotations(annotationType);
+                                                          })
+                                                          .orElse(Stream.empty()),
+                                                  Optional.ofNullable(readMethod)
+                                                          .map(method -> method.getAnnotations(annotationType))
+                                                          .orElse(Stream.empty()),
+                                                  Optional.ofNullable(writeMethod)
+                                                          .map(method -> method.getAnnotations(annotationType))
+                                                          .orElse(Stream.empty()))
+                                          .distinct();
                     }
 
                 };
@@ -866,6 +920,18 @@ public class BeanUtils
                     }
 
                 };
+            }
+
+            @Override
+            public <A extends Annotation> Stream<A> resolveTypeAnnotation(Class<A> annotationType)
+            {
+                return Stream.of(type.getAnnotationsByType(annotationType));
+            }
+
+            @Override
+            public Class<T> getType()
+            {
+                return type;
             }
         });
 

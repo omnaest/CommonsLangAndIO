@@ -521,6 +521,23 @@ public class StreamUtils
     }
 
     /**
+     * Returns a {@link Stream} based on a concatenation of the given {@link Supplier}s of {@link Stream} instances. <br>
+     * The {@link Supplier#get()} method is only called once per {@link Supplier} instance.<br>
+     * <br>
+     * For {@link Supplier} which return multiple different instances of a {@link Stream} please see {@link #fromSupplier(Supplier)}.
+     * 
+     * @param streamSuppliers
+     * @return
+     */
+    @SafeVarargs
+    public static <E> Stream<E> fromStreams(Supplier<Stream<? extends E>>... streamSuppliers)
+    {
+        return Arrays.asList(streamSuppliers)
+                     .stream()
+                     .flatMap(supplier -> supplier.get());
+    }
+
+    /**
      * Returns a {@link Stream} which removes elements from the given {@link Collection} one by one
      * 
      * @param collection

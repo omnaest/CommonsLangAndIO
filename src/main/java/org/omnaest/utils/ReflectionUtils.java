@@ -18,11 +18,13 @@
 */
 package org.omnaest.utils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -30,6 +32,59 @@ import java.util.stream.Stream;
 
 public class ReflectionUtils
 {
+    private static class FieldReflectionImpl<T> implements FieldReflection, FieldReflectionTyped<T>
+    {
+        private java.lang.reflect.Field field;
+
+        private FieldReflectionImpl(java.lang.reflect.Field field)
+        {
+            this.field = field;
+        }
+
+        @Override
+        public Stream<Annotation> getAnnotations()
+        {
+            return Optional.ofNullable(this.field)
+                           .map(f -> Arrays.asList(f.getDeclaredAnnotations())
+                                           .stream())
+                           .orElse(Stream.empty());
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <A extends Annotation> Stream<A> getAnnotations(Class<A> annotationType)
+        {
+            return this.getAnnotations()
+                       .filter(annotation -> annotationType.isAssignableFrom(annotation.getClass()))
+                       .map(a -> (A) a);
+        }
+
+        @Override
+        public String getName()
+        {
+            return this.field.getName();
+        }
+
+        @Override
+        public Class<?> getType()
+        {
+            return this.field.getType();
+        }
+
+        @Override
+        public java.lang.reflect.Field getRawField()
+        {
+            return this.field;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T2> FieldReflectionTyped<T2> withType(Class<T2> type)
+        {
+            return (FieldReflectionTyped<T2>) this;
+        }
+    }
+
     private static class MethodImpl<T> implements Method<T>
     {
         private java.lang.reflect.Method method;
@@ -61,6 +116,12 @@ public class ReflectionUtils
         public List<Class<?>> getParameterTypes()
         {
             return Arrays.asList(this.method.getParameterTypes());
+        }
+
+        @Override
+        public <A extends Annotation> Stream<A> getAnnotations(Class<A> annotationType)
+        {
+            return Stream.of(this.method.getAnnotationsByType(annotationType));
         }
 
         @Override
@@ -176,6 +237,8 @@ public class ReflectionUtils
         public List<Class<?>> getParameterTypes();
 
         public java.lang.reflect.Method getRawMethod();
+
+        public <A extends Annotation> Stream<A> getAnnotations(Class<A> annotationType);
     }
 
     public static interface MethodAccessor
@@ -201,6 +264,24 @@ public class ReflectionUtils
     {
     }
 
+    public static interface UntypedField
+    {
+        public String getName();
+
+        public Class<?> getType();
+
+        public Stream<Annotation> getAnnotations();
+
+        public <A extends Annotation> Stream<A> getAnnotations(Class<A> annotationType);
+
+        public java.lang.reflect.Field getRawField();
+    }
+
+    public static interface Field<T> extends UntypedField
+    {
+
+    }
+
     public static interface TypeReflection<T>
     {
         public Stream<Class<?>> getSuperTypes();
@@ -210,6 +291,8 @@ public class ReflectionUtils
         public Stream<Class<?>> getSuperTypesAndInterfaces();
 
         public Stream<Method<T>> getMethods();
+
+        public Optional<Field<T>> getField(String fieldName);
     }
 
     public static <T> TypeReflection<T> of(Class<T> type)
@@ -253,7 +336,52 @@ public class ReflectionUtils
                              .map(MethodImpl::new);
             }
 
+            @Override
+            public Optional<Field<T>> getField(String fieldName)
+            {
+                return Optional.ofNullable(this.determineRawField(type, fieldName))
+                               .map(rawField -> ReflectionUtils.of(type, rawField));
+            }
+
+            private java.lang.reflect.Field determineRawField(Class<T> type, String fieldName)
+            {
+                return StreamUtils.fromStreams(() -> Stream.of(type), () -> this.getSuperTypesAndInterfaces())
+                                  .map(t ->
+                                  {
+                                      try
+                                      {
+                                          return t.getDeclaredField(fieldName);
+                                      }
+                                      catch (Exception e)
+                                      {
+                                          return null;
+                                      }
+                                  })
+                                  .filter(field -> field != null)
+                                  .findFirst()
+                                  .orElse(null);
+            }
+
         };
+    }
+
+    public static interface FieldReflection extends UntypedField
+    {
+        public <T> FieldReflectionTyped<T> withType(Class<T> type);
+    }
+
+    public static interface FieldReflectionTyped<T> extends FieldReflection, Field<T>
+    {
+    }
+
+    public static FieldReflection of(java.lang.reflect.Field field)
+    {
+        return new FieldReflectionImpl<Object>(field);
+    }
+
+    public static <T> FieldReflectionTyped<T> of(Class<T> type, java.lang.reflect.Field field)
+    {
+        return of(field).withType(type);
     }
 
     /**
