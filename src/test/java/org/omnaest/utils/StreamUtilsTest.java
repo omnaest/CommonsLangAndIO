@@ -302,4 +302,34 @@ public class StreamUtilsTest
         assertTrue(result.contains("value0"));
         assertTrue(result.contains("value9999"));
     }
+
+    @Test
+    public void testBuilder() throws Exception
+    {
+        assertEquals(Arrays.asList("a", "b", "c", "d", "e", "f", "g"), StreamUtils.builder()
+                                                                                  .add("a")
+                                                                                  .addAll("b", "c")
+                                                                                  .addAll(Arrays.asList("d", "e"))
+                                                                                  .addAll(Arrays.asList("f", "g")
+                                                                                                .stream())
+                                                                                  .build()
+                                                                                  .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testGenerate() throws Exception
+    {
+        assertEquals(Arrays.asList(0, 5, 10, 15), StreamUtils.generate()
+                                                             .intStream()
+                                                             .unlimited(5)
+                                                             .limit(4)
+                                                             .mapToObj(v -> v)
+                                                             .collect(Collectors.toList()));
+
+        assertEquals(Arrays.asList(0, 1, 2, 3), StreamUtils.generate()
+                                                           .intStream()
+                                                           .unlimitedWithTerminationPredicate(ii -> ii > 3)
+                                                           .mapToObj(v -> v)
+                                                           .collect(Collectors.toList()));
+    }
 }

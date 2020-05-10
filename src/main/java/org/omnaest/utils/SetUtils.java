@@ -20,10 +20,13 @@ package org.omnaest.utils;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Helpoer methods for {@link Set}s
@@ -169,5 +172,31 @@ public class SetUtils
         shared.removeAll(removed);
 
         return new SetDelta<>(added, removed, shared);
+    }
+
+    /**
+     * @see ListUtils#getRandomElement(java.util.List)
+     * @param collection
+     * @return
+     */
+    public static <E> Optional<E> getRandomElement(Collection<E> collection)
+    {
+        return ListUtils.getRandomElement(collection.stream()
+                                                    .collect(Collectors.toList()));
+    }
+
+    /**
+     * @see ListUtils#getRandomElementStream(Collection)
+     * @param collection
+     * @return
+     */
+    public static <E> Stream<E> getRandomElementStream(Collection<E> collection)
+    {
+        return ListUtils.getRandomElementStream(collection);
+    }
+
+    public static <E> Set<E> empty()
+    {
+        return Collections.emptySet();
     }
 }

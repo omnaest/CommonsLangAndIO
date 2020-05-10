@@ -20,12 +20,14 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -264,5 +266,29 @@ public class ListUtilsTest
         assertEquals(Arrays.asList("3", "4"), ListUtils.last(3, Arrays.asList("3", "4")));
         assertEquals(Arrays.asList(), ListUtils.last(3, Arrays.asList()));
         assertEquals(Arrays.asList(), ListUtils.last(3, null));
+    }
+
+    @Test
+    public void testGetRandomElement() throws Exception
+    {
+        assertEquals("a", ListUtils.getRandomElement(Arrays.asList("a"))
+                                   .get());
+        assertEquals(2, IntStream.range(0, 1000)
+                                 .mapToObj(ii -> ListUtils.getRandomElement(Arrays.asList("a", "b"))
+                                                          .get())
+                                 .distinct()
+                                 .count());
+        ListUtils.getRandomElement(Arrays.asList())
+                 .ifPresent(e -> fail());
+        ListUtils.getRandomElement(null)
+                 .ifPresent(e -> fail());
+
+    }
+
+    @Test
+    public void testToListFromIterator()
+    {
+        List<String> list = Arrays.asList("a", "b", "c");
+        assertEquals(list, ListUtils.toList(list.iterator()));
     }
 }

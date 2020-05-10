@@ -62,4 +62,14 @@ public class MathUtils
         return new AverageAndStandardDeviation(average, standardDeviation);
 
     }
+
+    public static double random(double min, double max)
+    {
+        return Math.min(max, min) + Math.abs(max - min) * Math.random();
+    }
+
+    public static boolean randomBinary()
+    {
+        return Math.random() >= 0.5;
+    }
 }

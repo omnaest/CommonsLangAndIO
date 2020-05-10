@@ -25,9 +25,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.RandomUtils;
 import org.omnaest.utils.BeanUtils.BeanAnalyzer;
 import org.omnaest.utils.BeanUtils.BeanPropertyAccessor;
 import org.omnaest.utils.BeanUtils.NestedFlattenedProperty;
@@ -533,6 +536,46 @@ public class ListUtils
         @SuppressWarnings("unchecked")
         E[] array = (E[]) Array.newInstance(elementType, list.size());
         return list.toArray(array);
+    }
+
+    /**
+     * Returns a random element from the given {@link List}
+     * 
+     * @param list
+     * @return
+     */
+    public static <E> Optional<E> getRandomElement(List<E> list)
+    {
+        return list == null || list.isEmpty() ? Optional.empty() : Optional.ofNullable(list.get(RandomUtils.nextInt(0, list.size())));
+    }
+
+    /**
+     * Returns a {@link Stream} of random elements from the {@link Collection}. All elements available in the {@link Collection} will be only present once in
+     * the returned {@link Stream}.
+     * 
+     * @param collection
+     * @return
+     */
+    public static <E> Stream<E> getRandomElementStream(Collection<E> collection)
+    {
+        ArrayList<E> randomList = new ArrayList<>(collection);
+        Collections.shuffle(randomList);
+        return randomList.stream();
+    }
+
+    public static <E> List<E> toList(Iterator<E> iterator)
+    {
+        List<E> result = new ArrayList<>();
+
+        if (iterator != null)
+        {
+            while (iterator.hasNext())
+            {
+                result.add(iterator.next());
+            }
+        }
+
+        return result;
     }
 
 }

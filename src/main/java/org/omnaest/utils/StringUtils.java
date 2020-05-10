@@ -111,7 +111,7 @@ public class StringUtils
      */
     public static Stream<String> splitToStreamByLineSeparator(String str)
     {
-        return splitToStreamByRegEx(str, "[\n\r]+");
+        return splitToStreamByRegEx(str, "((\n\r)|(\\r\\n)|(\n)|(\r))");
     }
 
     /**
@@ -378,5 +378,17 @@ public class StringUtils
             retval = org.apache.commons.lang3.StringUtils.substring(str, str.length() - lengthFromBack, str.length());
         }
         return retval;
+    }
+
+    /**
+     * Ensures that the given prefix exists.
+     * 
+     * @param str
+     * @param prefix
+     * @return
+     */
+    public static String ensurePrefix(String str, String prefix)
+    {
+        return org.apache.commons.lang3.StringUtils.startsWith(str, prefix) ? str : prefix + org.apache.commons.lang3.StringUtils.defaultString(str);
     }
 }

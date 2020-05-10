@@ -30,6 +30,8 @@ public class ExecutorUtils
 
         public ParallelExecution withNumberOfThreadsPerCPUCore(double numberOfThreadsPerCPUCore);
 
+        public ParallelExecution withNumberOfThreadsLikeAvailableCPUCores();
+
         public ParallelExecution withUnlimitedNumberOfThreads();
 
         public ParallelExecution withSingleThread();
@@ -107,6 +109,12 @@ public class ExecutorUtils
             {
                 int numberOfThreads = calculateNumberOfThreadsByPerCPU(numberOfThreadsPerCPUCore);
                 return this.withNumberOfThreads(numberOfThreads);
+            }
+
+            @Override
+            public ParallelExecution withNumberOfThreadsLikeAvailableCPUCores()
+            {
+                return this.withNumberOfThreadsPerCPUCore(1.0);
             }
 
             @Override

@@ -106,6 +106,16 @@ public class PredicateUtils
     }
 
     /**
+     * Returns true if the tested object is null
+     * 
+     * @return
+     */
+    public static <T> Predicate<T> isNull()
+    {
+        return o -> o == null;
+    }
+
+    /**
      * Returns true if the tested element does not match the given
      * 
      * @param gene

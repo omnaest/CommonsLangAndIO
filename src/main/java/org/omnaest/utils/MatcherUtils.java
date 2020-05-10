@@ -198,6 +198,7 @@ public class MatcherUtils
                     @Override
                     public Optional<Stream<Match>> findIn(String input)
                     {
+                        AssertionUtils.assertIsNotNull("Pattern must not be null", pattern);
                         Optional<Stream<Match>> retval;
                         if (input != null)
                         {

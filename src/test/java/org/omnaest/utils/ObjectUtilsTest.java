@@ -18,17 +18,33 @@
 */
 package org.omnaest.utils;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
 public class ObjectUtilsTest
 {
 
-	@Test
-	public void testIsPrimitiveOrString() throws Exception
-	{
-		assertTrue(ObjectUtils.isPrimitiveOrString(Integer.class));
-	}
+    @Test
+    public void testIsPrimitiveOrString() throws Exception
+    {
+        assertTrue(ObjectUtils.isPrimitiveOrString(Integer.class));
+    }
+
+    @Test
+    public void testIs() throws Exception
+    {
+        assertTrue(ObjectUtils.is("a")
+                              .ofAny("b", "a")
+                              .ifFalse(v -> fail())
+                              .get());
+        assertFalse(ObjectUtils.is("c")
+                               .ofAny("b", "a")
+                               .ifTrue(v -> fail())
+                               .get());
+
+    }
 
 }

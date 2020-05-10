@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -685,6 +686,291 @@ public class StreamUtils
                                                                                                                                  }))
                                                                                                            .get());
 
+    }
+
+    public static interface StreamBuilder
+    {
+        public <E> TypedStreamBuilder<E> add(E element);
+
+        @SuppressWarnings("unchecked")
+        public <E> TypedStreamBuilder<E> addAll(E... elements);
+
+        public <E> TypedStreamBuilder<E> addAll(Collection<E> elements);
+
+        public <E> TypedStreamBuilder<E> addAll(Stream<E> elements);
+
+        public <E> Stream<E> build();
+    }
+
+    public static interface TypedStreamBuilder<E>
+    {
+
+        public TypedStreamBuilder<E> add(E element);
+
+        @SuppressWarnings("unchecked")
+        public TypedStreamBuilder<E> addAll(E... elements);
+
+        public TypedStreamBuilder<E> addAll(Collection<E> elements);
+
+        public TypedStreamBuilder<E> addAll(Stream<E> elements);
+
+        public Stream<E> build();
+
+    }
+
+    private static class TypedStreamBuilderImpl<E> implements TypedStreamBuilder<E>
+    {
+        private List<Stream<E>> streams = new ArrayList<>();
+
+        @Override
+        public Stream<E> build()
+        {
+            return this.streams.stream()
+                               .flatMap(s -> s);
+        }
+
+        @Override
+        public TypedStreamBuilder<E> add(E element)
+        {
+            this.streams.add(Stream.of(element));
+            return this;
+        }
+
+        @Override
+        public TypedStreamBuilder<E> addAll(Collection<E> elements)
+        {
+            return this.addAll(elements.stream());
+        }
+
+        @Override
+        public TypedStreamBuilder<E> addAll(Stream<E> elements)
+        {
+            this.streams.add(elements);
+            return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public TypedStreamBuilder<E> addAll(E... elements)
+        {
+            return this.addAll(Arrays.asList(elements));
+        }
+
+    }
+
+    public static StreamBuilder builder()
+    {
+        return new StreamBuilder()
+        {
+            @Override
+            public <E> Stream<E> build()
+            {
+                return Stream.empty();
+            }
+
+            @Override
+            public <E> TypedStreamBuilder<E> addAll(Stream<E> elements)
+            {
+                return new TypedStreamBuilderImpl<E>().addAll(elements);
+            }
+
+            @Override
+            public <E> TypedStreamBuilder<E> addAll(Collection<E> elements)
+            {
+                return new TypedStreamBuilderImpl<E>().addAll(elements);
+            }
+
+            @Override
+            public <E> TypedStreamBuilder<E> add(E element)
+            {
+                return new TypedStreamBuilderImpl<E>().add(element);
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public <E> TypedStreamBuilder<E> addAll(E... elements)
+            {
+                return new TypedStreamBuilderImpl<E>().addAll(elements);
+            }
+        };
+    }
+
+    public static interface StreamGenerator
+    {
+        public IntStreamGenerator intStream();
+
+        public <E, S extends I, I extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function);
+    }
+
+    public static interface IntStreamGenerator
+    {
+
+        /**
+         * Generates an {@link IntStream} based on the given {@link Options}
+         * 
+         * @param options
+         * @return
+         */
+        public IntStream with(Options options);
+
+        /**
+         * Generates an unlimited {@link IntStream} with an given increment
+         * 
+         * @param start
+         * @param increment
+         * @return
+         */
+        public IntStream unlimited(int start, int increment);
+
+        /**
+         * Similar to {@link #unlimited(int, int)} with a start of 0
+         * 
+         * @param increment
+         * @return
+         */
+        public IntStream unlimited(int increment);
+
+        /**
+         * Similar to {@link #unlimited(int)} with an increment of 1
+         * 
+         * @return
+         */
+        public IntStream unlimited();
+
+        /**
+         * Similar to {@link #unlimited()} but allows to provide a termination {@link Predicate} which should return true if the {@link Stream}
+         * should terminate.
+         * 
+         * @param terminationPredicate
+         * @return
+         */
+        public IntStream unlimitedWithTerminationPredicate(Predicate<Integer> terminationPredicate);
+
+        public static class Options
+        {
+            private int                start                = 0;
+            private int                increment            = 1;
+            private Predicate<Integer> terminationPredicate = null;
+
+            public Options withStart(int start)
+            {
+                this.start = start;
+                return this;
+            }
+
+            public Options withIncrement(int increment)
+            {
+                this.increment = increment;
+                return this;
+            }
+
+            public Options withEndInclusive(int end)
+            {
+                this.terminationPredicate = ii -> ii > end;
+                return this;
+            }
+
+            public Options withEndExclusive(int end)
+            {
+                this.terminationPredicate = ii -> ii >= end;
+                return this;
+            }
+
+            public Options withTerminationPredicate(Predicate<Integer> terminationPredicate)
+            {
+                this.terminationPredicate = terminationPredicate;
+                return this;
+            }
+
+            @Override
+            public String toString()
+            {
+                return "Options [start=" + start + ", increment=" + increment + ", terminationPredicate=" + terminationPredicate + "]";
+            }
+
+            public int getStart()
+            {
+                return start;
+            }
+
+            public int getIncrement()
+            {
+                return increment;
+            }
+
+            public Predicate<Integer> getTerminationPredicate()
+            {
+                return terminationPredicate;
+            }
+
+        }
+    }
+
+    public static StreamGenerator generate()
+    {
+        return new StreamGenerator()
+        {
+            @Override
+            public IntStreamGenerator intStream()
+            {
+                return new IntStreamGenerator()
+                {
+                    @Override
+                    public IntStream with(Options options)
+                    {
+                        AtomicInteger counter = new AtomicInteger(options.getStart());
+                        return StreamUtils.fromSupplier(() -> counter.getAndAdd(options.getIncrement()), options.getTerminationPredicate())
+                                          .mapToInt(MapperUtils.identitiyForIntegerAsUnboxed());
+                    }
+
+                    @Override
+                    public IntStream unlimitedWithTerminationPredicate(Predicate<Integer> terminationPredicate)
+                    {
+                        return this.with(new Options().withTerminationPredicate(terminationPredicate));
+                    }
+
+                    @Override
+                    public IntStream unlimited(int start, int increment)
+                    {
+                        AtomicInteger counter = new AtomicInteger(start);
+                        return IntStream.generate(() -> counter.getAndAdd(increment));
+                    }
+
+                    @Override
+                    public IntStream unlimited(int increment)
+                    {
+                        return this.unlimited(0, increment);
+                    }
+
+                    @Override
+                    public IntStream unlimited()
+                    {
+                        return this.unlimited(1);
+                    }
+
+                };
+            }
+
+            @Override
+            public <E, S extends I, I extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function)
+            {
+                return StreamUtils.fromSupplier(new Supplier<E>()
+                {
+                    private E element = startElement;
+
+                    @Override
+                    public E get()
+                    {
+                        E result = this.element;
+
+                        this.element = function.apply(this.element);
+
+                        return result;
+                    }
+                }, PredicateUtils.isNull());
+            }
+
+        };
     }
 
 }

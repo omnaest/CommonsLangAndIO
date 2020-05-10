@@ -69,4 +69,14 @@ public interface BiElement<E1, E2>
         return UnaryBiElement.of(getFirst(), (E1) getSecond());
     }
 
+    /**
+     * Returns true if {@link #getFirst()} or {@link #getSecond()} returns null
+     * 
+     * @return
+     */
+    public default boolean hasAnyNullValue()
+    {
+        return this.getFirst() == null || this.getSecond() == null;
+    }
+
 }

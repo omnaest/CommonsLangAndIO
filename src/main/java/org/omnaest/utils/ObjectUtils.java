@@ -20,6 +20,7 @@ package org.omnaest.utils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -188,5 +189,71 @@ public class ObjectUtils
         }
 
         return retval;
+    }
+
+    public static interface BooleanResult extends Supplier<Boolean>
+    {
+        public default BooleanResult ifTrue(Consumer<Boolean> valueConsumer)
+        {
+            Boolean value = this.get();
+            if (value)
+            {
+                valueConsumer.accept(value);
+            }
+            return this;
+        }
+
+        public default BooleanResult ifFalse(Consumer<Boolean> valueConsumer)
+        {
+            Boolean value = this.get();
+            if (!value)
+            {
+                valueConsumer.accept(value);
+            }
+            return this;
+        }
+
+        public default <R> Optional<R> map(Function<Boolean, R> mapper)
+        {
+            if (this.get())
+            {
+                return Optional.of(mapper.apply(this.get()));
+            }
+            else
+            {
+                return Optional.empty();
+            }
+        }
+    }
+
+    public static interface Condition<E>
+    {
+        @SuppressWarnings("unchecked")
+        public BooleanResult ofAny(E... element);
+    }
+
+    public static <E> Condition<E> is(E element)
+    {
+        return new Condition<E>()
+        {
+            @SuppressWarnings("unchecked")
+            @Override
+            public BooleanResult ofAny(E... matchElement)
+            {
+                return new BooleanResult()
+                {
+                    private boolean value = Arrays.asList(matchElement)
+                                                  .stream()
+                                                  .anyMatch(m -> m.equals(element));
+
+                    @Override
+                    public Boolean get()
+                    {
+                        return this.value;
+                    }
+                };
+
+            }
+        };
     }
 }

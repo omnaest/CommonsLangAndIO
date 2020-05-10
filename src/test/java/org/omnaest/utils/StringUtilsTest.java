@@ -181,4 +181,12 @@ public class StringUtilsTest
         assertEquals("ef", StringUtils.lastFromBack("abcdef", 2));
     }
 
+    @Test
+    public void testEnsurePrefix() throws Exception
+    {
+        assertEquals("/abc", StringUtils.ensurePrefix("abc", "/"));
+        assertEquals("/abc", StringUtils.ensurePrefix("/abc", "/"));
+        assertEquals("/", StringUtils.ensurePrefix(null, "/"));
+    }
+
 }
