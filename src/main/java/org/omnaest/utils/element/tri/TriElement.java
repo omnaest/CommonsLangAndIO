@@ -38,4 +38,14 @@ public interface TriElement<E1, E2, E3>
         return new DefaultTriElement<E1, E2, E3>(first, second, third);
     }
 
+    /**
+     * Returns an empty {@link TriElement}
+     * 
+     * @return
+     */
+    public static <R1, R2, R3> TriElement<R1, R2, R3> empty()
+    {
+        return TriElement.of(null, null, null);
+    }
+
 }

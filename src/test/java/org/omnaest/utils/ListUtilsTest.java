@@ -291,4 +291,27 @@ public class ListUtilsTest
         List<String> list = Arrays.asList("a", "b", "c");
         assertEquals(list, ListUtils.toList(list.iterator()));
     }
+
+    @Test
+    public void testToListEArray() throws Exception
+    {
+        assertEquals(Arrays.asList("a", "b"), ListUtils.toList("a", "b"));
+    }
+
+    @Test
+    public void testAllCombinations() throws Exception
+    {
+        assertEquals(SetUtils.toSet(SetUtils.toSet("a"), SetUtils.toSet("b"), SetUtils.toSet("c"), SetUtils.toSet("a", "b"), SetUtils.toSet("a", "c"),
+                                    SetUtils.toSet("b", "c"), SetUtils.toSet("a", "b", "c")
+
+        ), ListUtils.allCombinations(Arrays.asList("a", "b", "c")));
+    }
+
+    @Test
+    public void testAllPermutations() throws Exception
+    {
+        assertEquals(SetUtils.toSet(Arrays.asList("a", "b", "c"), Arrays.asList("b", "c", "a"), Arrays.asList("c", "a", "b"), Arrays.asList("c", "b", "a"),
+                                    Arrays.asList("b", "a", "c"), Arrays.asList("a", "c", "b")),
+                     ListUtils.allPermutations(Arrays.asList("a", "b", "c")));
+    }
 }

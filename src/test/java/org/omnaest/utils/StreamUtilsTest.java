@@ -332,4 +332,13 @@ public class StreamUtilsTest
                                                            .mapToObj(v -> v)
                                                            .collect(Collectors.toList()));
     }
+
+    @Test
+    public void testWithFilterAllOnAnyFilterFails() throws Exception
+    {
+        assertEquals(Arrays.asList(true, true), StreamUtils.withFilterAllOnAnyFilterFails(Arrays.asList(true, true, false, true, true)
+                                                                                                .stream())
+                                                           .filter(value -> value)
+                                                           .collect(Collectors.toList()));
+    }
 }

@@ -55,6 +55,7 @@ import org.omnaest.utils.buffer.CyclicBuffer;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.lar.LeftAndRight;
 import org.omnaest.utils.stream.DefaultSupplierStream;
+import org.omnaest.utils.stream.FilterAllOnFirstFilterFailStreamDecorator;
 import org.omnaest.utils.stream.SupplierStream;
 import org.omnaest.utils.supplier.OptionalSupplier;
 
@@ -971,6 +972,11 @@ public class StreamUtils
             }
 
         };
+    }
+
+    public static <E> Stream<E> withFilterAllOnAnyFilterFails(Stream<E> stream)
+    {
+        return new FilterAllOnFirstFilterFailStreamDecorator<>(stream);
     }
 
 }

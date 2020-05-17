@@ -44,6 +44,8 @@ import org.apache.commons.lang3.RandomUtils;
 import org.omnaest.utils.BeanUtils.BeanAnalyzer;
 import org.omnaest.utils.BeanUtils.BeanPropertyAccessor;
 import org.omnaest.utils.BeanUtils.NestedFlattenedProperty;
+import org.omnaest.utils.element.bi.UnaryBiElement;
+import org.omnaest.utils.element.tri.TriElement;
 import org.omnaest.utils.list.ComparableList;
 import org.omnaest.utils.list.ComparableListDecorator;
 import org.omnaest.utils.list.crud.CRUDList;
@@ -574,6 +576,95 @@ public class ListUtils
                 result.add(iterator.next());
             }
         }
+
+        return result;
+    }
+
+    @SafeVarargs
+    public static <E> List<E> toList(E... elements)
+    {
+        List<E> result = new ArrayList<>();
+
+        if (elements != null)
+        {
+            result.addAll(Arrays.asList(elements));
+        }
+
+        return result;
+    }
+
+    public static <E> Set<Set<E>> allCombinations(List<E> list)
+    {
+        Set<Set<E>> result = new HashSet<>();
+
+        if (list != null && !list.isEmpty())
+        {
+            IntStream.range(0, list.size())
+                     .forEach(index ->
+                     {
+                         TriElement<E, List<E>, List<E>> splits = ListUtils.removeAtAndSplit(list, index);
+
+                         E element = splits.getFirst();
+                         List<E> mergedRest = ListUtils.mergedList(splits.getSecond(), splits.getThird());
+
+                         result.add(Arrays.asList(element)
+                                          .stream()
+                                          .collect(Collectors.toSet()));
+
+                         result.addAll(allCombinations(mergedRest).stream()
+                                                                  .map(set -> SetUtils.addToNew(set, element))
+                                                                  .collect(Collectors.toList()));
+                     });
+        }
+
+        return result;
+    }
+
+    public static <E> TriElement<E, List<E>, List<E>> removeAtAndSplit(Collection<E> collection, int index)
+    {
+        List<E> list = collection == null ? null
+                : collection.stream()
+                            .collect(Collectors.toList());
+        if (list != null && index >= 0 && index < list.size())
+        {
+            return TriElement.of(list.get(index), list.subList(0, index), list.subList(index + 1, list.size()));
+        }
+        else if (list != null)
+        {
+            return TriElement.of(null, list, Collections.emptyList());
+        }
+        else
+        {
+            return TriElement.empty();
+        }
+    }
+
+    public static <E> UnaryBiElement<List<E>> split(int splitSize, List<E> list)
+    {
+        return UnaryBiElement.of(list.subList(0, splitSize), list.subList(splitSize, list.size()));
+    }
+
+    public static <E> Set<List<E>> allPermutations(Collection<E> collection)
+    {
+        Set<List<E>> result = new HashSet<>();
+
+        IntStream.range(0, collection.size())
+                 .forEach(index ->
+                 {
+                     TriElement<E, List<E>, List<E>> splits = ListUtils.removeAtAndSplit(collection, index);
+
+                     E element = splits.getFirst();
+                     List<E> rest = ListUtils.mergedList(splits.getSecond(), splits.getThird());
+
+                     if (!rest.isEmpty())
+                     {
+                         allPermutations(rest).forEach(iElement -> result.add(ListUtils.addToNew(iElement, element)));
+                     }
+                     else
+                     {
+                         result.add(Arrays.asList(element));
+                     }
+                 });
 
         return result;
     }

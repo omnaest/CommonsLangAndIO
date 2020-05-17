@@ -199,4 +199,12 @@ public class SetUtils
     {
         return Collections.emptySet();
     }
+
+    @SafeVarargs
+    public static <E> Set<E> toSet(E... elements)
+    {
+        return Arrays.asList(elements)
+                     .stream()
+                     .collect(Collectors.toSet());
+    }
 }
