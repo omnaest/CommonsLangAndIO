@@ -18,6 +18,8 @@
 */
 package org.omnaest.utils.element.lar;
 
+import org.omnaest.utils.element.bi.BiElement;
+
 /**
  * @see UnaryLeftAndRight
  * @see IntegerLeftAndRight
@@ -47,6 +49,26 @@ public class LeftAndRight<L, R>
         return this.right;
     }
 
+    public boolean hasLeft()
+    {
+        return this.left != null;
+    }
+
+    public boolean hasRight()
+    {
+        return this.right != null;
+    }
+
+    public boolean hasAny()
+    {
+        return this.hasLeft() || this.hasRight();
+    }
+
+    public boolean hasBoth()
+    {
+        return this.hasLeft() && this.hasRight();
+    }
+
     @Override
     public String toString()
     {
@@ -63,6 +85,11 @@ public class LeftAndRight<L, R>
     {
         this.right = right;
         return this;
+    }
+
+    public BiElement<L, R> asBiElement()
+    {
+        return BiElement.of(this.left, this.right);
     }
 
     @Override
@@ -116,5 +143,4 @@ public class LeftAndRight<L, R>
         }
         return true;
     }
-
 }

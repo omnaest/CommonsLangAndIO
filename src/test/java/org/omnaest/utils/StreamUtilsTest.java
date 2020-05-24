@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.omnaest.utils.StreamUtils.Drainage;
+import org.omnaest.utils.element.lar.LeftAndRight;
 
 public class StreamUtilsTest
 {
@@ -86,13 +87,17 @@ public class StreamUtilsTest
     @Test
     public void testConcat() throws Exception
     {
-        List<String> collect = StreamUtils.concat(Arrays.asList(Arrays.asList("1", "2")
-                                                                      .stream(),
-                                                                Arrays.asList("3", "4")
-                                                                      .stream())
-                                                        .stream())
-                                          .collect(Collectors.toList());
-        assertEquals(Arrays.asList("1", "2", "3", "4"), collect);
+        assertEquals(Arrays.asList("1", "2", "3", "4"), StreamUtils.concat(Arrays.asList(Arrays.asList("1", "2")
+                                                                                               .stream(),
+                                                                                         Arrays.asList("3", "4")
+                                                                                               .stream())
+                                                                                 .stream())
+                                                                   .collect(Collectors.toList()));
+        assertEquals(Arrays.asList("1", "2", "3", "4"), StreamUtils.concat(Arrays.asList("1", "2")
+                                                                                 .stream(),
+                                                                           Arrays.asList("3", "4")
+                                                                                 .stream())
+                                                                   .collect(Collectors.toList()));
     }
 
     @Test
@@ -141,6 +146,56 @@ public class StreamUtilsTest
             assertEquals(2, frames.size());
             assertArrayEquals(new String[] { "1", null, "3" }, frames.get(0));
             assertArrayEquals(new String[] { "4", "5", null }, frames.get(1));
+        }
+    }
+
+    @Test
+    public void testFramedList() throws Exception
+    {
+        {
+            List<List<String>> frames = StreamUtils.framedAsList(3, Arrays.asList("1", null, "3", "4", "5")
+                                                                          .stream())
+                                                   .collect(Collectors.toList());
+            assertEquals(2, frames.size());
+            assertEquals(Arrays.asList("1", null, "3"), frames.get(0));
+            assertEquals(Arrays.asList("4", "5", null), frames.get(1));
+        }
+        {
+            List<List<String>> frames = StreamUtils.framedAsList(6, Arrays.asList("1", null, "3", "4", "5")
+                                                                          .stream())
+                                                   .collect(Collectors.toList());
+            assertEquals(1, frames.size());
+            assertEquals(Arrays.asList("1", null, "3", "4", "5", null), frames.get(0));
+        }
+        {
+            List<List<String>> frames = StreamUtils.framedAsList(3, (Stream<String>) null)
+                                                   .collect(Collectors.toList());
+            assertEquals(0, frames.size());
+        }
+    }
+
+    @Test
+    public void testFramedListNonNull() throws Exception
+    {
+        {
+            List<List<String>> frames = StreamUtils.framedNonNullAsList(3, Arrays.asList("1", null, "3", "4", "5")
+                                                                                 .stream())
+                                                   .collect(Collectors.toList());
+            assertEquals(2, frames.size());
+            assertEquals(Arrays.asList("1", "3"), frames.get(0));
+            assertEquals(Arrays.asList("4", "5"), frames.get(1));
+        }
+        {
+            List<List<String>> frames = StreamUtils.framedNonNullAsList(6, Arrays.asList("1", null, "3", "4", "5")
+                                                                                 .stream())
+                                                   .collect(Collectors.toList());
+            assertEquals(1, frames.size());
+            assertEquals(Arrays.asList("1", "3", "4", "5"), frames.get(0));
+        }
+        {
+            List<List<String>> frames = StreamUtils.framedNonNullAsList(3, (Stream<String>) null)
+                                                   .collect(Collectors.toList());
+            assertEquals(0, frames.size());
         }
     }
 
@@ -334,11 +389,40 @@ public class StreamUtilsTest
     }
 
     @Test
+    public void testGenerateRandomNumbers() throws Exception
+    {
+        List<Integer> numbers = StreamUtils.generate()
+                                           .intStream()
+                                           .unlimited()
+                                           .withRandomNumbers(10)
+                                           .limit(50)
+                                           .boxed()
+                                           .collect(Collectors.toList());
+        assertEquals(50, numbers.size());
+        assertTrue(numbers.stream()
+                          .allMatch(value -> value >= 0 && value <= 10));
+        assertTrue(numbers.stream()
+                          .distinct()
+                          .count() > 1);
+    }
+
+    @Test
     public void testWithFilterAllOnAnyFilterFails() throws Exception
     {
         assertEquals(Arrays.asList(true, true), StreamUtils.withFilterAllOnAnyFilterFails(Arrays.asList(true, true, false, true, true)
                                                                                                 .stream())
                                                            .filter(value -> value)
                                                            .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testMergeOrderedAndSynchronize() throws Exception
+    {
+        List<LeftAndRight<Integer, Integer>> result = StreamUtils.mergeOrderedAndSynchronize(Arrays.asList(1, 2, 3)
+                                                                                                   .stream(),
+                                                                                             Arrays.asList(2, 4)
+                                                                                                   .stream())
+                                                                 .collect(Collectors.toList());
+        assertEquals(4, result.size());
     }
 }

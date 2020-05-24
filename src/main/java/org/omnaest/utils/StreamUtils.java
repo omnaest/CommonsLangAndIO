@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Spliterator;
@@ -41,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -50,6 +52,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.omnaest.utils.ExecutorUtils.ParallelExecution;
 import org.omnaest.utils.buffer.CyclicBuffer;
 import org.omnaest.utils.element.bi.BiElement;
@@ -256,6 +259,101 @@ public class StreamUtils
         });
     }
 
+    private static class OrderedStreamSynchronizer<E extends Comparable<E>> implements Function<LeftAndRight<E, E>, Stream<LeftAndRight<E, E>>>
+    {
+        private List<E> leftStack  = new ArrayList<>();
+        private List<E> rightStack = new ArrayList<>();
+
+        @Override
+        public Stream<LeftAndRight<E, E>> apply(LeftAndRight<E, E> lar)
+        {
+            if (lar.hasLeft())
+            {
+                this.leftStack.add(lar.getLeft());
+            }
+            if (lar.hasRight())
+            {
+                this.rightStack.add(lar.getRight());
+            }
+
+            List<LeftAndRight<E, E>> results = new ArrayList<>();
+            while (!this.leftStack.isEmpty() && !this.rightStack.isEmpty())
+            {
+                E left = ListUtils.first(this.leftStack);
+                E right = ListUtils.first(this.rightStack);
+
+                if (Objects.equals(left, right))
+                {
+                    results.add(new LeftAndRight<E, E>(left, right));
+                    this.leftStack.remove(0);
+                    this.rightStack.remove(0);
+                }
+                else if (left != null && right != null)
+                {
+                    if (left.compareTo(right) < 0)
+                    {
+                        results.add(new LeftAndRight<E, E>(left, null));
+                        this.leftStack.remove(0);
+                    }
+                    else
+                    {
+                        results.add(new LeftAndRight<E, E>(null, right));
+                        this.rightStack.remove(0);
+                    }
+                }
+            }
+
+            return results.stream();
+        }
+
+        public Stream<LeftAndRight<E, E>> remaining()
+        {
+            return Stream.of(1)
+                         .flatMap(unused -> !this.leftStack.isEmpty() ? this.leftStack.stream()
+                                                                                      .map(left -> new LeftAndRight<>(left, null))
+                                 : this.rightStack.stream()
+                                                  .map(right -> new LeftAndRight<>(null, right)));
+        }
+    }
+
+    private static class IncrementalNumberSupplier implements IntSupplier
+    {
+        private AtomicInteger counter;
+        private int           increment;
+
+        public IncrementalNumberSupplier(int start, int increment)
+        {
+            super();
+            this.increment = increment;
+            this.counter = new AtomicInteger(start);
+        }
+
+        @Override
+        public int getAsInt()
+        {
+            return this.counter.getAndAdd(this.increment);
+        }
+    }
+
+    private static class RandomNumberSupplier implements IntSupplier
+    {
+        private int maxValue;
+        private int minValue;
+
+        public RandomNumberSupplier(int minValue, int maxValue)
+        {
+            super();
+            this.minValue = minValue;
+            this.maxValue = maxValue;
+        }
+
+        @Override
+        public int getAsInt()
+        {
+            return RandomUtils.nextInt(0, this.maxValue - this.minValue + 1) + this.minValue;
+        }
+    }
+
     public static interface Drainage<E>
     {
         public Stream<E> getStream();
@@ -356,6 +454,20 @@ public class StreamUtils
     }
 
     /**
+     * Similar to {@link #framedAsList(int, Stream)} but does not return any null values in the frame
+     * 
+     * @param frameSize
+     * @param stream
+     * @return
+     */
+    public static <E> Stream<List<E>> framedNonNullAsList(int frameSize, Stream<E> stream)
+    {
+        return framedAsList(frameSize, stream).map(frame -> frame.stream()
+                                                                 .filter(PredicateUtils.notNull())
+                                                                 .collect(Collectors.toList()));
+    }
+
+    /**
      * Creates block frames of a given size based on a given {@link Stream} of elements.<br>
      * <br>
      * E.g. [1,2,3,4,5,6] -> [1,2],[3,4],[5,6] for a frame size = 2
@@ -367,31 +479,38 @@ public class StreamUtils
      */
     public static <E> Stream<E[]> framed(int frameSize, Stream<E> stream)
     {
-        AtomicLong position = new AtomicLong();
-        AtomicReference<E[]> frame = new AtomicReference<E[]>();
-        @SuppressWarnings("unchecked")
-        Predicate<E> filter = element ->
+        if (stream != null)
         {
-            int frameIndex = (int) (position.getAndIncrement() % frameSize);
-            if (frame.get() == null && element != null)
+            AtomicLong position = new AtomicLong();
+            AtomicReference<E[]> frame = new AtomicReference<E[]>();
+            @SuppressWarnings("unchecked")
+            Predicate<E> filter = element ->
             {
-                frame.set((E[]) Array.newInstance(element.getClass(), frameSize));
-            }
+                int frameIndex = (int) (position.getAndIncrement() % frameSize);
+                if (frame.get() == null && element != null)
+                {
+                    frame.set((E[]) Array.newInstance(element.getClass(), frameSize));
+                }
 
-            if (frame.get() != null)
-            {
-                frame.get()[frameIndex] = element;
-            }
+                if (frame.get() != null)
+                {
+                    frame.get()[frameIndex] = element;
+                }
 
-            boolean frameFinished = frameIndex == frameSize - 1;
-            return frameFinished;
-        };
-        Function<E, E[]> mapper = element -> frame.getAndSet(null);
-        Stream<E[]> retval = stream.filter(filter)
-                                   .map(mapper);
-        return Stream.concat(retval, Stream.of(1)
-                                           .filter(n -> frame.get() != null)
-                                           .map(n -> frame.getAndSet(null)));
+                boolean frameFinished = frameIndex == frameSize - 1;
+                return frameFinished;
+            };
+            Function<E, E[]> mapper = element -> frame.getAndSet(null);
+            Stream<E[]> retval = stream.filter(filter)
+                                       .map(mapper);
+            return Stream.concat(retval, Stream.of(1)
+                                               .filter(n -> frame.get() != null)
+                                               .map(n -> frame.getAndSet(null)));
+        }
+        else
+        {
+            return Stream.empty();
+        }
     }
 
     public static interface Window<E>
@@ -467,9 +586,15 @@ public class StreamUtils
         return StreamUtils.fromIterator(IteratorUtils.merge(stream1.iterator(), stream2.iterator()));
     }
 
+    public static <E extends Comparable<E>> Stream<LeftAndRight<E, E>> mergeOrderedAndSynchronize(Stream<E> stream1, Stream<E> stream2)
+    {
+        OrderedStreamSynchronizer<E> synchronizer = new OrderedStreamSynchronizer<E>();
+        return concat(merge(stream1, stream2).flatMap(synchronizer), synchronizer.remaining());
+    }
+
     public static <L, R> Stream<BiElement<L, R>> merge2(Stream<L> stream1, Stream<R> stream2)
     {
-        return merge(stream1, stream2).map(lar -> BiElement.of(lar.getLeft(), lar.getRight()));
+        return merge(stream1, stream2).map(lar -> lar.asBiElement());
     }
 
     /**
@@ -803,6 +928,20 @@ public class StreamUtils
         public <E, S extends I, I extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function);
     }
 
+    public static interface IntStreamConfigurator
+    {
+        public IntStreamConfigurator withIncrement(int increment);
+
+        public IntStream fromZero();
+
+        public IntStream from(int start);
+
+        public IntStream withRandomNumbers(int maxValue);
+
+        public IntStream withRandomNumbers(int minValue, int maxValue);
+
+    }
+
     public static interface IntStreamGenerator
     {
 
@@ -832,11 +971,11 @@ public class StreamUtils
         public IntStream unlimited(int increment);
 
         /**
-         * Similar to {@link #unlimited(int)} with an increment of 1
+         * Returns an {@link IntStreamConfigurator} instance with an unlimited underlying {@link IntStream}
          * 
          * @return
          */
-        public IntStream unlimited();
+        public IntStreamConfigurator unlimited();
 
         /**
          * Similar to {@link #unlimited()} but allows to provide a termination {@link Predicate} which should return true if the {@link Stream}
@@ -944,9 +1083,48 @@ public class StreamUtils
                     }
 
                     @Override
-                    public IntStream unlimited()
+                    public IntStreamConfigurator unlimited()
                     {
-                        return this.unlimited(1);
+                        return new IntStreamConfigurator()
+                        {
+                            private int                   increment      = 1;
+                            private int                   start          = 0;
+                            private Supplier<IntSupplier> numberSupplier = () -> new IncrementalNumberSupplier(this.start, this.increment);
+
+                            @Override
+                            public IntStream withRandomNumbers(int maxValue)
+                            {
+                                int minValue = 0;
+                                return this.withRandomNumbers(minValue, maxValue);
+                            }
+
+                            @Override
+                            public IntStream withRandomNumbers(int minValue, int maxValue)
+                            {
+                                this.numberSupplier = () -> new RandomNumberSupplier(minValue, maxValue);
+                                return IntStream.generate(this.numberSupplier.get());
+                            }
+
+                            @Override
+                            public IntStreamConfigurator withIncrement(int increment)
+                            {
+                                this.increment = increment;
+                                return this;
+                            }
+
+                            @Override
+                            public IntStream fromZero()
+                            {
+                                return this.from(0);
+                            }
+
+                            @Override
+                            public IntStream from(int start)
+                            {
+                                this.start = start;
+                                return IntStream.generate(this.numberSupplier.get());
+                            }
+                        };
                     }
 
                 };

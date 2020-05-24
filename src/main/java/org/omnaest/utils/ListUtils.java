@@ -669,4 +669,21 @@ public class ListUtils
         return result;
     }
 
+    public static <E> boolean equals(List<E> list1, List<E> list2)
+    {
+        return list1 != null && list2 != null && new ArrayList<>(list1).equals(new ArrayList<>(list2));
+    }
+
+    public static <E> int hashCode(List<E> list)
+    {
+        return new ArrayList<>(list).hashCode();
+    }
+
+    public static <E> String toString(List<E> list)
+    {
+        return "[" + (list != null ? list.stream() : Stream.empty()).map(element -> StringUtils.toString(element))
+                                                                    .collect(Collectors.joining(","))
+                + "]";
+    }
+
 }

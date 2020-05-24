@@ -391,4 +391,9 @@ public class StringUtils
     {
         return org.apache.commons.lang3.StringUtils.startsWith(str, prefix) ? str : prefix + org.apache.commons.lang3.StringUtils.defaultString(str);
     }
+
+    public static String toString(Object object)
+    {
+        return object == null ? null : String.valueOf(object);
+    }
 }
