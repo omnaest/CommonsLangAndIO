@@ -28,6 +28,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
+import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoderFactory;
+import org.omnaest.utils.StringUtils.StringEncoderAndDecoder;
 import org.omnaest.utils.element.bi.BiElement;
 
 public class StringUtilsTest
@@ -187,6 +189,38 @@ public class StringUtilsTest
         assertEquals("/abc", StringUtils.ensurePrefix("abc", "/"));
         assertEquals("/abc", StringUtils.ensurePrefix("/abc", "/"));
         assertEquals("/", StringUtils.ensurePrefix(null, "/"));
+    }
+
+    @Test
+    public void testRemoveStartAndEnd() throws Exception
+    {
+        assertEquals("bc", StringUtils.removeStartAndEnd("abcd", 1, 1));
+        assertEquals(null, StringUtils.removeStartAndEnd(null, 1, 1));
+    }
+
+    @Test
+    public void testEncoder() throws Exception
+    {
+        StringEncoderAndDecoder encoderAndDecoder = StringUtils.encoder()
+                                                               .with(TextEncoderAndDecoderFactory::forAlphaNumericText);
+        String encodedList = encoderAndDecoder.encodeList(Arrays.asList("a", "b"), ",");
+        assertEquals(Arrays.asList("a", "b"), encoderAndDecoder.decodeList(encodedList, ","));
+    }
+
+    @Test
+    public void testReplaceEach() throws Exception
+    {
+        assertEquals("1 hated city", StringUtils.replaceEach("my lovely town", map -> map.put("lovely", "hated")
+                                                                                         .put("town", "city")
+                                                                                         .put("my", 1)));
+    }
+
+    @Test
+    public void testLimitText() throws Exception
+    {
+        assertEquals("Once upon a time...", StringUtils.limitText("Once upon a time there was a nice little mouse.", 16, "..."));
+        assertEquals("Once upon a time there was a nice little mouse.", StringUtils.limitText("Once upon a time there was a nice little mouse.", 160, "..."));
+        assertEquals(null, StringUtils.limitText(null, 16, "..."));
     }
 
 }

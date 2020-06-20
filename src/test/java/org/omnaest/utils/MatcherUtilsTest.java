@@ -91,4 +91,43 @@ public class MatcherUtilsTest
         assertEquals("rotate(90,20,30)", result);
     }
 
+    @Test
+    public void testExactMatch()
+    {
+        assertEquals("_cacbcdef_gh", MatcherUtils.matcher()
+                                                 .ofExact("ab")
+                                                 .findInAnd("abcacbcdefabgh")
+                                                 .replace(token -> "_"));
+        assertEquals("abca_c*bcdefa?*bgh", MatcherUtils.matcher()
+                                                       .ofExact(".*")
+                                                       .findInAnd("abca.*c*bcdefa?*bgh")
+                                                       .replace(token -> "_"));
+    }
+
+    @Test
+    public void testSubRegionReplacement()
+    {
+        assertEquals("_cd_ef_", MatcherUtils.matcher()
+                                            .of(Pattern.compile("ab"))
+                                            .findInAnd("abcdabefab")
+                                            .replace(token -> "_"));
+        assertEquals("s_cd_ef_e", MatcherUtils.matcher()
+                                              .of(Pattern.compile("ab"))
+                                              .findInAnd("sabcdabefabe")
+                                              .replace(token -> "_"));
+        assertEquals("", MatcherUtils.matcher()
+                                     .of(Pattern.compile("ab"))
+                                     .findInAnd("")
+                                     .replace(token -> "_"));
+        assertEquals("def", MatcherUtils.matcher()
+                                        .ofExact("ab")
+                                        .findInAnd("def")
+                                        .replace(token -> "_"));
+        assertEquals("!§$%$/&/& _ (/()(=)=?`,.-*", MatcherUtils.matcher()
+                                                               .ofExact("ab")
+                                                               .findInAnd("!§$%$/&/& ab (/()(=)=?`,.-*")
+                                                               .replace(token -> "_"));
+
+    }
+
 }

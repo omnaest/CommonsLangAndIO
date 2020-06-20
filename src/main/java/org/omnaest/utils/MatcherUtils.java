@@ -45,7 +45,30 @@ public class MatcherUtils
      */
     public static interface MatchFinderBuilder
     {
+        /**
+         * Matches using a given {@link Pattern}
+         * 
+         * @param pattern
+         * @return
+         */
         public MatchFinder of(Pattern pattern);
+
+        /**
+         * Matches a given regEx like {@link #of(Pattern)}
+         * 
+         * @see #of(Pattern)
+         * @param regEx
+         * @return
+         */
+        public MatchFinder ofRegEx(String regEx);
+
+        /**
+         * Matches the exact {@link String}
+         * 
+         * @param str
+         * @return
+         */
+        public MatchFinder ofExact(String str);
     }
 
     /**
@@ -63,7 +86,22 @@ public class MatcherUtils
          */
         public Optional<Stream<Match>> findIn(String input);
 
+        /**
+         * Returns a {@link MatchResult} for elements found in the input
+         * 
+         * @param input
+         * @return
+         */
+        public MatchResult findInAnd(String input);
+
         public Optional<Match> matchAgainst(String input);
+    }
+
+    public static interface MatchResult extends Iterable<Match>
+    {
+        public Stream<Match> stream();
+
+        public String replace(Function<String, String> replacerFunction);
     }
 
     /**
@@ -156,6 +194,12 @@ public class MatcherUtils
          */
         public String replaceGroupsWith(Map<Integer, String> replacements);
 
+        public RegionReplacer asSubRegionReplacer(Supplier<String> replacements);
+
+        public String replaceSubRegionWith(String replacement);
+
+        public String replaceSubRegionWith(Function<String, String> replacerFunction);
+
     }
 
     /**
@@ -171,6 +215,19 @@ public class MatcherUtils
     {
         return new MatchFinderBuilder()
         {
+
+            @Override
+            public MatchFinder ofRegEx(String regEx)
+            {
+                return this.of(Pattern.compile(regEx));
+            }
+
+            @Override
+            public MatchFinder ofExact(String str)
+            {
+                return this.ofRegEx(Pattern.quote(str));
+            }
+
             @Override
             public MatchFinder of(Pattern pattern)
             {
@@ -193,6 +250,58 @@ public class MatcherUtils
                             retval = Optional.empty();
                         }
                         return retval;
+                    }
+
+                    @Override
+                    public MatchResult findInAnd(String input)
+                    {
+                        AssertionUtils.assertIsNotNull("Pattern must not be null", pattern);
+
+                        return new MatchResult()
+                        {
+                            @Override
+                            public Iterator<Match> iterator()
+                            {
+                                return this.stream()
+                                           .iterator();
+                            }
+
+                            @Override
+                            public Stream<Match> stream()
+                            {
+                                if (input != null)
+                                {
+                                    Matcher matcher = pattern.matcher(input);
+                                    Supplier<Boolean> matcherAction = () -> matcher.find();
+                                    return determineMatches(input, matcher, matcherAction).orElse(Stream.empty());
+                                }
+                                else
+                                {
+                                    return Stream.empty();
+                                }
+                            }
+
+                            @Override
+                            public String replace(Function<String, String> replacerFunction)
+                            {
+                                String result = input;
+
+                                if (input != null)
+                                {
+                                    Matcher matcher = pattern.matcher(input);
+                                    StringBuffer sb = new StringBuffer();
+                                    while (matcher.find())
+                                    {
+                                        String replacement = replacerFunction.apply(input.substring(matcher.start(), matcher.end()));
+                                        matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+                                    }
+                                    matcher.appendTail(sb);
+                                    result = sb.toString();
+                                }
+
+                                return result;
+                            }
+                        };
                     }
 
                     @Override
@@ -233,6 +342,8 @@ public class MatcherUtils
                                 {
                                     int start = matcher.start();
                                     int end = matcher.end();
+                                    int regionStart = matcher.regionStart();
+                                    int regionEnd = matcher.regionEnd();
 
                                     Map<Integer, String> groups = new LinkedHashMap<>();
                                     Map<Integer, BiElement<Integer, Integer>> groupToRegion = new LinkedHashMap<>();
@@ -338,12 +449,36 @@ public class MatcherUtils
                                         }
 
                                         @Override
+                                        public String replaceSubRegionWith(String replacement)
+                                        {
+                                            return this.asSubRegionReplacer(() -> replacement)
+                                                       .apply(input);
+                                        }
+
+                                        @Override
+                                        public String replaceSubRegionWith(Function<String, String> replacerFunction)
+                                        {
+                                            return this.asSubRegionReplacer(() -> replacerFunction.apply(this.getMatchRegion()))
+                                                       .apply(input);
+                                        }
+
+                                        @Override
                                         public RegionReplacer asReplacer(Supplier<String> replacements)
                                         {
                                             return input -> StringUtils.builder()
                                                                        .append(input.substring(0, start))
                                                                        .append(replacements.get())
                                                                        .append(input.substring(end))
+                                                                       .toString();
+                                        }
+
+                                        @Override
+                                        public RegionReplacer asSubRegionReplacer(Supplier<String> replacements)
+                                        {
+                                            return input -> StringUtils.builder()
+                                                                       .append(input.substring(regionStart, start))
+                                                                       .append(replacements.get())
+                                                                       .append(input.substring(regionEnd))
                                                                        .toString();
                                         }
 

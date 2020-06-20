@@ -16,8 +16,8 @@ import org.omnaest.utils.StreamUtils;
  */
 public class DefaultSupplierStream<E> extends StreamDecorator<E> implements SupplierStream<E>
 {
-    private Predicate<E> terminationMatcher;
-    private boolean      exclusive = true;
+    private Predicate<E> terminationMatcher = e -> false;
+    private boolean      exclusive          = true;
 
     public DefaultSupplierStream(Supplier<E> supplier)
     {

@@ -49,6 +49,17 @@ public interface CachedElement<E> extends Supplier<E>
     public E getAndReset();
 
     /**
+     * Resets the {@link CachedElement} and gets a new element from the {@link Supplier}
+     * 
+     * @return
+     */
+    public default E resetAndGet()
+    {
+        return this.reset()
+                   .get();
+    }
+
+    /**
      * Resets the cache, so that the next call to {@link #get()} will resolve a new element from the {@link Supplier}
      * 
      * @return
@@ -72,6 +83,32 @@ public interface CachedElement<E> extends Supplier<E>
      * @return
      */
     public CachedElement<E> setSupplier(Supplier<E> supplier);
+
+    /**
+     * Sets the {@link #setSupplier(Supplier)} fix to the given element. The {@link #get()} call will immediately return the set value.
+     * 
+     * @see #setSuppliedValueLazy(Object)
+     * @param element
+     * @return
+     */
+    public default CachedElement<E> setSuppliedValue(E element)
+    {
+        return this.setSupplier(() -> element)
+                   .reset();
+    }
+
+    /**
+     * In contrast to {@link #setSuppliedValue(Object)} this will not reset the current value of the {@link CachedElement} and will return the old value until
+     * {@link #reset()} is called or any other cache evicting event does happen.
+     * 
+     * @see #setSuppliedValue(Object)
+     * @param element
+     * @return
+     */
+    public default CachedElement<E> setSuppliedValueLazy(E element)
+    {
+        return this.setSupplier(() -> element);
+    }
 
     /**
      * Returns a new {@link CachedElement} which uses a {@link SoftReference} and is not {@link Thread}safe
@@ -131,6 +168,7 @@ public interface CachedElement<E> extends Supplier<E>
      */
     public default CachedElement<E> asSynchronized()
     {
-        return new SynchronizedCachedElementWrapper(this);
+        return new SynchronizedCachedElementWrapper<>(this);
     }
+
 }

@@ -377,9 +377,10 @@ public class MapUtils
 
     }
 
-    public static MapBuilder<?, ?> builder()
+    @SuppressWarnings("unchecked")
+    public static <K, V> MapBuilder<K, V> builder()
     {
-        return new MapBuilderImpl();
+        return (MapBuilder<K, V>) new MapBuilderImpl();
     }
 
     @SuppressWarnings("unchecked")

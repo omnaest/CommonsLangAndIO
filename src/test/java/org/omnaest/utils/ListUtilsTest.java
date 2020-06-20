@@ -314,4 +314,12 @@ public class ListUtilsTest
                                     Arrays.asList("b", "a", "c"), Arrays.asList("a", "c", "b")),
                      ListUtils.allPermutations(Arrays.asList("a", "b", "c")));
     }
+
+    @Test
+    public void testSublistsFromStart() throws Exception
+    {
+        assertEquals(Arrays.asList(Arrays.asList("a", "b", "c"), Arrays.asList("a", "b"), Arrays.asList("a")),
+                     ListUtils.sublistsFromStart(Arrays.asList("a", "b", "c"))
+                              .collect(Collectors.toList()));
+    }
 }

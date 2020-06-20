@@ -195,6 +195,19 @@ public class ListUtils
     }
 
     /**
+     * Returns a new {@link List} instance based on the given {@link Stream}.
+     * 
+     * @param elements
+     * @return
+     */
+    public static <E> List<E> of(Stream<E> elements)
+    {
+        return Optional.ofNullable(elements)
+                       .map(e -> e.collect(Collectors.toList()))
+                       .orElse(Collections.emptyList());
+    }
+
+    /**
      * Adds a given element to the given {@link List} or returns a new {@link List} instance if the given {@link List} is null
      * 
      * @param list
@@ -565,6 +578,11 @@ public class ListUtils
         return randomList.stream();
     }
 
+    public static <E> List<E> toList(Iterable<E> iterable)
+    {
+        return iterable != null ? toList(iterable.iterator()) : new ArrayList<>();
+    }
+
     public static <E> List<E> toList(Iterator<E> iterator)
     {
         List<E> result = new ArrayList<>();
@@ -684,6 +702,31 @@ public class ListUtils
         return "[" + (list != null ? list.stream() : Stream.empty()).map(element -> StringUtils.toString(element))
                                                                     .collect(Collectors.joining(","))
                 + "]";
+    }
+
+    public static <E> Stream<E> toStream(List<E> list)
+    {
+        return list != null ? list.stream() : Stream.empty();
+    }
+
+    /**
+     * Returns all possible sublists from start to the current pointer position. And the pointer position moves from the end to the start.
+     * <br>
+     * <br>
+     * Example: [0,1,2] -> [[0,1,2],[0,1],[0]]
+     * 
+     * @param list
+     * @return
+     */
+    public static <E> Stream<List<E>> sublistsFromStart(List<E> list)
+    {
+        return StreamUtils.generate()
+                          .intStream()
+                          .limited()
+                          .withMaxExclusive(list.size())
+                          .fromZero()
+                          .map(index -> list.size() - index)
+                          .mapToObj(index -> list.subList(0, index));
     }
 
 }

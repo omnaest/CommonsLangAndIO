@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.IntPredicate;
 import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -152,6 +153,18 @@ public class StreamUtils
     public static <E> SupplierStream<E> fromSupplier(Supplier<E> supplier, Predicate<E> terminationMatcher)
     {
         return fromSupplier(supplier).withTerminationMatcher(terminationMatcher);
+    }
+
+    /**
+     * Similar to {@link #fromSupplier(Supplier, Predicate)} for {@link IntStream}
+     * 
+     * @param supplier
+     * @param terminationMatcher
+     * @return
+     */
+    public static IntStream fromIntSupplier(IntSupplier supplier, IntPredicate terminationMatcher)
+    {
+        return fromSupplier(() -> supplier.getAsInt(), v -> terminationMatcher.test(v)).mapToInt(MapperUtils.identitiyForIntegerAsUnboxed());
     }
 
     public static <E> SupplierStream<E> fromSupplier(Supplier<E> supplier)
@@ -942,6 +955,15 @@ public class StreamUtils
 
     }
 
+    public static interface LimitedIntStreamConfigurator
+    {
+        public IntStreamConfigurator withTerminationPredicate(IntPredicate terminationPredicate);
+
+        public IntStreamConfigurator withMaxExclusive(int max);
+
+        public IntStreamConfigurator withMaxInclusive(int max);
+    }
+
     public static interface IntStreamGenerator
     {
 
@@ -973,9 +995,18 @@ public class StreamUtils
         /**
          * Returns an {@link IntStreamConfigurator} instance with an unlimited underlying {@link IntStream}
          * 
+         * @see #limited()
          * @return
          */
         public IntStreamConfigurator unlimited();
+
+        /**
+         * Returns an {@link LimitedIntStreamConfigurator} instance
+         * 
+         * @see #unlimited()
+         * @return
+         */
+        public LimitedIntStreamConfigurator limited();
 
         /**
          * Similar to {@link #unlimited()} but allows to provide a termination {@link Predicate} which should return true if the {@link Stream}
@@ -1046,6 +1077,60 @@ public class StreamUtils
         }
     }
 
+    protected static class AbstractIntStreamConfigurator implements IntStreamConfigurator
+    {
+        private int                                        increment      = 1;
+        private int                                        start          = 0;
+        private Supplier<IntSupplier>                      numberSupplier = () -> new IncrementalNumberSupplier(this.start, this.increment);
+        private Function<Supplier<IntSupplier>, IntStream> intStreamGenerator;
+
+        public AbstractIntStreamConfigurator(Function<Supplier<IntSupplier>, IntStream> intStreamGenerator)
+        {
+            super();
+            this.intStreamGenerator = intStreamGenerator;
+        }
+
+        @Override
+        public IntStream withRandomNumbers(int maxValue)
+        {
+            int minValue = 0;
+            return this.withRandomNumbers(minValue, maxValue);
+        }
+
+        @Override
+        public IntStream withRandomNumbers(int minValue, int maxValue)
+        {
+            this.numberSupplier = () -> new RandomNumberSupplier(minValue, maxValue);
+            return IntStream.generate(this.numberSupplier.get());
+        }
+
+        @Override
+        public IntStreamConfigurator withIncrement(int increment)
+        {
+            this.increment = increment;
+            return this;
+        }
+
+        @Override
+        public IntStream fromZero()
+        {
+            return this.from(0);
+        }
+
+        public IntStreamConfigurator withTerminationPredicate()
+        {
+            // TODO
+            return this;
+        }
+
+        @Override
+        public IntStream from(int start)
+        {
+            this.start = start;
+            return this.intStreamGenerator.apply(this.numberSupplier);
+        }
+    }
+
     public static StreamGenerator generate()
     {
         return new StreamGenerator()
@@ -1083,48 +1168,34 @@ public class StreamUtils
                     }
 
                     @Override
-                    public IntStreamConfigurator unlimited()
+                    public LimitedIntStreamConfigurator limited()
                     {
-                        return new IntStreamConfigurator()
+                        return new LimitedIntStreamConfigurator()
                         {
-                            private int                   increment      = 1;
-                            private int                   start          = 0;
-                            private Supplier<IntSupplier> numberSupplier = () -> new IncrementalNumberSupplier(this.start, this.increment);
-
                             @Override
-                            public IntStream withRandomNumbers(int maxValue)
+                            public IntStreamConfigurator withTerminationPredicate(IntPredicate terminationPredicate)
                             {
-                                int minValue = 0;
-                                return this.withRandomNumbers(minValue, maxValue);
+                                return new AbstractIntStreamConfigurator(ns -> StreamUtils.fromIntSupplier(ns.get(), terminationPredicate));
                             }
 
                             @Override
-                            public IntStream withRandomNumbers(int minValue, int maxValue)
+                            public IntStreamConfigurator withMaxInclusive(int max)
                             {
-                                this.numberSupplier = () -> new RandomNumberSupplier(minValue, maxValue);
-                                return IntStream.generate(this.numberSupplier.get());
+                                return this.withTerminationPredicate(value -> value > max);
                             }
 
                             @Override
-                            public IntStreamConfigurator withIncrement(int increment)
+                            public IntStreamConfigurator withMaxExclusive(int max)
                             {
-                                this.increment = increment;
-                                return this;
-                            }
-
-                            @Override
-                            public IntStream fromZero()
-                            {
-                                return this.from(0);
-                            }
-
-                            @Override
-                            public IntStream from(int start)
-                            {
-                                this.start = start;
-                                return IntStream.generate(this.numberSupplier.get());
+                                return this.withTerminationPredicate(value -> value >= max);
                             }
                         };
+                    }
+
+                    @Override
+                    public IntStreamConfigurator unlimited()
+                    {
+                        return new AbstractIntStreamConfigurator(ns -> IntStream.generate(ns.get()));
                     }
 
                 };

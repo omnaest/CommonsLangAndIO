@@ -28,13 +28,21 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
+import org.omnaest.utils.EncoderUtils.EncoderAndDecoderFactory;
+import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoder;
+import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoderFactory;
+import org.omnaest.utils.MapUtils.MapBuilder;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.iterator.StringIterator;
 
@@ -396,4 +404,111 @@ public class StringUtils
     {
         return object == null ? null : String.valueOf(object);
     }
+
+    /**
+     * Removes the given number of start and end characters from the given {@link String}
+     * 
+     * @param str
+     * @param startOffset
+     * @param endOffset
+     * @return
+     */
+    public static String removeStartAndEnd(String str, int startOffset, int endOffset)
+    {
+        return org.apache.commons.lang3.StringUtils.substring(str, startOffset, str != null ? str.length() - endOffset : 0);
+    }
+
+    public static interface StringEncoderAndDecoderInitializer
+    {
+        public StringEncoderAndDecoder with(Function<TextEncoderAndDecoderFactory, TextEncoderAndDecoder> factoryConsumer);
+    }
+
+    public static interface StringEncoderAndDecoder
+    {
+        public String encodeList(List<String> list, String delimiter);
+
+        public List<String> decodeList(String encodedText, String delimiter);
+    }
+
+    public static StringEncoderAndDecoderInitializer decoder()
+    {
+        return encoder();
+    }
+
+    public static StringEncoderAndDecoderInitializer encoder()
+    {
+        return new StringEncoderAndDecoderInitializer()
+        {
+            @Override
+            public StringEncoderAndDecoder with(Function<TextEncoderAndDecoderFactory, TextEncoderAndDecoder> consumer)
+            {
+                EncoderAndDecoderFactory factory = EncoderUtils.newInstance();
+                TextEncoderAndDecoder encoderAndDecoder = consumer.apply(factory);
+                return new StringEncoderAndDecoder()
+                {
+
+                    @Override
+                    public String encodeList(List<String> list, String delimiter)
+                    {
+                        return ListUtils.toStream(list)
+                                        .map(token -> encoderAndDecoder.encode(token))
+                                        .collect(Collectors.joining(delimiter));
+                    }
+
+                    @Override
+                    public List<String> decodeList(String encodedText, String delimiter)
+                    {
+                        return splitToStream(encodedText, delimiter).map(token -> encoderAndDecoder.decode(token))
+                                                                    .collect(Collectors.toList());
+                    }
+                };
+            }
+        };
+    }
+
+    public static String replaceEach(String text, Consumer<MapBuilder<String, ?>> replacementsConsumer)
+    {
+        MapBuilder<String, Object> builder = MapUtils.<String, Object>builder();
+        replacementsConsumer.accept(builder);
+        return replaceEach(text, builder.build());
+    }
+
+    public static String replaceEach(String text, Map<String, ?> replacements)
+    {
+        String[] searchList = replacements.keySet()
+                                          .stream()
+                                          .sorted()
+                                          .collect(Collectors.toList())
+                                          .toArray(new String[0]);
+        String[] replacementList = Arrays.asList(searchList)
+                                         .stream()
+                                         .map(key -> Optional.ofNullable(replacements.get(key))
+                                                             .map(String::valueOf)
+                                                             .orElse(null))
+                                         .collect(Collectors.toList())
+                                         .toArray(new String[0]);
+        return org.apache.commons.lang3.StringUtils.replaceEach(text, searchList, replacementList);
+    }
+
+    /**
+     * Limits the given {@link String} to the given size. If the size is exceeded the substring of that size is returned with the given overflows suffix
+     * appended.
+     * 
+     * @param text
+     * @param size
+     * @param overflowSuffix
+     * @return
+     */
+    public static String limitText(String text, int size, String overflowSuffix)
+    {
+        if (org.apache.commons.lang3.StringUtils.length(text) > size)
+        {
+            return org.apache.commons.lang3.StringUtils.substring(text, 0, size) + (overflowSuffix != null ? overflowSuffix : "");
+        }
+        else
+        {
+            return text;
+        }
+    }
+
 }
