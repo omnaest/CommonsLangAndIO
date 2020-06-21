@@ -19,8 +19,6 @@
 package org.omnaest.utils;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,6 +27,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.apache.commons.lang3.ClassUtils;
 
 public class ReflectionUtils
 {
@@ -397,32 +397,84 @@ public class ReflectionUtils
         try
         {
             @SuppressWarnings("rawtypes")
-            Class[] parameterTypes = Arrays.asList(parameters)
-                                           .stream()
-                                           .map(parameter -> parameter.getClass())
-                                           .collect(Collectors.toList())
-                                           .toArray(new Class[0]);
-            @SuppressWarnings("unchecked")
-            Constructor<T> constructor = (Constructor<T>) Arrays.asList(type.getConstructors())
-                                                                .stream()
-                                                                .filter(c -> StreamUtils.merge(Arrays.asList(c.getParameterTypes())
-                                                                                                     .stream(),
-                                                                                               Arrays.asList(parameterTypes)
-                                                                                                     .stream())
-                                                                                        .allMatch(lar -> lar.getLeft() != null && lar.getRight() != null
-                                                                                                && lar.getLeft()
-                                                                                                      .isAssignableFrom(lar.getRight())))
-                                                                .findFirst()
-                                                                .get();
-            constructor.setAccessible(true);
-            retval = constructor.newInstance(parameters);
+            Class[] providedParameterTypes = Arrays.asList(parameters)
+                                                   .stream()
+                                                   .map(parameter -> parameter.getClass())
+                                                   .collect(Collectors.toList())
+                                                   .toArray(new Class[0]);
+
+            retval = tryToInstantiateByConstructor(type, providedParameterTypes,
+                                                   parameters).orElseGet(() -> tryToInstantiateByValueOf(type, providedParameterTypes, parameters).orElse(null));
+
         }
-        catch (NoSuchElementException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException e)
+        catch (NoSuchElementException | SecurityException | IllegalArgumentException e)
         {
-            throw new IllegalStateException(e);
+            throw new IllegalStateException("" + type + ": " + Arrays.toString(parameters), e);
         }
+
+        if (retval == null)
+        {
+            throw new IllegalStateException("" + type + ": " + Arrays.toString(parameters));
+        }
+
         return retval;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Optional<T> tryToInstantiateByConstructor(Class<T> type, Class<?>[] providedParameterTypes, Object... parameters)
+    {
+        return Arrays.asList(type.getConstructors())
+                     .stream()
+                     .filter(c -> determineMatchingParameterTypes(providedParameterTypes, c.getParameterTypes()))
+                     .findFirst()
+                     .map(constructor -> ExceptionUtils.executeThrowingSilent(() ->
+                     {
+                         constructor.setAccessible(true);
+                         return (T) constructor.newInstance(parameters);
+                     }));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Optional<T> tryToInstantiateByValueOf(Class<T> type, Class<?>[] providedParameterTypes, Object... parameters)
+    {
+        return Arrays.asList(type.getMethods())
+                     .stream()
+                     .filter(method -> method.getName()
+                                             .equals("valueOf"))
+                     .filter(method -> determineMatchingParameterTypes(providedParameterTypes, method.getParameterTypes()))
+                     .findFirst()
+                     .map(method -> ExceptionUtils.executeThrowingSilent(() ->
+                     {
+                         method.setAccessible(true);
+                         return (T) method.invoke(null, parameters);
+                     }));
+    }
+
+    private static boolean determineMatchingParameterTypes(Class<?>[] providedParameterTypes, Class<?>[] methodParameterTypes)
+    {
+        return StreamUtils.merge(Arrays.asList(methodParameterTypes)
+                                       .stream(),
+                                 Arrays.asList(providedParameterTypes)
+                                       .stream())
+                          .allMatch(lar ->
+                          {
+                              if (lar.getLeft() == null || lar.getRight() == null)
+                              {
+                                  return false;
+                              }
+
+                              if (lar.getLeft()
+                                     .isPrimitive())
+                              {
+                                  return ClassUtils.primitiveToWrapper(lar.getLeft())
+                                                   .isAssignableFrom(lar.getRight());
+                              }
+                              else
+                              {
+                                  return lar.getLeft()
+                                            .isAssignableFrom(lar.getRight());
+                              }
+                          });
     }
 
 }

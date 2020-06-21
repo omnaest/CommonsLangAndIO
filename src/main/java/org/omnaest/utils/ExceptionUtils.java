@@ -89,7 +89,7 @@ public class ExceptionUtils
      */
     public static void executeSilentVoid(VoidOperationWithException operation, ExceptionHandler... exceptionHandlers)
     {
-        executeSilent((OperationWithException<Void>) () ->
+        executeThrowingSilent((OperationWithException<Void>) () ->
         {
             operation.execute();
             return null;
@@ -125,7 +125,7 @@ public class ExceptionUtils
         return retval;
     }
 
-    public static <R> R executeSilent(OperationWithException<R> operation, ExceptionHandler... exceptionHandlers)
+    public static <R> R executeThrowingSilent(OperationWithException<R> operation, ExceptionHandler... exceptionHandlers)
     {
         R retval = null;
 

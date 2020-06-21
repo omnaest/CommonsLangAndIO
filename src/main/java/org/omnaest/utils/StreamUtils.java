@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -57,6 +58,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.omnaest.utils.ExecutorUtils.ParallelExecution;
 import org.omnaest.utils.buffer.CyclicBuffer;
 import org.omnaest.utils.element.bi.BiElement;
+import org.omnaest.utils.element.cached.CachedFunction;
 import org.omnaest.utils.element.lar.LeftAndRight;
 import org.omnaest.utils.stream.DefaultSupplierStream;
 import org.omnaest.utils.stream.FilterAllOnFirstFilterFailStreamDecorator;
@@ -434,10 +436,15 @@ public class StreamUtils
 
     public static <E> Stream<E> fromIterable(Iterable<E> iterable)
     {
-        Supplier<Spliterator<E>> supplier = () -> iterable.spliterator();
-        int characteristics = iterable.spliterator()
-                                      .characteristics();
-        return StreamSupport.stream(supplier, characteristics, false);
+        return Optional.ofNullable(iterable)
+                       .map(iIterable ->
+                       {
+                           Supplier<Spliterator<E>> supplier = () -> iIterable.spliterator();
+                           int characteristics = iIterable.spliterator()
+                                                          .characteristics();
+                           return StreamSupport.stream(supplier, characteristics, false);
+                       })
+                       .orElse(Stream.empty());
     }
 
     /**
@@ -938,7 +945,9 @@ public class StreamUtils
     {
         public IntStreamGenerator intStream();
 
-        public <E, S extends I, I extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function);
+        public <E, S extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function);
+
+        public <E, R> Stream<R> recursive(E startElement, Function<E, R> mapper, Function<R, E> nextElementFunction);
     }
 
     public static interface IntStreamConfigurator
@@ -1202,7 +1211,32 @@ public class StreamUtils
             }
 
             @Override
-            public <E, S extends I, I extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function)
+            public <E, R> Stream<R> recursive(E startElement, Function<E, R> mapper, Function<R, E> nextElementFunction)
+            {
+                return StreamUtils.fromSupplier(new Supplier<R>()
+                {
+                    private AtomicReference<E> element = new AtomicReference<>(startElement);
+
+                    @Override
+                    public R get()
+                    {
+                        try
+                        {
+                            CachedFunction<E, R> cachedMapper = CachedFunction.of(mapper, new HashMap<>());
+                            return cachedMapper.apply(this.element.getAndUpdate(currentValue -> Optional.ofNullable(cachedMapper.apply(currentValue))
+                                                                                                        .map(mappedValue -> nextElementFunction.apply(mappedValue))
+                                                                                                        .orElse(null)));
+                        }
+                        catch (Exception e)
+                        {
+                            throw new IllegalStateException("Excpetion for current element: " + this.element, e);
+                        }
+                    }
+                }, PredicateUtils.isNull());
+            }
+
+            @Override
+            public <E, S extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function)
             {
                 return StreamUtils.fromSupplier(new Supplier<E>()
                 {
@@ -1226,6 +1260,14 @@ public class StreamUtils
     public static <E> Stream<E> withFilterAllOnAnyFilterFails(Stream<E> stream)
     {
         return new FilterAllOnFirstFilterFailStreamDecorator<>(stream);
+    }
+
+    @SafeVarargs
+    public static <E> Stream<E> fromArray(E... elements)
+    {
+        return Optional.ofNullable(elements)
+                       .map(iElements -> Stream.of(iElements))
+                       .orElse(Stream.empty());
     }
 
 }

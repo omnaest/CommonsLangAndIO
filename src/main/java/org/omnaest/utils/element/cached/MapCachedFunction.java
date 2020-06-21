@@ -1,6 +1,7 @@
 package org.omnaest.utils.element.cached;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class MapCachedFunction<T, R> implements CachedFunction<T, R>
@@ -18,7 +19,9 @@ public class MapCachedFunction<T, R> implements CachedFunction<T, R>
     @Override
     public R apply(T t)
     {
-        return this.map.computeIfAbsent(t, this.function);
+        return Optional.ofNullable(t)
+                       .map(v -> this.map.computeIfAbsent(v, this.function))
+                       .orElseGet(() -> this.function.apply(t));
     }
 
 }

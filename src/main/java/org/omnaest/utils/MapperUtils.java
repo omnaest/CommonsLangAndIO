@@ -61,7 +61,7 @@ public class MapperUtils
      * 
      * @return
      */
-    public static <E> UnaryOperator<E> identity()
+    public static <F extends T, T> Function<F, T> identity()
     {
         return i -> i;
     }
