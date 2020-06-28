@@ -322,4 +322,11 @@ public class ListUtilsTest
                      ListUtils.sublistsFromStart(Arrays.asList("a", "b", "c"))
                               .collect(Collectors.toList()));
     }
+
+    @Test
+    public void testSublist() throws Exception
+    {
+        assertEquals(Arrays.asList(2, 3), ListUtils.sublist(Arrays.asList(1, 2, 3), 1));
+        assertEquals(Arrays.asList(), ListUtils.sublist(null, 1));
+    }
 }

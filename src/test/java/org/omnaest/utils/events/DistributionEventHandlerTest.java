@@ -33,20 +33,20 @@ import org.junit.Test;
 public class DistributionEventHandlerTest
 {
 
-	@Test
-	public void testHandle() throws Exception
-	{
-		List<String> result = new ArrayList<>();
+    @Test
+    public void testHandle() throws Exception
+    {
+        List<String> result = new ArrayList<>();
 
-		DistributionEventHandler<String> distributionEventHandler = new DistributionEventHandler<>();
-		distributionEventHandler.register(result::add)
-								.register(result::add);
+        DistributionEventHandler<String> distributionEventHandler = new DistributionEventHandler<>();
+        distributionEventHandler.register(result::add)
+                                .register(result::add);
 
-		Arrays	.asList("1", "2", "3")
-				.stream()
-				.forEach(event -> distributionEventHandler.handle(event));
+        Arrays.asList("1", "2", "3")
+              .stream()
+              .forEach(distributionEventHandler);
 
-		assertEquals(Arrays.asList("1", "1", "2", "2", "3", "3"), result);
-	}
+        assertEquals(Arrays.asList("1", "1", "2", "2", "3", "3"), result);
+    }
 
 }

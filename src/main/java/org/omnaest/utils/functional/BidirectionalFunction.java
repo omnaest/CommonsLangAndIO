@@ -36,4 +36,9 @@ public interface BidirectionalFunction<S, T>
     {
         return new CompositeBidirectionalFunction<>(forward, backward);
     }
+
+    public static <U> BidirectionalFunction<U, U> identity()
+    {
+        return new BidirectionalIdentityFunction<U>();
+    }
 }

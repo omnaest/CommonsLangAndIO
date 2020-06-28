@@ -729,4 +729,60 @@ public class ListUtils
                           .mapToObj(index -> list.subList(0, index));
     }
 
+    /**
+     * Returns a new {@link List} instance beginning at the given start position of the given {@link List}.<br>
+     * <br>
+     * If null is given an empty {@link List} is returned.
+     * 
+     * @param list
+     * @param startInclusive
+     * @return
+     */
+    public static <E> List<E> sublist(List<E> list, int startInclusive)
+    {
+        return sublist(list, startInclusive, Optional.ofNullable(list)
+                                                     .map(List<E>::size)
+                                                     .orElse(0));
+    }
+
+    /**
+     * Returns a new {@link List} instance beginning at the given start and ending of the given {@link List}.<br>
+     * <br>
+     * The end is exclusive.
+     * <br>
+     * <br>
+     * If null is given as {@link List} and empty {@link List} is returned.
+     * 
+     * @param list
+     * @param startInclusive
+     * @param endExclusive
+     * @return
+     */
+    public static <E> List<E> sublist(List<E> list, int startInclusive, int endExclusive)
+    {
+        return Optional.ofNullable(list)
+                       .orElse(Collections.emptyList())
+                       .stream()
+                       .skip(startInclusive)
+                       .limit(Math.max(0, endExclusive - startInclusive))
+                       .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a new {@link List} instance beginning at the start and ending a the given distance to the size of the given {@link List}.<br>
+     * <br>
+     * If null is given an empty {@link List} is returned.
+     * 
+     * @param list
+     * @param fromEnd
+     * @return
+     */
+    public static <E> List<E> sublistFromEnd(List<E> list, int fromEnd)
+    {
+        return sublist(list, 0, Optional.ofNullable(list)
+                                        .map(List<E>::size)
+                                        .map(size -> size - fromEnd)
+                                        .orElse(0));
+    }
+
 }

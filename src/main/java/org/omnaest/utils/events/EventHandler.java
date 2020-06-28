@@ -18,12 +18,14 @@
 */
 package org.omnaest.utils.events;
 
+import java.util.function.Consumer;
+
 /**
  * @see DistributionEventHandler
  * @author Omnaest
  * @param <E>
  */
-public interface EventHandler<E>
+@FunctionalInterface
+public interface EventHandler<E> extends Consumer<E>
 {
-	public void handle(E event);
 }

@@ -36,6 +36,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.omnaest.utils.SetUtils.SetDelta;
 import org.omnaest.utils.element.lar.ModifiableUnaryLeftAndRight;
 import org.omnaest.utils.element.lar.UnaryLeftAndRight;
 import org.omnaest.utils.functional.BidirectionalFunction;
@@ -560,6 +561,104 @@ public class MapUtils
             }
         }
         return retmap;
+    }
+
+    public static class MapDelta<K, V>
+    {
+        private SetDelta<K>           keyChanges;
+        private Map<K, ValueDelta<V>> changes;
+
+        public MapDelta(SetDelta<K> keyChanges, Map<K, ValueDelta<V>> changes)
+        {
+            super();
+            this.keyChanges = keyChanges;
+            this.changes = changes;
+        }
+
+        public SetDelta<K> getKeyChanges()
+        {
+            return this.keyChanges;
+        }
+
+        public Map<K, ValueDelta<V>> getChanges()
+        {
+            return this.changes;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "MapDelta [keyChanges=" + this.keyChanges + ", changes=" + this.changes + "]";
+        }
+
+        /**
+         * Applies the key and value delta to a given {@link Map}
+         * 
+         * @param newMap
+         * @return this
+         */
+        public MapDelta<K, V> applyTo(Map<K, V> map)
+        {
+            this.keyChanges.getRemoved()
+                           .forEach(key -> map.remove(key));
+            this.changes.keySet()
+                        .stream()
+                        .filter(key -> !this.keyChanges.getRemoved()
+                                                       .contains(key))
+                        .forEach(key -> map.put(key, this.changes.get(key)
+                                                                 .getNext()));
+            return this;
+        }
+
+    }
+
+    public static class ValueDelta<V>
+    {
+        private V previous;
+        private V next;
+
+        public ValueDelta(V previous, V next)
+        {
+            super();
+            this.previous = previous;
+            this.next = next;
+        }
+
+        public V getPrevious()
+        {
+            return this.previous;
+        }
+
+        public V getNext()
+        {
+            return this.next;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "ValueDelta [previous=" + this.previous + ", next=" + this.next + "]";
+        }
+
+    }
+
+    public static <K, V> MapDelta<K, V> delta(Map<K, V> previous, Map<K, V> next)
+    {
+        SetDelta<K> keyChanges = SetUtils.delta(previous.keySet(), next.keySet());
+
+        Map<K, ValueDelta<V>> changes = new HashMap<>();
+        keyChanges.getAll()
+                  .forEach(key ->
+                  {
+                      V previousValue = previous.get(key);
+                      V nextValue = next.get(key);
+                      if (!Objects.equals(previousValue, nextValue))
+                      {
+                          changes.put(key, new ValueDelta<>(previousValue, nextValue));
+                      }
+                  });
+
+        return new MapDelta<>(keyChanges, changes);
     }
 
 }

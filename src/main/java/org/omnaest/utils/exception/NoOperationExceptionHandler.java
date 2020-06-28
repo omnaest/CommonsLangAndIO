@@ -3,7 +3,7 @@ package org.omnaest.utils.exception;
 public class NoOperationExceptionHandler implements ExceptionHandler
 {
     @Override
-    public void handle(Exception event)
+    public void accept(Exception event)
     {
 
     }

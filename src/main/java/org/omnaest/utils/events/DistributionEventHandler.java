@@ -30,21 +30,21 @@ import java.util.stream.Collectors;
  */
 public class DistributionEventHandler<E> implements EventHandler<E>, EventHandlerRegistry<E>
 {
-	private List<EventHandler<E>> handlers = new ArrayList<>();
+    private List<EventHandler<E>> handlers = new ArrayList<>();
 
-	@Override
-	public void handle(E event)
-	{
-		this.handlers	.stream()
-						.collect(Collectors.toList())
-						.forEach(handler -> handler.handle(event));
-	}
+    @Override
+    public void accept(E event)
+    {
+        this.handlers.stream()
+                     .collect(Collectors.toList())
+                     .forEach(handler -> handler.accept(event));
+    }
 
-	@Override
-	public DistributionEventHandler<E> register(EventHandler<E> eventHandler)
-	{
-		this.handlers.add(eventHandler);
-		return this;
-	}
+    @Override
+    public DistributionEventHandler<E> register(EventHandler<E> eventHandler)
+    {
+        this.handlers.add(eventHandler);
+        return this;
+    }
 
 }

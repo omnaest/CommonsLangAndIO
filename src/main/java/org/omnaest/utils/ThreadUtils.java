@@ -40,7 +40,7 @@ public class ThreadUtils
 		{
 			if (exceptionHandler != null)
 			{
-				exceptionHandler.handle(e);
+				exceptionHandler.accept(e);
 			}
 		}
 	}

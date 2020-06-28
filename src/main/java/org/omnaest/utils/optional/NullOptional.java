@@ -105,6 +105,15 @@ public class NullOptional<T>
         return this;
     }
 
+    public NullOptional<T> ifNotPresent(Consumer<? super T> consumer)
+    {
+        if (!this.isPresent())
+        {
+            consumer.accept(this.value);
+        }
+        return this;
+    }
+
     /**
      * Returns an {@link NullOptional} where {@link NullOptional#isPresent()} will only return true if also the mapped return value is not null.
      * 

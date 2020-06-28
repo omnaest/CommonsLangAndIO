@@ -29,6 +29,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
+import org.omnaest.utils.MapUtils.MapDelta;
 import org.omnaest.utils.element.lar.UnaryLeftAndRight;
 
 /**
@@ -206,5 +207,47 @@ public class MapUtilsTest
                                          MapUtils.builder()
                                                  .put("key1", "value1")
                                                  .build()));
+    }
+
+    @Test
+    public void testDelta() throws Exception
+    {
+        MapDelta<String, String> delta = MapUtils.delta(MapUtils.builder()
+                                                                .put("key1", "value1")
+                                                                .put("key2", "value2")
+                                                                .put("key3", "value3")
+                                                                .build(),
+                                                        MapUtils.builder()
+                                                                .put("key2", "value2")
+                                                                .put("key3", "value3New")
+                                                                .put("key4", "value4")
+                                                                .build());
+        assertEquals(SetUtils.toSet("key1"), delta.getKeyChanges()
+                                                  .getRemoved());
+        assertEquals(SetUtils.toSet("key2", "key3"), delta.getKeyChanges()
+                                                          .getShared());
+        assertEquals(SetUtils.toSet("key4"), delta.getKeyChanges()
+                                                  .getAdded());
+
+        assertEquals(SetUtils.toSet("key1", "key3", "key4"), delta.getChanges()
+                                                                  .keySet());
+        assertEquals("value1", delta.getChanges()
+                                    .get("key1")
+                                    .getPrevious());
+        assertEquals(null, delta.getChanges()
+                                .get("key1")
+                                .getNext());
+        assertEquals("value3", delta.getChanges()
+                                    .get("key3")
+                                    .getPrevious());
+        assertEquals("value3New", delta.getChanges()
+                                       .get("key3")
+                                       .getNext());
+        assertEquals(null, delta.getChanges()
+                                .get("key4")
+                                .getPrevious());
+        assertEquals("value4", delta.getChanges()
+                                    .get("key4")
+                                    .getNext());
     }
 }

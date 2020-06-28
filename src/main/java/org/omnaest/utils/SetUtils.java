@@ -148,26 +148,32 @@ public class SetUtils
             return "SetDelta [added=" + this.added + ", removed=" + this.removed + ", shared=" + this.shared + "]";
         }
 
+        public Set<E> getAll()
+        {
+            return StreamUtils.concat(this.added.stream(), this.shared.stream(), this.removed.stream())
+                              .collect(Collectors.toSet());
+        }
+
     }
 
     /**
      * Returns a {@link SetDelta} of two given {@link Set}s
      * 
      * @param previous
-     * @param after
+     * @param next
      * @return
      */
-    public static <E> SetDelta<E> delta(Collection<E> previous, Collection<E> after)
+    public static <E> SetDelta<E> delta(Collection<E> previous, Collection<E> next)
     {
-        Set<E> added = new HashSet<>(after);
+        Set<E> added = new HashSet<>(next);
         added.removeAll(previous);
 
         Set<E> removed = new HashSet<>(previous);
-        removed.removeAll(after);
+        removed.removeAll(next);
 
         Set<E> shared = new HashSet<>();
         shared.addAll(previous);
-        shared.addAll(after);
+        shared.addAll(next);
         shared.removeAll(added);
         shared.removeAll(removed);
 

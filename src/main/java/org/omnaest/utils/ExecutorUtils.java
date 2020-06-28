@@ -145,7 +145,7 @@ public class ExecutorUtils
                                 }
                                 catch (InterruptedException | ExecutionException | TimeoutException e)
                                 {
-                                    exceptionHandler.handle(e);
+                                    exceptionHandler.accept(e);
                                     return null;
                                 }
                             };
@@ -231,7 +231,7 @@ public class ExecutorUtils
                                          }
                                          catch (Exception e)
                                          {
-                                             exceptionHandler.handle(e);
+                                             exceptionHandler.accept(e);
                                              return null;
                                          }
                                      });

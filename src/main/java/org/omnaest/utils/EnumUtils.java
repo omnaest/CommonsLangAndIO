@@ -8,6 +8,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.omnaest.utils.functional.Action;
+
 public class EnumUtils
 {
 
@@ -57,10 +59,6 @@ public class EnumUtils
 
         public <X extends Throwable> R orElseThrow(Supplier<? extends X> exceptionSupplier) throws X;
 
-    }
-
-    public static interface Action extends Runnable
-    {
     }
 
     /**
