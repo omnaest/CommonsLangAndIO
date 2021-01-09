@@ -511,4 +511,19 @@ public class StringUtils
         }
     }
 
+    /**
+     * Returns the text part until the given match token. The match token is excluded from the result.
+     * 
+     * @param text
+     * @param matchToken
+     * @return
+     */
+    public static String leftUntil(String text, String matchToken)
+    {
+        return Optional.ofNullable(org.apache.commons.lang3.StringUtils.splitByWholeSeparatorPreserveAllTokens(text, matchToken))
+                       .filter(tokens -> tokens.length >= 1)
+                       .map(tokens -> tokens[0])
+                       .orElse("");
+    }
+
 }

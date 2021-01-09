@@ -223,4 +223,11 @@ public class StringUtilsTest
         assertEquals(null, StringUtils.limitText(null, 16, "..."));
     }
 
+    @Test
+    public void testLeftUntil() throws Exception
+    {
+        assertEquals("abc", StringUtils.leftUntil("abcdef", "de"));
+        assertEquals("abcdef", StringUtils.leftUntil("abcdef", "xy"));
+    }
+
 }
