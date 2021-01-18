@@ -18,9 +18,10 @@
 */
 package org.omnaest.utils;
 
-import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -31,123 +32,127 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TimeFormatUtils
 {
-	private static final Map<TimeUnit, String> timeUnitToName = MapUtils.builder()
-																		.put(TimeUnit.DAYS, "d")
-																		.put(TimeUnit.HOURS, "h")
-																		.put(TimeUnit.MICROSECONDS, "microsecond(s)")
-																		.put(TimeUnit.MILLISECONDS, "ms")
-																		.put(TimeUnit.MINUTES, "min")
-																		.put(TimeUnit.NANOSECONDS, "ns")
-																		.put(TimeUnit.SECONDS, "sec")
-																		.build();
+    private static final Map<TimeUnit, String> timeUnitToName = MapUtils.builder()
+                                                                        .put(TimeUnit.DAYS, "d")
+                                                                        .put(TimeUnit.HOURS, "h")
+                                                                        .put(TimeUnit.MICROSECONDS, "microsecond(s)")
+                                                                        .put(TimeUnit.MILLISECONDS, "ms")
+                                                                        .put(TimeUnit.MINUTES, "min")
+                                                                        .put(TimeUnit.NANOSECONDS, "ns")
+                                                                        .put(TimeUnit.SECONDS, "sec")
+                                                                        .build();
 
-	public static interface TimeFormatter
-	{
-		public static interface TimeUnitFormatter
-		{
-			public String asString();
+    public static interface TimeFormatter
+    {
+        public static interface TimeUnitFormatter
+        {
+            public String asString();
 
-			public String asCanonicalString();
-		}
+            public String asCanonicalString();
 
-		/**
-		 * Returns a {@link TimeUnitFormatter}
-		 * 
-		 * @param duration
-		 * @param timeUnit
-		 * @return
-		 */
-		public TimeUnitFormatter duration(long duration, TimeUnit timeUnit);
-	}
+            String asCanonicalString(TimeUnit... timeUnits);
+        }
 
-	private static class TimeUnitAndDuration
-	{
-		private long		duration;
-		private TimeUnit	timeUnit;
+        /**
+         * Returns a {@link TimeUnitFormatter}
+         * 
+         * @param duration
+         * @param timeUnit
+         * @return
+         */
+        public TimeUnitFormatter duration(long duration, TimeUnit timeUnit);
+    }
 
-		public TimeUnitAndDuration(long duration, TimeUnit timeUnit)
-		{
-			super();
-			this.duration = duration;
-			this.timeUnit = timeUnit;
-		}
+    private static class TimeUnitAndDuration
+    {
+        private long     duration;
+        private TimeUnit timeUnit;
 
-		public long getDuration()
-		{
-			return this.duration;
-		}
+        public TimeUnitAndDuration(long duration, TimeUnit timeUnit)
+        {
+            super();
+            this.duration = duration;
+            this.timeUnit = timeUnit;
+        }
 
-		public TimeUnit getTimeUnit()
-		{
-			return this.timeUnit;
-		}
+        public long getDuration()
+        {
+            return this.duration;
+        }
 
-		@Override
-		public String toString()
-		{
-			return "TimeUnitAndDuration [duration=" + this.duration + ", timeUnit=" + this.timeUnit + "]";
-		}
+        public TimeUnit getTimeUnit()
+        {
+            return this.timeUnit;
+        }
 
-	}
+        @Override
+        public String toString()
+        {
+            return "TimeUnitAndDuration [duration=" + this.duration + ", timeUnit=" + this.timeUnit + "]";
+        }
 
-	/**
-	 * Returns a {@link TimeFormatter}
-	 * 
-	 * @return
-	 */
-	public static TimeFormatter format()
-	{
-		return new TimeFormatter()
-		{
-			@Override
-			public TimeUnitFormatter duration(long duration, TimeUnit timeUnit)
-			{
-				return new TimeUnitFormatter()
-				{
-					@Override
-					public String asString()
-					{
-						return StringUtils	.builder()
-											.append(duration)
-											.append(" ")
-											.append(timeUnitToName.get(timeUnit))
-											.toString();
-					}
+    }
 
-					@Override
-					public String asCanonicalString()
-					{
-						StringBuilder stringBuilder = StringUtils.builder();
+    /**
+     * Returns a {@link TimeFormatter}
+     * 
+     * @return
+     */
+    public static TimeFormatter format()
+    {
+        return new TimeFormatter()
+        {
+            @Override
+            public TimeUnitFormatter duration(long duration, TimeUnit timeUnit)
+            {
+                return new TimeUnitFormatter()
+                {
+                    @Override
+                    public String asString()
+                    {
+                        return StringUtils.builder()
+                                          .append(duration)
+                                          .append(timeUnitToName.get(timeUnit))
+                                          .toString();
+                    }
 
-						AtomicLong decreasingDuration = new AtomicLong(duration);
-						while (decreasingDuration.get() > 0)
-						{
-							TimeUnitAndDuration timeUnitAndDuration = Arrays.asList(TimeUnit.values())
-																			.stream()
-																			.map(itimeUnit -> new TimeUnitAndDuration(	itimeUnit.convert(	decreasingDuration.get(),
-																																			timeUnit),
-																														itimeUnit))
-																			.filter(tuad -> tuad.getDuration() > 0)
-																			.sorted(ComparatorUtils	.builder()
-																									.of(TimeUnitAndDuration.class)
-																									.with(tuad -> tuad.getDuration())
-																									.build())
-																			.findFirst()
-																			.get();
+                    @Override
+                    public String asCanonicalString()
+                    {
+                        return this.asCanonicalString(TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES, TimeUnit.SECONDS);
+                    }
 
-							decreasingDuration.getAndAdd(-timeUnit.convert(timeUnitAndDuration.getDuration(), timeUnitAndDuration.getTimeUnit()));
+                    @Override
+                    public String asCanonicalString(TimeUnit... timeUnits)
+                    {
+                        StringBuilder stringBuilder = StringUtils.builder();
 
-							stringBuilder	.append(format().duration(timeUnitAndDuration.getDuration(), timeUnitAndDuration.getTimeUnit())
-															.asString())
-											.append(" ");
-						}
+                        AtomicLong decreasingDuration = new AtomicLong(duration);
+                        TimeUnit lastTimeUnit = ArrayUtils.last(timeUnits);
+                        AtomicBoolean forceDisplay = new AtomicBoolean(false);
+                        for (TimeUnit iTimeUnit : timeUnits)
+                        {
+                            Optional.of(iTimeUnit)
+                                    .map(unit -> new TimeUnitAndDuration(unit.convert(decreasingDuration.get(), timeUnit), unit))
+                                    .filter(tuad -> tuad.getDuration() > 0 || forceDisplay.get() || tuad.getTimeUnit()
+                                                                                                        .equals(lastTimeUnit))
+                                    .ifPresent(timeUnitAndDuration ->
+                                    {
+                                        decreasingDuration.getAndAdd(-timeUnit.convert(timeUnitAndDuration.getDuration(), timeUnitAndDuration.getTimeUnit()));
 
-						return stringBuilder.toString()
-											.trim();
-					}
+                                        stringBuilder.append(format().duration(timeUnitAndDuration.getDuration(), timeUnitAndDuration.getTimeUnit())
+                                                                     .asString())
+                                                     .append(" ");
+                                        forceDisplay.set(true);
+                                    });
+                        }
 
-				};
-			}
-		};
-	}
+                        return stringBuilder.toString()
+                                            .trim();
+                    }
+
+                };
+            }
+        };
+    }
 }

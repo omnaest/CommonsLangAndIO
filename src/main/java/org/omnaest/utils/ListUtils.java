@@ -105,6 +105,11 @@ public class ListUtils
         return retval;
     }
 
+    public static <E> Optional<E> optionalFirst(List<E> list)
+    {
+        return Optional.ofNullable(first(list));
+    }
+
     @SafeVarargs
     public static <E> List<E> mergedList(Collection<E>... lists)
     {
@@ -186,6 +191,11 @@ public class ListUtils
             Collections.reverse(retlist);
         }
         return retlist;
+    }
+
+    public static <E> List<E> reverse(Collection<E> collection)
+    {
+        return inverse(collection);
     }
 
     @SafeVarargs

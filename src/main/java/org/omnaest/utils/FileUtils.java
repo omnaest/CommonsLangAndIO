@@ -365,7 +365,19 @@ public class FileUtils
 
             public Stream<String> getAsStringStream();
 
+            /**
+             * Returns a {@link Stream} of lines through all files in their order.
+             * 
+             * @return
+             */
             public Stream<String> getAsLinesStream();
+
+            /**
+             * Similar to {@link #getAsLinesStream()} but loads the whole file content into memory first
+             * 
+             * @return
+             */
+            public Stream<String> getAsInMemoryLinesStream();
         }
 
     }
@@ -452,38 +464,57 @@ public class FileUtils
             @Override
             public Stream<String> getAsStringStream()
             {
-                return this.files.stream()
-                                 .filter(PredicateUtils.notNull())
-                                 .map(file ->
-                                 {
-                                     try
-                                     {
-                                         return org.apache.commons.io.FileUtils.readFileToString(file, this.encoding);
-                                     }
-                                     catch (IOException e)
-                                     {
-                                         throw new FileAccessRuntimeException(e);
-                                     }
-                                 });
+                return this.mapFileToStream(file ->
+                {
+                    try
+                    {
+                        return Stream.of(org.apache.commons.io.FileUtils.readFileToString(file, this.encoding));
+                    }
+                    catch (IOException e)
+                    {
+                        throw new FileAccessRuntimeException(e);
+                    }
+                });
             }
 
             @Override
             public Stream<String> getAsLinesStream()
             {
+                return this.mapFileToStream(file ->
+                {
+                    try
+                    {
+                        return FileUtils.toLineStream(file, this.encoding);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new FileAccessRuntimeException(e);
+                    }
+                });
+            }
+
+            @Override
+            public Stream<String> getAsInMemoryLinesStream()
+            {
+                return this.mapFileToStream(file ->
+                {
+                    try
+                    {
+                        return org.apache.commons.io.FileUtils.readLines(file, this.encoding)
+                                                              .stream();
+                    }
+                    catch (IOException e)
+                    {
+                        throw new FileAccessRuntimeException(e);
+                    }
+                });
+            }
+
+            private Stream<String> mapFileToStream(Function<File, Stream<String>> fileToStreamMapper)
+            {
                 return this.files.stream()
                                  .filter(PredicateUtils.notNull())
-                                 .flatMap(file ->
-                                 {
-                                     try
-                                     {
-                                         return org.apache.commons.io.FileUtils.readLines(file, this.encoding)
-                                                                               .stream();
-                                     }
-                                     catch (IOException e)
-                                     {
-                                         throw new FileAccessRuntimeException(e);
-                                     }
-                                 });
+                                 .flatMap(fileToStreamMapper);
             }
         };
     }
@@ -723,8 +754,14 @@ public class FileUtils
             {
                 return t ->
                 {
-                    Writer writer = this.get();
-                    acceptor.accept(t, writer);
+                    try (Writer writer = this.get())
+                    {
+                        acceptor.accept(t, writer);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new IllegalStateException(e);
+                    }
                 };
             }
         };

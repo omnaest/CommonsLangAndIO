@@ -18,20 +18,38 @@
 */
 package org.omnaest.utils;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 public class ArrayUtils
 {
-	public static <E> E[][] deepClone(E[][] array)
-	{
-		E[][] retval = clone(array);
-		for (int ii = 0; ii < retval.length; ii++)
-		{
-			retval[ii] = clone(retval[ii]);
-		}
-		return retval;
-	}
+    public static <E> E[][] deepClone(E[][] array)
+    {
+        E[][] retval = clone(array);
+        for (int ii = 0; ii < retval.length; ii++)
+        {
+            retval[ii] = clone(retval[ii]);
+        }
+        return retval;
+    }
 
-	public static <E> E[] clone(E[] array)
-	{
-		return org.apache.commons.lang3.ArrayUtils.clone(array);
-	}
+    public static <E> E[] clone(E[] array)
+    {
+        return org.apache.commons.lang3.ArrayUtils.clone(array);
+    }
+
+    public static <E> E last(E[] array)
+    {
+        return array != null && array.length >= 1 ? array[array.length - 1] : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E> E[] reverse(E[] array)
+    {
+        return array == null ? null
+                : ListUtils.reverse(Arrays.asList(array))
+                           .toArray((E[]) Array.newInstance(array.getClass()
+                                                                 .getComponentType(),
+                                                            array.length));
+    }
 }

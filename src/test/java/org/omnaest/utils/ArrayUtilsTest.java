@@ -19,26 +19,36 @@
 package org.omnaest.utils;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+
+import java.util.Arrays;
 
 import org.junit.Test;
 
 public class ArrayUtilsTest
 {
 
-	@Test
-	public void testDeepClone() throws Exception
-	{
-		String[][] matrix = new String[][] { new String[] { "1", "2" }, new String[] { "3", "4" } };
+    @Test
+    public void testDeepClone() throws Exception
+    {
+        String[][] matrix = new String[][] { new String[] { "1", "2" }, new String[] { "3", "4" } };
 
-		String[][] clone = ArrayUtils.deepClone(matrix);
-		assertArrayEquals(matrix, clone);
+        String[][] clone = ArrayUtils.deepClone(matrix);
+        assertArrayEquals(matrix, clone);
 
-		clone[1][1] = "x";
-		assertNotSame(matrix, clone);
-		assertNotSame("x", matrix[1][1]);
-		assertNotSame(matrix[1], clone[1]);
-		assertArrayEquals(matrix[0], clone[0]);
-	}
+        clone[1][1] = "x";
+        assertNotSame(matrix, clone);
+        assertNotSame("x", matrix[1][1]);
+        assertNotSame(matrix[1], clone[1]);
+        assertArrayEquals(matrix[0], clone[0]);
+    }
+
+    @Test
+    public void testReverse() throws Exception
+    {
+        String[] reverse = ArrayUtils.reverse(new String[] { "a", "b", "c" });
+        assertEquals(Arrays.asList("c", "b", "a"), Arrays.asList(reverse));
+    }
 
 }

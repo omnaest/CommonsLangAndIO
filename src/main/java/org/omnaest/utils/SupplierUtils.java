@@ -65,4 +65,19 @@ public class SupplierUtils
                             .asSoftReferenceCachedElement();
     }
 
+    /**
+     * Returns a {@link Supplier} that throws the {@link RuntimeException} provided by the given {@link Supplier} if the {@link Supplier#get()} method is
+     * called.
+     * 
+     * @param exceptionSupplier
+     * @return
+     */
+    public static <R> Supplier<R> toExceptionThrowingSupplier(Supplier<? extends RuntimeException> exceptionSupplier)
+    {
+        return () ->
+        {
+            throw exceptionSupplier.get();
+        };
+    }
+
 }

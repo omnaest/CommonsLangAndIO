@@ -31,20 +31,20 @@ import org.junit.Test;
 public class TimeFormatUtilsTest
 {
 
-	@Test
-	public void testFormat() throws Exception
-	{
-		assertEquals("10 sec", TimeFormatUtils	.format()
-												.duration(10, TimeUnit.SECONDS)
-												.asString());
-	}
+    @Test
+    public void testFormat() throws Exception
+    {
+        assertEquals("10sec", TimeFormatUtils.format()
+                                             .duration(10, TimeUnit.SECONDS)
+                                             .asString());
+    }
 
-	@Test
-	public void testFormatCanonical() throws Exception
-	{
-		assertEquals("1 h 59 min 10 sec", TimeFormatUtils	.format()
-															.duration(3600 + 59 * 60 + 10, TimeUnit.SECONDS)
-															.asCanonicalString());
-	}
+    @Test
+    public void testFormatCanonical() throws Exception
+    {
+        assertEquals("1h 59min 10sec", TimeFormatUtils.format()
+                                                      .duration(3600 + 59 * 60 + 10, TimeUnit.SECONDS)
+                                                      .asCanonicalString());
+    }
 
 }

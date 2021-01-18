@@ -172,32 +172,6 @@ public class StreamUtils
     public static <E> SupplierStream<E> fromSupplier(Supplier<E> supplier)
     {
         return new DefaultSupplierStream<>(supplier);
-        //                fromIterator(new Iterator<E>()
-        //        {
-        //            private AtomicReference<E> takenElement = new AtomicReference<>();
-        //
-        //            @Override
-        //            public boolean hasNext()
-        //            {
-        //                this.takeOneElement();
-        //                return terminateMatcher.negate()
-        //                                       .test(this.takenElement.get());
-        //            }
-        //
-        //            @Override
-        //            public E next()
-        //            {
-        //                this.takeOneElement();
-        //                return this.takenElement.getAndSet(null);
-        //            }
-        //
-        //            private void takeOneElement()
-        //            {
-        //                this.takenElement.getAndUpdate(e -> e != null ? e : supplier.get());
-        //            }
-        //        }).filter(terminateMatcher.negate())
-        //          .sequential();
-
     }
 
     /**
@@ -250,7 +224,7 @@ public class StreamUtils
      */
     public static Stream<String> fromReaderAsLines(Reader reader)
     {
-        BufferedReader bufferedReader = new BufferedReader(reader);
+        BufferedReader bufferedReader = new BufferedReader(reader, 128 * 1024);
         return fromSupplier(() ->
         {
             try

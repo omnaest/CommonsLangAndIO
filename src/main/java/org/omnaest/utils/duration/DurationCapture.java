@@ -21,6 +21,8 @@ package org.omnaest.utils.duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import org.omnaest.utils.duration.DefaultDurationCapture.TimeUnitDisplay;
+
 /**
  * @see #newInstance()
  * @see #measure(MeasuredOperation)
@@ -48,6 +50,10 @@ public interface DurationCapture
 		public String getDurationAsCanonicalString();
 
 		public MeasurementResult doWithResult(Consumer<MeasurementResult> resultConsumer);
+
+        TimeUnitDisplay toETA(double progress);
+
+        TimeUnitDisplay asTimeUnitDisplay();
 
 	}
 

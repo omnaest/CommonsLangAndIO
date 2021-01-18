@@ -29,138 +29,190 @@ import org.omnaest.utils.TimeFormatUtils;
 public class DefaultDurationCapture implements DurationCapture
 {
 
-	private static class MeasurementResultImpl implements MeasurementResult
-	{
-		private long duration;
+    private static class MeasurementResultImpl implements MeasurementResult
+    {
+        private long duration;
 
-		public MeasurementResultImpl(long duration)
-		{
-			super();
-			this.duration = duration;
-		}
+        public MeasurementResultImpl(long duration)
+        {
+            super();
+            this.duration = duration;
+        }
 
-		@Override
-		public long getDuration(TimeUnit timeUnit)
-		{
-			return timeUnit.convert(this.duration, TimeUnit.MILLISECONDS);
-		}
+        @Override
+        public long getDuration(TimeUnit timeUnit)
+        {
+            return timeUnit.convert(this.duration, TimeUnit.MILLISECONDS);
+        }
 
-		@Override
-		public String getDurationAsString(TimeUnit timeUnit)
-		{
-			return TimeFormatUtils	.format()
-									.duration(this.getDuration(timeUnit), timeUnit)
-									.asString();
-		}
+        @Override
+        public String getDurationAsString(TimeUnit timeUnit)
+        {
+            return TimeFormatUtils.format()
+                                  .duration(this.getDuration(timeUnit), timeUnit)
+                                  .asString();
+        }
 
-		@Override
-		public String getDurationAsCanonicalString()
-		{
-			return TimeFormatUtils	.format()
-									.duration(this.getDuration(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
-									.asCanonicalString();
-		}
+        @Override
+        public String getDurationAsCanonicalString()
+        {
+            return TimeFormatUtils.format()
+                                  .duration(this.getDuration(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
+                                  .asCanonicalString();
+        }
 
-		@Override
-		public String toString()
-		{
-			return this.getDurationAsString(TimeUnit.MILLISECONDS);
-		}
+        @Override
+        public String toString()
+        {
+            return this.getDurationAsString(TimeUnit.MILLISECONDS);
+        }
 
-		@Override
-		public MeasurementResult doWithResult(Consumer<MeasurementResult> resultConsumer)
-		{
-			if (resultConsumer != null)
-			{
-				resultConsumer.accept(this);
-			}
-			return this;
-		}
+        @Override
+        public MeasurementResult doWithResult(Consumer<MeasurementResult> resultConsumer)
+        {
+            if (resultConsumer != null)
+            {
+                resultConsumer.accept(this);
+            }
+            return this;
+        }
 
-	}
+        @Override
+        public TimeUnitDisplay asTimeUnitDisplay()
+        {
+            return TimeUnitDisplay.of(this.duration, TimeUnit.MILLISECONDS);
+        }
 
-	private static class MeasurementResultWithReturnValueImpl<R> extends MeasurementResultImpl implements MeasurementResultWithReturnValue<R>
-	{
-		private R retval;
+        @Override
+        public TimeUnitDisplay toETA(double progress)
+        {
+            return TimeUnitDisplay.of(Math.round(this.duration / progress - this.duration), TimeUnit.MILLISECONDS);
+        }
 
-		public MeasurementResultWithReturnValueImpl(R retval, long duration)
-		{
-			super(duration);
-			this.retval = retval;
-		}
+    }
 
-		@Override
-		public R getReturnValue()
-		{
-			return this.retval;
-		}
+    private static class MeasurementResultWithReturnValueImpl<R> extends MeasurementResultImpl implements MeasurementResultWithReturnValue<R>
+    {
+        private R retval;
 
-		@SuppressWarnings("unchecked")
-		@Override
-		public MeasurementResultWithReturnValue<R> doWithResult(Consumer<MeasurementResult> resultConsumer)
-		{
-			return (MeasurementResultWithReturnValue<R>) super.doWithResult(resultConsumer);
-		}
+        public MeasurementResultWithReturnValueImpl(R retval, long duration)
+        {
+            super(duration);
+            this.retval = retval;
+        }
 
-	}
+        @Override
+        public R getReturnValue()
+        {
+            return this.retval;
+        }
 
-	protected static final Map<TimeUnit, String> timeUnitToLabelMap = MapUtils	.builder()
-																				.put(TimeUnit.MILLISECONDS, "ms")
-																				.put(TimeUnit.MICROSECONDS, "microseconds")
-																				.put(TimeUnit.NANOSECONDS, "ns")
-																				.put(TimeUnit.SECONDS, "sec")
-																				.put(TimeUnit.MINUTES, "min")
-																				.put(TimeUnit.DAYS, "d")
-																				.put(TimeUnit.HOURS, "h")
-																				.build();
+        @SuppressWarnings("unchecked")
+        @Override
+        public MeasurementResultWithReturnValue<R> doWithResult(Consumer<MeasurementResult> resultConsumer)
+        {
+            return (MeasurementResultWithReturnValue<R>) super.doWithResult(resultConsumer);
+        }
 
-	@Override
-	public MeasurementResult measure(MeasuredVoidOperation operation)
-	{
-		return this.measure(() ->
-		{
-			operation.execute();
-			return null;
-		});
-	}
+    }
 
-	@Override
-	public <R> MeasurementResultWithReturnValue<R> measure(MeasuredOperation<R> operation)
-	{
-		//
-		long duration;
-		long stopTime;
-		long startTime;
-		AtomicReference<R> retval = new AtomicReference<>();
+    protected static final Map<TimeUnit, String> timeUnitToLabelMap = MapUtils.builder()
+                                                                              .put(TimeUnit.MILLISECONDS, "ms")
+                                                                              .put(TimeUnit.MICROSECONDS, "microseconds")
+                                                                              .put(TimeUnit.NANOSECONDS, "ns")
+                                                                              .put(TimeUnit.SECONDS, "sec")
+                                                                              .put(TimeUnit.MINUTES, "min")
+                                                                              .put(TimeUnit.DAYS, "d")
+                                                                              .put(TimeUnit.HOURS, "h")
+                                                                              .build();
 
-		//
-		startTime = System.currentTimeMillis();
-		try
-		{
-			retval.set(operation.execute());
-		} finally
-		{
-			stopTime = System.currentTimeMillis();
-			duration = stopTime - startTime;
-		}
+    @Override
+    public MeasurementResult measure(MeasuredVoidOperation operation)
+    {
+        return this.measure(() ->
+        {
+            operation.execute();
+            return null;
+        });
+    }
 
-		//
-		return new MeasurementResultWithReturnValueImpl<>(retval.get(), duration);
-	}
+    @Override
+    public <R> MeasurementResultWithReturnValue<R> measure(MeasuredOperation<R> operation)
+    {
+        //
+        long duration;
+        long stopTime;
+        long startTime;
+        AtomicReference<R> retval = new AtomicReference<>();
 
-	@Override
-	public DurationMeasurement start()
-	{
-		long start = System.currentTimeMillis();
-		return new DurationMeasurement()
-		{
-			@Override
-			public MeasurementResult stop()
-			{
-				long duration = System.currentTimeMillis() - start;
-				return new MeasurementResultImpl(duration);
-			}
-		};
-	}
+        //
+        startTime = System.currentTimeMillis();
+        try
+        {
+            retval.set(operation.execute());
+        }
+        finally
+        {
+            stopTime = System.currentTimeMillis();
+            duration = stopTime - startTime;
+        }
 
+        //
+        return new MeasurementResultWithReturnValueImpl<>(retval.get(), duration);
+    }
+
+    @Override
+    public DurationMeasurement start()
+    {
+        long start = System.currentTimeMillis();
+        return new DurationMeasurement()
+        {
+            @Override
+            public MeasurementResult stop()
+            {
+                long duration = System.currentTimeMillis() - start;
+                return new MeasurementResultImpl(duration);
+            }
+
+        };
+    }
+
+    public static interface TimeUnitDisplay
+    {
+        public static TimeUnitDisplay of(long time, TimeUnit timeUnit)
+        {
+            return new DefaultTimeUnitDisplay(time, timeUnit);
+        }
+
+        long as(TimeUnit timeUnit);
+
+        String asCanonicalString(TimeUnit... timeUnits);
+    }
+
+    public static class DefaultTimeUnitDisplay implements TimeUnitDisplay
+    {
+        private long     time;
+        private TimeUnit timeUnit;
+
+        private DefaultTimeUnitDisplay(long time, TimeUnit timeUnit)
+        {
+            super();
+            this.time = time;
+            this.timeUnit = timeUnit;
+        }
+
+        @Override
+        public String asCanonicalString(TimeUnit... timeUnits)
+        {
+            return TimeFormatUtils.format()
+                                  .duration(this.time, this.timeUnit)
+                                  .asCanonicalString(timeUnits);
+        }
+
+        @Override
+        public long as(TimeUnit timeUnit)
+        {
+            return timeUnit.convert(this.time, this.timeUnit);
+        }
+    }
 }
