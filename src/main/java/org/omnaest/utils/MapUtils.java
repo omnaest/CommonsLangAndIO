@@ -661,4 +661,38 @@ public class MapUtils
         return new MapDelta<>(keyChanges, changes);
     }
 
+    /**
+     * Merges the values of multiple {@link Map}s into a single {@link Map}. Overwrites entries that are duplicates in random order.
+     * 
+     * @see #join(Map...)
+     * @param maps
+     * @return
+     */
+    @SafeVarargs
+    public static <K, V> Map<K, V> merge(Map<K, V>... maps)
+    {
+        Map<K, V> result = new HashMap<>();
+
+        for (Map<K, V> map : maps)
+        {
+            if (map != null)
+            {
+                result.putAll(map);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns true if the given {@link Map} is not null or empty.
+     * 
+     * @param map
+     * @return
+     */
+    public static <K, V> boolean isNotEmpty(Map<K, V> map)
+    {
+        return map != null && !map.isEmpty();
+    }
+
 }

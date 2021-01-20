@@ -250,4 +250,22 @@ public class MapUtilsTest
                                     .get("key4")
                                     .getNext());
     }
+
+    @Test
+    public void testMerge() throws Exception
+    {
+        assertEquals(MapUtils.builder()
+                             .put("key1", "value1")
+                             .put("key2", "value2")
+                             .put("key3", "value3")
+                             .build(),
+                     MapUtils.merge(MapUtils.builder()
+                                            .put("key1", "value1")
+                                            .put("key2", "value2")
+                                            .build(),
+                                    MapUtils.builder()
+                                            .put("key3", "value3")
+                                            .put("key2", "value2")
+                                            .build()));
+    }
 }

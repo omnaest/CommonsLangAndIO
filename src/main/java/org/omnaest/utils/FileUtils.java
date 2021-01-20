@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -48,6 +49,7 @@ import java.util.stream.Stream;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.omnaest.utils.FileUtils.BatchFileReader.BatchFileReaderLoaded;
+import org.omnaest.utils.exception.ExceptionHandler;
 import org.omnaest.utils.functional.Accessor;
 
 /**
@@ -349,6 +351,39 @@ public class FileUtils
                                   .toFile();
         tempDirectory.deleteOnExit();
         return tempDirectory;
+    }
+
+    /**
+     * Similar to {@link #createRandomTempDirectory()} without throwing an {@link IOException}
+     * 
+     * @return
+     */
+    public static Optional<File> createRandomTempDirectoryQuietly()
+    {
+        return createRandomTempDirectory(e ->
+        {
+        });
+    }
+
+    /**
+     * Similar to {@link #createRandomTempDirectory()} allowing to specify an {@link ExceptionHandler}
+     * 
+     * @param exceptionHandler
+     * @return
+     */
+    public static Optional<File> createRandomTempDirectory(ExceptionHandler... exceptionHandler)
+    {
+        try
+        {
+            return Optional.of(createRandomTempDirectory());
+        }
+        catch (IOException e)
+        {
+            Optional.ofNullable(exceptionHandler)
+                    .ifPresent(handlers -> Arrays.asList(handlers)
+                                                 .forEach(handler -> handler.accept(e)));
+            return Optional.empty();
+        }
     }
 
     public static interface BatchFileReader
