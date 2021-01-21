@@ -15,7 +15,7 @@ import org.omnaest.utils.FileUtils;
  */
 public class HashTextFileIndexTest
 {
-    private HashTextFileIndex index = new HashTextFileIndex(FileUtils.createRandomTempDirectoryQuietly()
+    private TextFileIndex index = new HashTextFileIndex(FileUtils.createRandomTempDirectoryQuietly()
                                                                      .get());
 
     @Test

@@ -248,13 +248,13 @@ public class ListUtils
         return list;
     }
 
-    public static <E> List<E> addToNew(List<E> list, E element)
+    public static <E> List<E> addToNew(Collection<E> list, E element)
     {
         int index = list.size();
         return addToNew(list, index, element);
     }
 
-    public static <E> List<E> addToNew(List<E> list, int index, E element)
+    public static <E> List<E> addToNew(Collection<E> list, int index, E element)
     {
         List<E> retlist = new ArrayList<>(list);
         while (retlist.size() < index)
