@@ -49,6 +49,9 @@ public class ThreadUtils
 
     public static void sleepSilently(Duration duration)
     {
-        sleepSilently((int) duration.get(ChronoUnit.MILLIS), TimeUnit.MILLISECONDS);
+        if (duration != null)
+        {
+            sleepSilently((int) duration.get(ChronoUnit.MILLIS), TimeUnit.MILLISECONDS);
+        }
     }
 }

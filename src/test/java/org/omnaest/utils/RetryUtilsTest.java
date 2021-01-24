@@ -18,8 +18,10 @@
 */
 package org.omnaest.utils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,23 +33,43 @@ import org.junit.Test;
  */
 public class RetryUtilsTest
 {
-	@Test
-	public void testRetryIntIntTimeUnitRetryOperation() throws Exception
-	{
-		AtomicInteger counter = new AtomicInteger();
-		boolean success = RetryUtils.retry(5, 50, TimeUnit.MILLISECONDS, () ->
-		{
-			int current = counter.getAndIncrement();
-			if (current < 3)
-			{
-				throw new Exception("Test");
-			}
-			else
-			{
-				return true;
-			}
-		});
-		assertTrue(success);
-	}
+    @Test
+    public void testRetryIntIntTimeUnitRetryOperation() throws Exception
+    {
+        AtomicInteger counter = new AtomicInteger();
+        boolean success = RetryUtils.retry(5, 50, TimeUnit.MILLISECONDS, () ->
+        {
+            int current = counter.getAndIncrement();
+            if (current < 3)
+            {
+                throw new Exception("Test");
+            }
+            else
+            {
+                return true;
+            }
+        });
+        assertTrue(success);
+    }
+
+    @Test(expected = IOExceptionDerivate.class)
+    public void testRetry() throws Exception
+    {
+        AtomicInteger maxRetryCount = new AtomicInteger();
+        RetryUtils.retry()
+                  .times(3)
+                  .withSingleExceptionFilter(IOException.class)
+                  .withRetryListener(maxRetryCount::set)
+                  .operation(() ->
+                  {
+                      throw new IOExceptionDerivate();
+                  });
+        assertEquals(2, maxRetryCount.get());
+    }
+
+    private static class IOExceptionDerivate extends IOException
+    {
+        private static final long serialVersionUID = -3832989781507986302L;
+    }
 
 }

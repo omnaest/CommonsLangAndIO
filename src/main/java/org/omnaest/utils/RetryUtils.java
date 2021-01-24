@@ -22,7 +22,9 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -45,6 +47,8 @@ public class RetryUtils
 
         public RetryOperationBuilder withSingleExceptionFilter(Class<? extends Exception> exception);
 
+        public RetryOperationBuilder withRetryListener(Consumer<Integer> retryListenter);
+
         public <E> E operation(RetryGetOperation<E> operation) throws Exception;
 
         public void operation(RetryOperation operation) throws Exception;
@@ -59,14 +63,15 @@ public class RetryUtils
     {
         return new RetryOperationBuilder()
         {
-            private int                  times           = 2;
+            private int                  times           = 3;
             private Duration             durationInBetween;
             private Predicate<Exception> exceptionFilter = e -> true;
+            private Consumer<Integer>    retryListenter;
 
             @Override
             public RetryOperationBuilder times(int times)
             {
-                this.times = times;
+                this.times = times + 1;
                 return this;
             }
 
@@ -125,6 +130,10 @@ public class RetryUtils
                         else
                         {
                             ThreadUtils.sleepSilently(this.durationInBetween);
+
+                            int retryCount = ii + 1;
+                            Optional.ofNullable(this.retryListenter)
+                                    .ifPresent(consumer -> consumer.accept(retryCount));
                         }
                     }
                 }
@@ -165,6 +174,13 @@ public class RetryUtils
                 {
                     throw new RuntimeException(e);
                 }
+            }
+
+            @Override
+            public RetryOperationBuilder withRetryListener(Consumer<Integer> retryListenter)
+            {
+                this.retryListenter = retryListenter;
+                return this;
             }
         };
     }
