@@ -26,16 +26,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 
 /**
- * @see RetryHelper
+ * @see RetryUtils
  * @author omnaest
  */
-public class RetryHelperTest
+public class RetryUtilsTest
 {
 	@Test
 	public void testRetryIntIntTimeUnitRetryOperation() throws Exception
 	{
 		AtomicInteger counter = new AtomicInteger();
-		boolean success = RetryHelper.retry(5, 50, TimeUnit.MILLISECONDS, () ->
+		boolean success = RetryUtils.retry(5, 50, TimeUnit.MILLISECONDS, () ->
 		{
 			int current = counter.getAndIncrement();
 			if (current < 3)

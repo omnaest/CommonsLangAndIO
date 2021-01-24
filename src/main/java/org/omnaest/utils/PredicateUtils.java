@@ -126,4 +126,14 @@ public class PredicateUtils
         return t -> !Objects.equals(t, object);
     }
 
+    /**
+     * Returns allways true for all elements
+     * 
+     * @return
+     */
+    public static <T> Predicate<T> allMatching()
+    {
+        return t -> true;
+    }
+
 }

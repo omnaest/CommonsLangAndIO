@@ -18,30 +18,37 @@
 */
 package org.omnaest.utils;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 import org.omnaest.utils.exception.ExceptionHandler;
 
 public class ThreadUtils
 {
-	public static void sleepSilently(int duration, TimeUnit timeUnit)
-	{
-		ExceptionHandler exceptionHandler = null;
-		sleepSilently(duration, timeUnit, exceptionHandler);
-	}
+    public static void sleepSilently(int duration, TimeUnit timeUnit)
+    {
+        ExceptionHandler exceptionHandler = null;
+        sleepSilently(duration, timeUnit, exceptionHandler);
+    }
 
-	public static void sleepSilently(int duration, TimeUnit timeUnit, ExceptionHandler exceptionHandler)
-	{
-		try
-		{
-			Thread.sleep(timeUnit.toMillis(duration));
-		}
-		catch (InterruptedException e)
-		{
-			if (exceptionHandler != null)
-			{
-				exceptionHandler.accept(e);
-			}
-		}
-	}
+    public static void sleepSilently(int duration, TimeUnit timeUnit, ExceptionHandler exceptionHandler)
+    {
+        try
+        {
+            Thread.sleep(timeUnit.toMillis(duration));
+        }
+        catch (InterruptedException e)
+        {
+            if (exceptionHandler != null)
+            {
+                exceptionHandler.accept(e);
+            }
+        }
+    }
+
+    public static void sleepSilently(Duration duration)
+    {
+        sleepSilently((int) duration.get(ChronoUnit.MILLIS), TimeUnit.MILLISECONDS);
+    }
 }
