@@ -179,14 +179,14 @@ public class StreamUtilsTest
                                                    .collect(Collectors.toList());
             assertEquals(2, frames.size());
             assertEquals(Arrays.asList("1", null, "3"), frames.get(0));
-            assertEquals(Arrays.asList("4", "5", null), frames.get(1));
+            assertEquals(Arrays.asList("4", "5"), frames.get(1));
         }
         {
             List<List<String>> frames = StreamUtils.framedAsList(6, Arrays.asList("1", null, "3", "4", "5")
                                                                           .stream())
                                                    .collect(Collectors.toList());
             assertEquals(1, frames.size());
-            assertEquals(Arrays.asList("1", null, "3", "4", "5", null), frames.get(0));
+            assertEquals(Arrays.asList("1", null, "3", "4", "5"), frames.get(0));
         }
         {
             List<List<String>> frames = StreamUtils.framedAsList(3, (Stream<String>) null)

@@ -436,7 +436,7 @@ public class StreamUtils
     }
 
     /**
-     * Similar to {@link #framedPreserveSize(int, Stream)} but returns a {@link List} wrapper
+     * Similar to {@link #framed(int, Stream)} but returns a {@link List} wrapper
      * 
      * @param frameSize
      * @param stream
