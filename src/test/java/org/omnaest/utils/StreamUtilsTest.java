@@ -129,6 +129,27 @@ public class StreamUtilsTest
     }
 
     @Test
+    public void testFramedPreserveSize() throws Exception
+    {
+        {
+            List<String[]> frames = StreamUtils.framedPreserveSize(3, Arrays.asList("1", "2", "3", "4", "5", "6")
+                                                                            .stream())
+                                               .collect(Collectors.toList());
+            assertEquals(2, frames.size());
+            assertArrayEquals(new String[] { "1", "2", "3" }, frames.get(0));
+            assertArrayEquals(new String[] { "4", "5", "6" }, frames.get(1));
+        }
+        {
+            List<String[]> frames = StreamUtils.framedPreserveSize(3, Arrays.asList("1", null, "3", "4", "5")
+                                                                            .stream())
+                                               .collect(Collectors.toList());
+            assertEquals(2, frames.size());
+            assertArrayEquals(new String[] { "1", null, "3" }, frames.get(0));
+            assertArrayEquals(new String[] { "4", "5", null }, frames.get(1));
+        }
+    }
+
+    @Test
     public void testFramed() throws Exception
     {
         {
@@ -145,12 +166,12 @@ public class StreamUtilsTest
                                                .collect(Collectors.toList());
             assertEquals(2, frames.size());
             assertArrayEquals(new String[] { "1", null, "3" }, frames.get(0));
-            assertArrayEquals(new String[] { "4", "5", null }, frames.get(1));
+            assertArrayEquals(new String[] { "4", "5" }, frames.get(1));
         }
     }
 
     @Test
-    public void testFramedList() throws Exception
+    public void testFramedAsList() throws Exception
     {
         {
             List<List<String>> frames = StreamUtils.framedAsList(3, Arrays.asList("1", null, "3", "4", "5")
@@ -175,7 +196,7 @@ public class StreamUtilsTest
     }
 
     @Test
-    public void testFramedListNonNull() throws Exception
+    public void testFramedAsListNonNull() throws Exception
     {
         {
             List<List<String>> frames = StreamUtils.framedNonNullAsList(3, Arrays.asList("1", null, "3", "4", "5")

@@ -422,21 +422,21 @@ public class StreamUtils
     }
 
     /**
-     * Similar to {@link #framed(int, Stream)} for an {@link IntStream}
+     * Similar to {@link #framedPreserveSize(int, Stream)} for an {@link IntStream}
      * 
      * @see IntStream
-     * @see #framed(int, Stream)
+     * @see #framedPreserveSize(int, Stream)
      * @param frameSize
      * @param stream
      * @return
      */
     public static Stream<int[]> framed(int frameSize, IntStream stream)
     {
-        return framed(frameSize, stream.mapToObj(Integer::valueOf)).map(array -> ArrayUtils.toPrimitive(array));
+        return framedPreserveSize(frameSize, stream.mapToObj(Integer::valueOf)).map(array -> ArrayUtils.toPrimitive(array));
     }
 
     /**
-     * Similar to {@link #framed(int, Stream)} but returns a {@link List} wrapper
+     * Similar to {@link #framedPreserveSize(int, Stream)} but returns a {@link List} wrapper
      * 
      * @param frameSize
      * @param stream
@@ -464,19 +464,52 @@ public class StreamUtils
     /**
      * Creates block frames of a given size based on a given {@link Stream} of elements.<br>
      * <br>
-     * E.g. [1,2,3,4,5,6] -> [1,2],[3,4],[5,6] for a frame size = 2
+     * E.g. [1,2,3,4,5] -> [1,2],[3,4],[5,null] for a frame size = 2
+     * <br>
+     * <br>
+     * In comparison to {@link #framed(int, Stream)} this will always return the same frame array size also if there are not enough elements in the
+     * {@link Stream} to fill the last frame.
      * 
      * @see #framed(int, IntStream)
+     * @see #framed(int, Stream)
+     * @param frameSize
+     * @param stream
+     * @return
+     */
+    public static <E> Stream<E[]> framedPreserveSize(int frameSize, Stream<E> stream)
+    {
+        boolean preserveTokens = true;
+        return framed(frameSize, stream, preserveTokens);
+    }
+
+    /**
+     * Creates block frames of a given size based on a given {@link Stream} of elements.<br>
+     * <br>
+     * E.g. [1,2,3,4,5] -> [1,2],[3,4],[5] for a frame size = 2
+     * <br>
+     * <br>
+     * In comparison to {@link #framedPreserveSize(int, Stream)} this will reduce the arrays size of the last element frame, if there are not enough elements in
+     * the {@link Stream} left.
+     * 
+     * @see #framed(int, IntStream)
+     * @see #framedPreserveSize(int, Stream)
      * @param frameSize
      * @param stream
      * @return
      */
     public static <E> Stream<E[]> framed(int frameSize, Stream<E> stream)
     {
+        boolean preserveTokens = false;
+        return framed(frameSize, stream, preserveTokens);
+    }
+
+    private static <E> Stream<E[]> framed(int frameSize, Stream<E> stream, boolean preserveTokens)
+    {
         if (stream != null)
         {
             AtomicLong position = new AtomicLong();
             AtomicReference<E[]> frame = new AtomicReference<E[]>();
+            AtomicInteger lastFrameIndex = new AtomicInteger();
             @SuppressWarnings("unchecked")
             Predicate<E> filter = element ->
             {
@@ -491,6 +524,8 @@ public class StreamUtils
                     frame.get()[frameIndex] = element;
                 }
 
+                lastFrameIndex.set(frameIndex);
+
                 boolean frameFinished = frameIndex == frameSize - 1;
                 return frameFinished;
             };
@@ -499,7 +534,8 @@ public class StreamUtils
                                        .map(mapper);
             return Stream.concat(retval, Stream.of(1)
                                                .filter(n -> frame.get() != null)
-                                               .map(n -> frame.getAndSet(null)));
+                                               .map(n -> preserveTokens ? frame.getAndSet(null)
+                                                       : ArrayUtils.subarray(frame.getAndSet(null), 0, lastFrameIndex.get() + 1)));
         }
         else
         {

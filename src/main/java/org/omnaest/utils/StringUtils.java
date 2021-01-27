@@ -126,14 +126,14 @@ public class StringUtils
      * Returns token frames with a fixed frame size from the original text. E.g. "abcdefghi" -> "abc","def","ghi" for a frame size of 3.
      * 
      * @see #splitToStream(String)
-     * @see StreamUtils#framed(int, Stream)
+     * @see StreamUtils#framedPreserveSize(int, Stream)
      * @param frameSize
      * @param text
      * @return
      */
     public static Stream<String> splitToframedStream(int frameSize, String text)
     {
-        return StreamUtils.framed(frameSize, splitToStream(text))
+        return StreamUtils.framedPreserveSize(frameSize, splitToStream(text))
                           .map(frame -> org.apache.commons.lang3.StringUtils.join(frame));
     }
 
