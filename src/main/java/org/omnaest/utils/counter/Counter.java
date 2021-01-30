@@ -1,80 +1,55 @@
 package org.omnaest.utils.counter;
 
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.LongConsumer;
+import java.util.function.LongSupplier;
 
 /**
- * Wrapper around a {@link AtomicLong} with additional helper methods
+ * Represents an {@link AtomicLong} counter with additional methods for counting support
  * 
+ * @see #from(int)
+ * @see #from(long)
+ * @see #fromZero()
+ * @see #asProgressCounter()
+ * @see #asDurationProgressCounter()
  * @author omnaest
  */
-public class Counter implements Supplier<Long>
+public interface Counter extends LongSupplier
 {
-    private AtomicLong counter;
+    public long deltaTo(Counter otherCounter);
 
-    private Counter(long start)
-    {
-        this.counter = new AtomicLong(start);
-    }
+    public Counter synchronizeWith(Counter sourceCounter);
+
+    public Counter incrementBy(int delta);
+
+    public Counter increment();
+
+    public Counter ifModulo(int modulo, LongConsumer counterConsumer);
+
+    /**
+     * @see ProgressCounter
+     * @return
+     */
+    public ProgressCounter asProgressCounter();
+
+    /**
+     * @see DurationProgressCounter
+     * @return
+     */
+    public DurationProgressCounter asDurationProgressCounter();
 
     public static Counter fromZero()
     {
-        return new Counter(0l);
+        return new DefaultCounter(0l);
     }
 
     public static Counter from(int start)
     {
-        return new Counter(start);
+        return new DefaultCounter(start);
     }
 
     public static Counter from(long start)
     {
-        return new Counter(start);
+        return new DefaultCounter(start);
     }
-
-    public Counter ifModulo(int modulo, Consumer<Long> counterConsumer)
-    {
-        long count = this.counter.get();
-        if (counterConsumer != null && count % modulo == 0)
-        {
-            counterConsumer.accept(count);
-        }
-        return this;
-    }
-
-    public Counter increment()
-    {
-        return this.incrementBy(1);
-    }
-
-    public Counter incrementBy(int delta)
-    {
-        this.counter.addAndGet(delta);
-        return this;
-    }
-
-    @Override
-    public Long get()
-    {
-        return this.counter.get();
-    }
-
-    public Counter synchronizeWith(Counter sourceCounter)
-    {
-        this.counter.set(sourceCounter.get());
-        return this;
-    }
-
-    /**
-     * Returns the delta = other counter - current counter
-     * 
-     * @param otherCounter
-     * @return
-     */
-    public long deltaTo(Counter otherCounter)
-    {
-        return otherCounter.get() - this.counter.get();
-    }
-
 }

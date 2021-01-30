@@ -11,9 +11,12 @@ import java.util.stream.IntStream;
 
 import org.junit.Test;
 
+/**
+ * @see IOUtils
+ * @author omnaest
+ */
 public class IOUtilsTest
 {
-
     @Test
     public void testCopyWithProgess() throws Exception
     {
@@ -33,5 +36,4 @@ public class IOUtilsTest
                               .min()
                               .getAsDouble() >= 0.0);
     }
-
 }

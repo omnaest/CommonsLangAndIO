@@ -18,6 +18,7 @@
 */
 package org.omnaest.utils;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -44,23 +45,23 @@ public class TimeFormatUtils
 
     public static interface TimeFormatter
     {
-        public static interface TimeUnitFormatter
+        public static interface TimeWithUnitFormatter
         {
             public String asString();
 
             public String asCanonicalString();
 
-            String asCanonicalString(TimeUnit... timeUnits);
+            public String asCanonicalString(TimeUnit... timeUnits);
         }
 
         /**
-         * Returns a {@link TimeUnitFormatter}
+         * Returns a {@link TimeWithUnitFormatter}
          * 
          * @param duration
          * @param timeUnit
          * @return
          */
-        public TimeUnitFormatter duration(long duration, TimeUnit timeUnit);
+        public TimeWithUnitFormatter duration(long duration, TimeUnit timeUnit);
     }
 
     private static class TimeUnitAndDuration
@@ -103,9 +104,9 @@ public class TimeFormatUtils
         return new TimeFormatter()
         {
             @Override
-            public TimeUnitFormatter duration(long duration, TimeUnit timeUnit)
+            public TimeWithUnitFormatter duration(long duration, TimeUnit timeUnit)
             {
-                return new TimeUnitFormatter()
+                return new TimeWithUnitFormatter()
                 {
                     @Override
                     public String asString()
@@ -130,22 +131,27 @@ public class TimeFormatUtils
                         AtomicLong decreasingDuration = new AtomicLong(duration);
                         TimeUnit lastTimeUnit = ArrayUtils.last(timeUnits);
                         AtomicBoolean forceDisplay = new AtomicBoolean(false);
-                        for (TimeUnit iTimeUnit : timeUnits)
-                        {
-                            Optional.of(iTimeUnit)
-                                    .map(unit -> new TimeUnitAndDuration(unit.convert(decreasingDuration.get(), timeUnit), unit))
-                                    .filter(tuad -> tuad.getDuration() > 0 || forceDisplay.get() || tuad.getTimeUnit()
-                                                                                                        .equals(lastTimeUnit))
-                                    .ifPresent(timeUnitAndDuration ->
-                                    {
-                                        decreasingDuration.getAndAdd(-timeUnit.convert(timeUnitAndDuration.getDuration(), timeUnitAndDuration.getTimeUnit()));
 
-                                        stringBuilder.append(format().duration(timeUnitAndDuration.getDuration(), timeUnitAndDuration.getTimeUnit())
-                                                                     .asString())
-                                                     .append(" ");
-                                        forceDisplay.set(true);
-                                    });
-                        }
+                        Arrays.asList(timeUnits)
+                              .stream()
+                              .sorted(ComparatorUtils.reverse(ComparatorUtils.comparatorFunction(TimeUnit::ordinal)))
+                              .forEach(iTimeUnit ->
+                              {
+                                  Optional.of(iTimeUnit)
+                                          .map(unit -> new TimeUnitAndDuration(unit.convert(decreasingDuration.get(), timeUnit), unit))
+                                          .filter(tuad -> tuad.getDuration() > 0 || forceDisplay.get() || tuad.getTimeUnit()
+                                                                                                              .equals(lastTimeUnit))
+                                          .ifPresent(timeUnitAndDuration ->
+                                          {
+                                              decreasingDuration.getAndAdd(-timeUnit.convert(timeUnitAndDuration.getDuration(),
+                                                                                             timeUnitAndDuration.getTimeUnit()));
+
+                                              stringBuilder.append(format().duration(timeUnitAndDuration.getDuration(), timeUnitAndDuration.getTimeUnit())
+                                                                           .asString())
+                                                           .append(" ");
+                                              forceDisplay.set(true);
+                                          });
+                              });
 
                         return stringBuilder.toString()
                                             .trim();

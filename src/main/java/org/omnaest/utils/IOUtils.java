@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
 
 import org.omnaest.utils.counter.Counter;
 
@@ -20,7 +20,7 @@ import com.google.common.io.ByteStreams;
 public class IOUtils
 {
 
-    public static void copyWithProgess(InputStream inputStream, ByteArrayOutputStream outputStream, long size, int steps, Consumer<Double> progessConsumer)
+    public static void copyWithProgess(InputStream inputStream, ByteArrayOutputStream outputStream, long size, int steps, DoubleConsumer progessConsumer)
             throws IOException
     {
         copyWithCounter(inputStream, outputStream, steps, (current, available) ->
@@ -32,7 +32,7 @@ public class IOUtils
         });
     }
 
-    public static void copyWithProgess(InputStream inputStream, OutputStream outputStream, Consumer<Double> progessConsumer) throws IOException
+    public static void copyWithProgess(InputStream inputStream, OutputStream outputStream, DoubleConsumer progessConsumer) throws IOException
     {
         copyWithCounter(inputStream, outputStream, (current, available) ->
         {
@@ -65,9 +65,8 @@ public class IOUtils
                 if (progessConsumer != null && this.previousCounter.deltaTo(this.counter) >= steps)
                 {
                     int available = inputStream.available();
-                    progessConsumer.accept(this.previousCounter.synchronizeWith(this.counter)
-                                                               .get()
-                                                               .intValue(),
+                    progessConsumer.accept((int) this.previousCounter.synchronizeWith(this.counter)
+                                                                     .getAsLong(),
                                            available);
                 }
                 return true;

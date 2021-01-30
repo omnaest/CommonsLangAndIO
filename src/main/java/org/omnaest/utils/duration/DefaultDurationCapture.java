@@ -78,15 +78,15 @@ public class DefaultDurationCapture implements DurationCapture
         }
 
         @Override
-        public TimeUnitDisplay asTimeUnitDisplay()
+        public DisplayableDuration asTimeUnitDisplay()
         {
-            return TimeUnitDisplay.of(this.duration, TimeUnit.MILLISECONDS);
+            return DisplayableDuration.of(this.duration, TimeUnit.MILLISECONDS);
         }
 
         @Override
-        public TimeUnitDisplay toETA(double progress)
+        public DisplayableDuration toETA(double progress)
         {
-            return TimeUnitDisplay.of(Math.round(this.duration / progress - this.duration), TimeUnit.MILLISECONDS);
+            return DisplayableDuration.of(Math.round(this.duration / progress - this.duration), TimeUnit.MILLISECONDS);
         }
 
     }
@@ -175,44 +175,5 @@ public class DefaultDurationCapture implements DurationCapture
             }
 
         };
-    }
-
-    public static interface TimeUnitDisplay
-    {
-        public static TimeUnitDisplay of(long time, TimeUnit timeUnit)
-        {
-            return new DefaultTimeUnitDisplay(time, timeUnit);
-        }
-
-        long as(TimeUnit timeUnit);
-
-        String asCanonicalString(TimeUnit... timeUnits);
-    }
-
-    public static class DefaultTimeUnitDisplay implements TimeUnitDisplay
-    {
-        private long     time;
-        private TimeUnit timeUnit;
-
-        private DefaultTimeUnitDisplay(long time, TimeUnit timeUnit)
-        {
-            super();
-            this.time = time;
-            this.timeUnit = timeUnit;
-        }
-
-        @Override
-        public String asCanonicalString(TimeUnit... timeUnits)
-        {
-            return TimeFormatUtils.format()
-                                  .duration(this.time, this.timeUnit)
-                                  .asCanonicalString(timeUnits);
-        }
-
-        @Override
-        public long as(TimeUnit timeUnit)
-        {
-            return timeUnit.convert(this.time, this.timeUnit);
-        }
     }
 }

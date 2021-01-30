@@ -21,8 +21,6 @@ package org.omnaest.utils.duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.omnaest.utils.duration.DefaultDurationCapture.TimeUnitDisplay;
-
 /**
  * @see #newInstance()
  * @see #measure(MeasuredOperation)
@@ -30,55 +28,85 @@ import org.omnaest.utils.duration.DefaultDurationCapture.TimeUnitDisplay;
  */
 public interface DurationCapture
 {
-	public static interface MeasuredOperation<R>
-	{
-		public R execute();
-	}
+    public static interface MeasuredOperation<R>
+    {
+        public R execute();
+    }
 
-	public static interface MeasuredVoidOperation
-	{
-		public void execute();
-	}
+    public static interface MeasuredVoidOperation
+    {
+        public void execute();
+    }
 
-	public static interface MeasurementResult
-	{
+    public static interface MeasurementResult
+    {
 
-		public long getDuration(TimeUnit timeUnit);
+        public long getDuration(TimeUnit timeUnit);
 
-		public String getDurationAsString(TimeUnit timeUnit);
+        public String getDurationAsString(TimeUnit timeUnit);
 
-		public String getDurationAsCanonicalString();
+        public String getDurationAsCanonicalString();
 
-		public MeasurementResult doWithResult(Consumer<MeasurementResult> resultConsumer);
+        public MeasurementResult doWithResult(Consumer<MeasurementResult> resultConsumer);
 
-        TimeUnitDisplay toETA(double progress);
+        public DisplayableDuration toETA(double progress);
 
-        TimeUnitDisplay asTimeUnitDisplay();
+        public DisplayableDuration asTimeUnitDisplay();
 
-	}
+    }
 
-	public static interface MeasurementResultWithReturnValue<R> extends MeasurementResult
-	{
-		public R getReturnValue();
+    /**
+     * A duration which can be displayed.
+     * 
+     * @see #of(long, TimeUnit)
+     * @see #asCanonicalString(TimeUnit...)
+     * @see #as(TimeUnit)
+     * @author omnaest
+     */
+    public static interface DisplayableDuration
+    {
+        public long as(TimeUnit timeUnit);
 
-		@Override
-		public MeasurementResultWithReturnValue<R> doWithResult(Consumer<MeasurementResult> resultConsumer);
+        public String asCanonicalString(TimeUnit... timeUnits);
 
-	}
+        public String asCanonicalStringWithMinimalTimeUnit(TimeUnit timeUnit);
 
-	public MeasurementResult measure(MeasuredVoidOperation operation);
+        /**
+         * Similar to {@link #asCanonicalStringWithMinimalTimeUnit(TimeUnit)} with {@link TimeUnit#SECONDS}
+         * 
+         * @return
+         */
+        public String asCanonicalString();
 
-	public <R> MeasurementResultWithReturnValue<R> measure(MeasuredOperation<R> operation);
+        public static DisplayableDuration of(long time, TimeUnit timeUnit)
+        {
+            return new DefaultDisplayableDuration(time, timeUnit);
+        }
 
-	public static DurationCapture newInstance()
-	{
-		return new DefaultDurationCapture();
-	}
+    }
 
-	public static interface DurationMeasurement
-	{
-		public MeasurementResult stop();
-	}
+    public static interface MeasurementResultWithReturnValue<R> extends MeasurementResult
+    {
+        public R getReturnValue();
 
-	public DurationMeasurement start();
+        @Override
+        public MeasurementResultWithReturnValue<R> doWithResult(Consumer<MeasurementResult> resultConsumer);
+
+    }
+
+    public MeasurementResult measure(MeasuredVoidOperation operation);
+
+    public <R> MeasurementResultWithReturnValue<R> measure(MeasuredOperation<R> operation);
+
+    public static DurationCapture newInstance()
+    {
+        return new DefaultDurationCapture();
+    }
+
+    public static interface DurationMeasurement
+    {
+        public MeasurementResult stop();
+    }
+
+    public DurationMeasurement start();
 }
