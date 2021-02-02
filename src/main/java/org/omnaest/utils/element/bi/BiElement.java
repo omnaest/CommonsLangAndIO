@@ -76,7 +76,27 @@ public interface BiElement<E1, E2>
      */
     public default boolean hasAnyNullValue()
     {
-        return this.getFirst() == null || this.getSecond() == null;
+        return this.isFirstValueNull() || this.isSecondValueNull();
+    }
+
+    /**
+     * Returns true, if {@link #getSecond()} returns null
+     * 
+     * @return
+     */
+    public default boolean isSecondValueNull()
+    {
+        return this.getSecond() == null;
+    }
+
+    /**
+     * Returns true, if {@link #getFirst()} returns null
+     * 
+     * @return
+     */
+    public default boolean isFirstValueNull()
+    {
+        return this.getFirst() == null;
     }
 
 }

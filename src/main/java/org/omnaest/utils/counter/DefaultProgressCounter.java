@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 public class DefaultProgressCounter implements ProgressCounter
 {
     private Counter                         counter;
-    private AtomicReference<Supplier<Long>> maximumProvider = new AtomicReference<Supplier<Long>>(() -> this.counter.getAsLong());
+    private AtomicReference<Supplier<Long>> maximumProvider = new AtomicReference<Supplier<Long>>(() -> Long.MAX_VALUE);
 
     private DefaultProgressCounter(Counter counter)
     {
@@ -39,9 +39,16 @@ public class DefaultProgressCounter implements ProgressCounter
     @Override
     public double getProgress()
     {
-        double maximum = Math.max(1.0, this.maximumProvider.get()
-                                                           .get());
-        return this.counter.getAsLong() / maximum;
+        long maximum = this.maximumProvider.get()
+                                           .get();
+        if (Long.MAX_VALUE == maximum)
+        {
+            return 1.0 - 1.0 / (1.0 + Math.log10(1.0 + this.counter.getAsLong()));
+        }
+        else
+        {
+            return this.counter.getAsLong() / Math.max(1.0, maximum);
+        }
     }
 
     @Override

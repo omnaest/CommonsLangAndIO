@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
 import java.util.function.IntSupplier;
@@ -57,6 +58,9 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.omnaest.utils.ExecutorUtils.ParallelExecution;
 import org.omnaest.utils.buffer.CyclicBuffer;
+import org.omnaest.utils.counter.Counter;
+import org.omnaest.utils.counter.DurationProgressCounter;
+import org.omnaest.utils.counter.DurationProgressCounter.DurationProgressConsumer;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.cached.CachedFunction;
 import org.omnaest.utils.element.lar.LeftAndRight;
@@ -1278,6 +1282,15 @@ public class StreamUtils
         return Optional.ofNullable(elements)
                        .map(iElements -> Stream.of(iElements))
                        .orElse(Stream.empty());
+    }
+
+    public static <E> Consumer<E> peekProgressCounter(int modulo, long maximum, DurationProgressConsumer durationProgressConsumer)
+    {
+        DurationProgressCounter progressCounter = Counter.fromZero()
+                                                         .asDurationProgressCounter()
+                                                         .withMaximum(maximum);
+        return element -> progressCounter.increment()
+                                         .ifModulo(modulo, durationProgressConsumer);
     }
 
 }
