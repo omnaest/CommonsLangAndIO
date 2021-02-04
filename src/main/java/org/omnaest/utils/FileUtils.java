@@ -43,7 +43,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.LineIterator;
@@ -138,7 +137,7 @@ public class FileUtils
             {
                 if (data != null)
                 {
-                    org.apache.commons.io.FileUtils.writeLines(this.file, this.charset.toString(), data.collect(Collectors.toList()));
+                    writeLines(data, this.file, this.charset);
                 }
                 else
                 {
@@ -223,11 +222,19 @@ public class FileUtils
          * <br>
          * Returns null if the {@link File} does not exists, but throws an {@link FileAccessException} in other {@link IOException} cases.
          * 
+         * @see #getLines()
          * @throws FileAccessException
          *             for any {@link IOException}
          */
         @Override
         public String get();
+
+        /**
+         * Returns the {@link #get()} content split by line end characters like \n or \r or any combination.
+         * 
+         * @return
+         */
+        public Stream<String> getAsLines();
 
         /**
          * Returns a {@link Supplier} based on the given deserialization {@link Function}
@@ -236,6 +243,7 @@ public class FileUtils
          * @return
          */
         public <T> Supplier<T> with(Function<String, T> deserializer);
+
     }
 
     /**
@@ -268,7 +276,7 @@ public class FileUtils
      * @param file
      * @return
      */
-    public static FileStreamContentConsumer toStreamConsumer(File file)
+    public static FileStreamContentConsumer toLineStreamConsumer(File file)
     {
         return new FileStreamContentConsumerImpl(file);
     }
@@ -314,6 +322,12 @@ public class FileUtils
                     throw new FileAccessException(e);
                 }
                 return retval;
+            }
+
+            @Override
+            public Stream<String> getAsLines()
+            {
+                return StringUtils.splitToStreamByLineSeparator(this.get());
             }
 
             @Override
@@ -801,5 +815,33 @@ public class FileUtils
             }
         };
 
+    }
+
+    /**
+     * Similar to {@link #writeLines(Stream, File, Charset, String)} with the system default line ending
+     * 
+     * @param lines
+     * @param file
+     * @param charset
+     * @throws IOException
+     */
+    public static void writeLines(Stream<String> lines, File file, Charset charset) throws IOException
+    {
+        String lineEnding = null; // system line ending
+        writeLines(lines, file, charset, lineEnding);
+    }
+
+    /**
+     * @see IOUtils#writeLines(Stream, java.io.OutputStream, Charset, String)
+     * @param lines
+     * @param file
+     * @param charset
+     * @param lineEnding
+     * @throws IOException
+     */
+    public static void writeLines(Stream<String> lines, File file, Charset charset, String lineEnding) throws IOException
+    {
+        org.apache.commons.io.FileUtils.forceMkdirParent(file);
+        IOUtils.writeLines(lines, new FileOutputStream(file), charset, lineEnding);
     }
 }

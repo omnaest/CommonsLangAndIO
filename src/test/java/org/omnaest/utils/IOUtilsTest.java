@@ -1,13 +1,16 @@
 package org.omnaest.utils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 
@@ -35,5 +38,13 @@ public class IOUtilsTest
                               .mapToDouble(v -> v)
                               .min()
                               .getAsDouble() >= 0.0);
+    }
+
+    @Test
+    public void testWriteLines() throws Exception
+    {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        IOUtils.writeLines(Stream.of("a", "b"), outputStream, StandardCharsets.UTF_8, "\n");
+        assertEquals("a\nb", new String(outputStream.toByteArray(), StandardCharsets.UTF_8));
     }
 }

@@ -1,12 +1,17 @@
 package org.omnaest.utils;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.DoubleConsumer;
+import java.util.stream.Stream;
 
+import org.apache.commons.io.Charsets;
 import org.omnaest.utils.counter.Counter;
 
 import com.google.common.io.ByteProcessor;
@@ -94,4 +99,42 @@ public class IOUtils
         }
     }
 
+    /**
+     * Writes the given {@link String} {@link Stream} into a file where each element of the {@link Stream} is written to an own line.
+     * 
+     * @param lines
+     * @param outputStream
+     * @param charset
+     * @param lineEnding
+     * @throws IOException
+     */
+    public static void writeLines(Stream<String> lines, OutputStream outputStream, Charset charset, String lineEnding) throws IOException
+    {
+        if (outputStream != null && lines != null)
+        {
+            try (OutputStream bufferedOutputStream = new BufferedOutputStream(outputStream, 1024 * 1024))
+            {
+                final Charset effectiveCharset = Charsets.toCharset(charset);
+                byte[] lineEndingBytes = Optional.ofNullable(lineEnding)
+                                                 .orElse(System.lineSeparator())
+                                                 .getBytes(effectiveCharset);
+
+                boolean first = true;
+                for (String line : IterableUtils.from(lines))
+                {
+                    if (!first)
+                    {
+                        outputStream.write(lineEndingBytes);
+                    }
+
+                    if (line != null)
+                    {
+                        outputStream.write(line.getBytes(effectiveCharset));
+                    }
+
+                    first = false;
+                }
+            }
+        }
+    }
 }

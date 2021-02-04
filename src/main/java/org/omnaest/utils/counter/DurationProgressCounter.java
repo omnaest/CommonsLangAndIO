@@ -42,6 +42,13 @@ public interface DurationProgressCounter extends ProgressCounter
     @Override
     public DurationProgressCounter ifModulo(int modulo, ProgressConsumer progressConsumer);
 
+    /**
+     * Similar to {@link #ifModulo(int, LongConsumer)} but provides a {@link DurationProgress} via a {@link DurationProgressConsumer}
+     * 
+     * @param modulo
+     * @param durationProgressConsumer
+     * @return
+     */
     public DurationProgressCounter ifModulo(int modulo, DurationProgressConsumer durationProgressConsumer);
 
     @Override

@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -673,11 +674,14 @@ public class MapUtils
     {
         Map<K, V> result = new HashMap<>();
 
-        for (Map<K, V> map : maps)
+        if (maps != null)
         {
-            if (map != null)
+            for (Map<K, V> map : maps)
             {
-                result.putAll(map);
+                if (map != null)
+                {
+                    result.putAll(map);
+                }
             }
         }
 
@@ -693,6 +697,16 @@ public class MapUtils
     public static <K, V> boolean isNotEmpty(Map<K, V> map)
     {
         return map != null && !map.isEmpty();
+    }
+
+    /**
+     * Returns a reducer which {@link #merge(Map...)}s the given {@link Map}s
+     * 
+     * @return
+     */
+    public static <K, V> BinaryOperator<Map<K, V>> merger()
+    {
+        return (map1, map2) -> merge(map1, map2);
     }
 
 }

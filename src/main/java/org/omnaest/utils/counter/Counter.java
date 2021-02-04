@@ -24,6 +24,15 @@ public interface Counter extends LongSupplier
 
     public Counter increment();
 
+    /**
+     * Calls the given {@link LongConsumer} for all counted values that have counter % 'modulo' value == 0.<br>
+     * <br>
+     * Be aware that for this method to work the {@link #increment()} and not the {@link #incrementBy(int)} method should be used.
+     * 
+     * @param modulo
+     * @param counterConsumer
+     * @return
+     */
     public Counter ifModulo(int modulo, LongConsumer counterConsumer);
 
     /**

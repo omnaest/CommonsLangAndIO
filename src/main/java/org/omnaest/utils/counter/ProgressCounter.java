@@ -32,6 +32,13 @@ public interface ProgressCounter extends Counter
     @Override
     public ProgressCounter ifModulo(int modulo, LongConsumer counterConsumer);
 
+    /**
+     * Similar to {@link #ifModulo(int, LongConsumer)} but provides a {@link ProgressCounter} via the given {@link ProgressConsumer}
+     * 
+     * @param modulo
+     * @param progressConsumer
+     * @return
+     */
     public ProgressCounter ifModulo(int modulo, ProgressConsumer progressConsumer);
 
     public static interface ProgressConsumer extends Consumer<Progress>

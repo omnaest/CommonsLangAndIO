@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -228,6 +229,16 @@ public class StringUtilsTest
     {
         assertEquals("abc", StringUtils.leftUntil("abcdef", "de"));
         assertEquals("abcdef", StringUtils.leftUntil("abcdef", "xy"));
+    }
+
+    @Test
+    public void testNotEqualsAnyFilter() throws Exception
+    {
+        Predicate<String> filter = StringUtils.notEqualsAnyFilter("a", "b");
+
+        assertEquals(true, filter.test("c"));
+        assertEquals(false, filter.test("b"));
+        assertEquals(false, filter.test("a"));
     }
 
 }

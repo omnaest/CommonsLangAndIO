@@ -99,4 +99,24 @@ public interface BiElement<E1, E2>
         return this.getFirst() == null;
     }
 
+    /**
+     * Returns true, if {@link #getSecond()} returns not null
+     * 
+     * @return
+     */
+    public default boolean isSecondValueNotNull()
+    {
+        return this.getSecond() != null;
+    }
+
+    /**
+     * Returns true, if {@link #getFirst()} returns not null
+     * 
+     * @return
+     */
+    public default boolean isFirstValueNotNull()
+    {
+        return this.getFirst() != null;
+    }
+
 }

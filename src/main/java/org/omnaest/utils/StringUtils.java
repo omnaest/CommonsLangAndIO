@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -524,6 +525,30 @@ public class StringUtils
                        .filter(tokens -> tokens.length >= 1)
                        .map(tokens -> tokens[0])
                        .orElse("");
+    }
+
+    /**
+     * Returns a {@link Predicate} that matches all values that are NOT equal to any of the given parameter values
+     * 
+     * @see #equalsAnyFilter(String...)
+     * @param matchValue
+     * @return
+     */
+    public static Predicate<String> notEqualsAnyFilter(String... matchValue)
+    {
+        return equalsAnyFilter(matchValue).negate();
+    }
+
+    /**
+     * Returns a {@link Predicate} that matches all values that are equal to any of the given parameter values
+     * 
+     * @see #notEqualsAnyFilter(String...)
+     * @param matchValue
+     * @return
+     */
+    public static Predicate<String> equalsAnyFilter(String... matchValue)
+    {
+        return value -> org.apache.commons.lang3.StringUtils.equalsAny(value, matchValue);
     }
 
 }

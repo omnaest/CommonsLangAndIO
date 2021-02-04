@@ -41,7 +41,7 @@ public class DefaultProgressCounter implements ProgressCounter
     {
         long maximum = this.maximumProvider.get()
                                            .get();
-        if (Long.MAX_VALUE == maximum)
+        if (Long.MAX_VALUE == maximum || maximum <= 0l)
         {
             return 1.0 - 1.0 / (1.0 + Math.log10(1.0 + this.counter.getAsLong()));
         }

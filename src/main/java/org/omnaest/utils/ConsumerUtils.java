@@ -21,6 +21,10 @@ package org.omnaest.utils;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import org.omnaest.utils.counter.Counter;
+import org.omnaest.utils.counter.DurationProgressCounter;
+import org.omnaest.utils.counter.DurationProgressCounter.DurationProgressConsumer;
+
 /**
  * Helper for {@link Consumer} instances
  * 
@@ -28,27 +32,59 @@ import java.util.function.Consumer;
  */
 public class ConsumerUtils
 {
-	/**
-	 * Returns a {@link Consumer} which does accept the given element once. If it accepts the {@link Consumer#accept(Object)} method of the given
-	 * {@link Consumer} is called, otherwise not.
-	 * 
-	 * @param consumer
-	 * @return
-	 */
-	public static <E> Consumer<E> consumeOnce(Consumer<E> consumer)
-	{
-		return new Consumer<E>()
-		{
-			private AtomicBoolean done = new AtomicBoolean(false);
+    /**
+     * Returns a {@link Consumer} which does accept the given element once. If it accepts the {@link Consumer#accept(Object)} method of the given
+     * {@link Consumer} is called, otherwise not.
+     * 
+     * @param consumer
+     * @return
+     */
+    public static <E> Consumer<E> consumeOnce(Consumer<E> consumer)
+    {
+        return new Consumer<E>()
+        {
+            private AtomicBoolean done = new AtomicBoolean(false);
 
-			@Override
-			public void accept(E t)
-			{
-				if (!this.done.getAndSet(true))
-				{
-					consumer.accept(t);
-				}
-			}
-		};
-	}
+            @Override
+            public void accept(E t)
+            {
+                if (!this.done.getAndSet(true))
+                {
+                    consumer.accept(t);
+                }
+            }
+        };
+    }
+
+    /**
+     * {@link Consumer} which does nothing
+     * 
+     * @return
+     */
+    public static <E> Consumer<E> noOperation()
+    {
+        return e ->
+        {
+            // do nothing
+        };
+    }
+
+    /**
+     * Creates a {@link Consumer} which hosts a {@link DurationProgressCounter} that increments for each call to {@link Consumer#accept(Object)}. For all
+     * 'modulo' operations the given {@link DurationProgressConsumer} is called.
+     * 
+     * @see DurationProgressCounter#ifModulo(int, DurationProgressConsumer)
+     * @param modulo
+     * @param maximum
+     * @param durationProgressConsumer
+     * @return
+     */
+    public static <E> Consumer<E> progessCounter(int modulo, long maximum, DurationProgressConsumer durationProgressConsumer)
+    {
+        DurationProgressCounter progressCounter = Counter.fromZero()
+                                                         .asDurationProgressCounter()
+                                                         .withMaximum(maximum);
+        return element -> progressCounter.increment()
+                                         .ifModulo(modulo, durationProgressConsumer);
+    }
 }
