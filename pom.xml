@@ -4,6 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.omnaest.utils</groupId>
 	<artifactId>CommonsLangAndIO</artifactId>
+
 	<parent>
 		<groupId>org.omnaest.utils</groupId>
 		<artifactId>CommonsParent</artifactId>
@@ -29,6 +30,16 @@
 	<properties>
 		<java.version>1.8</java.version>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
