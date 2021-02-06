@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
+import org.omnaest.utils.duration.TimeDuration;
 import org.omnaest.utils.exception.ExceptionHandler;
 
 public class ThreadUtils
@@ -45,6 +46,11 @@ public class ThreadUtils
                 exceptionHandler.accept(e);
             }
         }
+    }
+
+    public static void sleepSilently(TimeDuration timeDuration)
+    {
+        sleepSilently((int) timeDuration.getDuration(), timeDuration.getTimeUnit());
     }
 
     public static void sleepSilently(Duration duration)

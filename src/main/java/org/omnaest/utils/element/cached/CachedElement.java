@@ -26,6 +26,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.omnaest.utils.duration.TimeDuration;
+
 /**
  * A single cached element
  * 
@@ -119,6 +121,17 @@ public interface CachedElement<E> extends Supplier<E>
     public default CachedElement<E> asSoftReferenceCachedElement()
     {
         return new SoftCachedElementImpl<>(this.asNonCachedSupplier());
+    }
+
+    /**
+     * Returns a new {@link CachedElement} instances which wraps this one and enforces a cache eviction after a given {@link TimeDuration}
+     * 
+     * @param timeDuration
+     * @return
+     */
+    public default CachedElement<E> asDurationLimitedCachedElement(TimeDuration timeDuration)
+    {
+        return new DurationCachedElement<>(this, timeDuration);
     }
 
     /**

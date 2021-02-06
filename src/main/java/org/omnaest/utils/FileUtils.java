@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -843,5 +844,39 @@ public class FileUtils
     {
         org.apache.commons.io.FileUtils.forceMkdirParent(file);
         IOUtils.writeLines(lines, new FileOutputStream(file), charset, lineEnding);
+    }
+
+    public static void forceMkdirParentSilently(File file)
+    {
+        forceMkdirParent(file, ExceptionHandler.noOperationExceptionHandler());
+    }
+
+    public static void forceMkdirParent(File file, ExceptionHandler exceptionHandler)
+    {
+        try
+        {
+            org.apache.commons.io.FileUtils.forceMkdirParent(file);
+        }
+        catch (IOException e)
+        {
+            Optional.ofNullable(exceptionHandler)
+                    .ifPresent(consumer -> consumer.accept(e));
+        }
+    }
+
+    public static Stream<File> listDirectoryFiles(File directory)
+    {
+        return listDirectoryFiles(directory, file -> true);
+    }
+
+    public static Stream<File> listDirectoryFiles(File directory, Predicate<File> filter)
+    {
+        return Optional.ofNullable(directory)
+                       .filter(File::isDirectory)
+                       .map(File::listFiles)
+                       .map(Arrays::asList)
+                       .map(List::stream)
+                       .map(files -> files.filter(filter))
+                       .orElse(Stream.empty());
     }
 }

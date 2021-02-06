@@ -130,7 +130,7 @@ public class StreamUtilsTest
     }
 
     @Test
-    public void testFramedPreserveSize() throws Exception
+    public void testFramedPreserveSizePreserveSize() throws Exception
     {
         {
             List<String[]> frames = StreamUtils.framedPreserveSize(3, Arrays.asList("1", "2", "3", "4", "5", "6")
@@ -151,7 +151,7 @@ public class StreamUtilsTest
     }
 
     @Test
-    public void testFramed() throws Exception
+    public void testFramedPreserveSize() throws Exception
     {
         {
             List<String[]> frames = StreamUtils.framed(3, Arrays.asList("1", "2", "3", "4", "5", "6")
@@ -172,7 +172,7 @@ public class StreamUtilsTest
     }
 
     @Test
-    public void testFramedAsList() throws Exception
+    public void testFramedPreserveSizeAsList() throws Exception
     {
         {
             List<List<String>> frames = StreamUtils.framedAsList(3, Arrays.asList("1", null, "3", "4", "5")
@@ -197,7 +197,7 @@ public class StreamUtilsTest
     }
 
     @Test
-    public void testFramedAsListNonNull() throws Exception
+    public void testFramedPreserveSizeAsListNonNull() throws Exception
     {
         {
             List<List<String>> frames = StreamUtils.framedNonNullAsList(3, Arrays.asList("1", null, "3", "4", "5")
@@ -446,5 +446,15 @@ public class StreamUtilsTest
                                                                                                    .stream())
                                                                  .collect(Collectors.toList());
         assertEquals(4, result.size());
+    }
+
+    @Test
+    public void testAggregate() throws Exception
+    {
+        Stream<List<String>> aggregate = StreamUtils.aggregate(Arrays.asList("a", "b", "x", "c")
+                                                                     .stream(),
+                                                               StringUtils.equalsAnyFilter("a", "c"), StringUtils.equalsAnyFilter("b"),
+                                                               group -> Stream.of(group.collect(Collectors.toList())));
+        assertEquals(Arrays.asList(Arrays.asList("a", "b"), Arrays.asList("c")), aggregate.collect(Collectors.toList()));
     }
 }

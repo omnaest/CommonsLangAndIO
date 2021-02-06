@@ -434,7 +434,7 @@ public class StreamUtils
      * @param stream
      * @return
      */
-    public static Stream<int[]> framed(int frameSize, IntStream stream)
+    public static Stream<int[]> framedPreserveSize(int frameSize, IntStream stream)
     {
         return framedPreserveSize(frameSize, stream.mapToObj(Integer::valueOf)).map(array -> ArrayUtils.toPrimitive(array));
     }
@@ -474,7 +474,7 @@ public class StreamUtils
      * In comparison to {@link #framed(int, Stream)} this will always return the same frame array size also if there are not enough elements in the
      * {@link Stream} to fill the last frame.
      * 
-     * @see #framed(int, IntStream)
+     * @see #framedPreserveSize(int, IntStream)
      * @see #framed(int, Stream)
      * @param frameSize
      * @param stream
@@ -495,7 +495,7 @@ public class StreamUtils
      * In comparison to {@link #framedPreserveSize(int, Stream)} this will reduce the arrays size of the last element frame, if there are not enough elements in
      * the {@link Stream} left.
      * 
-     * @see #framed(int, IntStream)
+     * @see #framedPreserveSize(int, IntStream)
      * @see #framedPreserveSize(int, Stream)
      * @param frameSize
      * @param stream
@@ -1291,6 +1291,85 @@ public class StreamUtils
                                                          .withMaximum(maximum);
         return element -> progressCounter.increment()
                                          .ifModulo(modulo, durationProgressConsumer);
+    }
+
+    /**
+     * Similar to {@link #aggregate(Stream, Predicate, Predicate, Function)} but without an explicit end barrier matcher
+     * 
+     * @param stream
+     * @param startBarrierMatcher
+     * @param aggregationFunction
+     * @return
+     */
+    public static <E, A> Stream<A> aggregateByStart(Stream<E> stream, Predicate<E> startBarrierMatcher, Function<Stream<E>, Stream<A>> aggregationFunction)
+    {
+        Predicate<E> endBarrierMatcher = e -> false;
+        return aggregate(stream, startBarrierMatcher, endBarrierMatcher, aggregationFunction);
+    }
+
+    /**
+     * Allows to aggregate groups of elements which are identified by a start and end barrier {@link Predicate} matcher
+     * 
+     * @param stream
+     * @param startBarrierMatcher
+     * @param endBarrierMatcher
+     * @param aggregationFunction
+     * @return
+     */
+    public static <E, A> Stream<A> aggregate(Stream<E> stream, Predicate<E> startBarrierMatcher, Predicate<E> endBarrierMatcher,
+                                             Function<Stream<E>, Stream<A>> aggregationFunction)
+    {
+        return Optional.ofNullable(stream)
+                       .map(s ->
+                       {
+                           AtomicReference<List<E>> currentFrame = new AtomicReference<>();
+                           AtomicReference<List<E>> completeFrame = new AtomicReference<>();
+
+                           Predicate<E> filter = element ->
+                           {
+                               boolean startBarrierReached = startBarrierMatcher.test(element);
+                               boolean endBarrierReached = endBarrierMatcher.test(element);
+                               boolean activeFrame = currentFrame.get() != null;
+                               boolean ejectFrameByNewStart = startBarrierReached && activeFrame;
+                               boolean ejectFrame = endBarrierReached || ejectFrameByNewStart;
+
+                               if (ejectFrame && ejectFrameByNewStart)
+                               {
+                                   completeFrame.set(currentFrame.getAndSet(null));
+                               }
+
+                               if (startBarrierReached)
+                               {
+                                   currentFrame.set(new ArrayList<>());
+                               }
+
+                               Optional.ofNullable(currentFrame.get())
+                                       .ifPresent(frame -> frame.add(element));
+
+                               if (ejectFrame && !ejectFrameByNewStart)
+                               {
+                                   completeFrame.set(currentFrame.getAndSet(null));
+                               }
+
+                               return ejectFrame;
+                           };
+                           Function<E, Stream<E>> completeFrameMapper = element -> Optional.ofNullable(completeFrame.getAndSet(null))
+                                                                                           .map(List::stream)
+                                                                                           .orElse(Stream.empty());
+                           Function<E, Stream<E>> currentFrameMapper = element -> Optional.ofNullable(currentFrame.getAndSet(null))
+                                                                                          .map(List::stream)
+                                                                                          .orElse(Stream.empty());
+
+                           Stream<A> retval = s.sequential()
+                                               .filter(filter)
+                                               .map(completeFrameMapper)
+                                               .flatMap(aggregationFunction);
+                           return Stream.concat(retval, Stream.of((E) null)
+                                                              .filter(e -> currentFrame.get() != null)
+                                                              .map(currentFrameMapper)
+                                                              .flatMap(aggregationFunction));
+                       })
+                       .orElse(Stream.empty());
     }
 
 }

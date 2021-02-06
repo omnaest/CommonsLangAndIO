@@ -53,6 +53,8 @@ public interface DurationCapture
 
         public DisplayableDuration asTimeUnitDisplay();
 
+        public boolean isDurationLargerThen(TimeDuration timeDuration);
+
     }
 
     /**

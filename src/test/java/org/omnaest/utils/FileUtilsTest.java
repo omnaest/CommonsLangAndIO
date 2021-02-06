@@ -108,4 +108,18 @@ public class FileUtilsTest
                  .forEach(System.out::println);
     }
 
+    @Test
+    public void testListDirectoryFilesFile() throws Exception
+    {
+        File directory = FileUtils.createRandomTempDirectory();
+        FileUtils.toConsumer(new File(directory, "test.txt"))
+                 .accept("test");
+        List<File> files = FileUtils.listDirectoryFiles(directory)
+                                    .collect(Collectors.toList());
+        assertEquals(1, files.size());
+        assertEquals("test.txt", files.iterator()
+                                      .next()
+                                      .getName());
+    }
+
 }

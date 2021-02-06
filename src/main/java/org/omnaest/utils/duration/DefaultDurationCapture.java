@@ -89,6 +89,12 @@ public class DefaultDurationCapture implements DurationCapture
             return DisplayableDuration.of(Math.round(this.duration / progress - this.duration), TimeUnit.MILLISECONDS);
         }
 
+        @Override
+        public boolean isDurationLargerThen(TimeDuration timeDuration)
+        {
+            return this.getDuration(timeDuration.getTimeUnit()) > timeDuration.getDuration();
+        }
+
     }
 
     private static class MeasurementResultWithReturnValueImpl<R> extends MeasurementResultImpl implements MeasurementResultWithReturnValue<R>
