@@ -130,4 +130,15 @@ public class MatcherUtilsTest
 
     }
 
+    @Test
+    public void testReplacer() throws Exception
+    {
+        assertEquals("bbbc", MatcherUtils.replacer()
+                                         .addExactMatchReplacement("a", "b")
+                                         .findAndReplaceAllIn("abac"));
+        assertEquals("bbbbc", MatcherUtils.replacer()
+                                          .addRegExMatchReplacement("[ad]", "b")
+                                          .findAndReplaceAllIn("abdac"));
+    }
+
 }

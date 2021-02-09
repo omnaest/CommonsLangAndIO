@@ -1372,4 +1372,73 @@ public class StreamUtils
                        .orElse(Stream.empty());
     }
 
+    /**
+     * Operates with all mappers on the same incoming element and returns the aggregated result of each mapping operation as {@link Stream}<br>
+     * <br>
+     * This is helpful if one and the same element in a {@link Stream} should be processed multiple times with different operations and all the results should
+     * be combined into the orginal {@link Stream}.<br>
+     * <br>
+     * 
+     * <pre>
+     * assertEquals(Arrays.asList("a", "ab"), Stream.of("a")
+     *                                              .flatMap(StreamUtils.redundant(element -> element, element -> element + "b"))
+     *                                              .collect(Collectors.toList()));
+     * </pre>
+     * 
+     * @param mappers
+     * @return
+     */
+    @SafeVarargs
+    public static <E, R> Function<E, Stream<R>> redundant(Function<E, R>... mappers)
+    {
+        return element -> Optional.ofNullable(mappers)
+                                  .map(Arrays::asList)
+                                  .map(List::stream)
+                                  .orElse(Stream.empty())
+                                  .map(mapper -> mapper.apply(element));
+    }
+
+    /**
+     * Similar to {@link #redundant(Function...)} but allows each mapper to return a {@link Stream}
+     * 
+     * @param mappers
+     * @return
+     */
+    @SafeVarargs
+    public static <E, R> Function<E, Stream<R>> redundantFlattener(Function<E, Stream<R>>... mappers)
+    {
+        return element -> Optional.ofNullable(mappers)
+                                  .map(Arrays::asList)
+                                  .map(List::stream)
+                                  .orElse(Stream.empty())
+                                  .flatMap(mapper -> mapper.apply(element));
+    }
+
+    /**
+     * Similar to {@link #splitAtIndex(Stream, int)} but splits the first element from the given {@link Stream}
+     * 
+     * @param stream
+     * @return
+     */
+    public static <E> BiElement<Optional<E>, Stream<E>> splitOne(Stream<E> stream)
+    {
+        return splitAtIndex(stream, 1).applyToFirstArgument(s -> s.findFirst());
+    }
+
+    /**
+     * Splits the {@link Stream} into a {@link Stream} until the given index (exclusive) and a {@link Stream} starting at the given index from the original
+     * {@link Stream}
+     * 
+     * @param stream
+     * @param index
+     * @return
+     */
+    public static <E> BiElement<Stream<E>, Stream<E>> splitAtIndex(Stream<E> stream, int index)
+    {
+        Iterator<E> iterator = Optional.ofNullable(stream)
+                                       .orElse(Stream.empty())
+                                       .iterator();
+        return BiElement.of(fromIterator(iterator).limit(index), fromIterator(iterator));
+    }
+
 }

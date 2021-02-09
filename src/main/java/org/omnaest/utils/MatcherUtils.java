@@ -102,6 +102,8 @@ public class MatcherUtils
         public Stream<Match> stream();
 
         public String replace(Function<String, String> replacerFunction);
+
+        public Optional<Match> getFirst();
     }
 
     /**
@@ -176,6 +178,14 @@ public class MatcherUtils
          * @return
          */
         public Stream<String> getSubGroupsAsStream();
+
+        /**
+         * Gets a single sub group at the given group index. Subgroups are starting with 1,2,3,...
+         * 
+         * @param index
+         * @return
+         */
+        public Optional<String> getSubGroup(int index);
 
         /**
          * Replaces the groups with the given replacements in the given order. If any replacement is null, the group at that position is unchanged.
@@ -279,6 +289,13 @@ public class MatcherUtils
                                 {
                                     return Stream.empty();
                                 }
+                            }
+
+                            @Override
+                            public Optional<Match> getFirst()
+                            {
+                                return this.stream()
+                                           .findFirst();
                             }
 
                             @Override
@@ -396,6 +413,12 @@ public class MatcherUtils
                                         }
 
                                         @Override
+                                        public Optional<String> getSubGroup(int index)
+                                        {
+                                            return Optional.ofNullable(this.getGroup(index));
+                                        }
+
+                                        @Override
                                         public String replaceGroupsWith(String... replacements)
                                         {
                                             Map<Integer, String> map = new HashMap<>(this.getGroups());
@@ -503,5 +526,70 @@ public class MatcherUtils
             }
 
         };
+    }
+
+    public static Replacer replacer()
+    {
+        return new Replacer()
+        {
+            private Map<String, String> exactMatchTokenToValue = new LinkedHashMap<>();
+            private Map<String, String> regexToReplacement     = new LinkedHashMap<>();
+
+            @Override
+            public Replacer addExactMatchReplacement(String matchToken, String value)
+            {
+                this.exactMatchTokenToValue.put(matchToken, value);
+                return this;
+            }
+
+            @Override
+            public Replacer addExactMatchReplacements(Map<String, String> matchTokenToValue)
+            {
+                Optional.ofNullable(matchTokenToValue)
+                        .ifPresent(map -> map.forEach(this::addExactMatchReplacement));
+                return this;
+            }
+
+            @Override
+            public Replacer addRegExMatchReplacement(String regEx, String replacement)
+            {
+                this.regexToReplacement.put(regEx, replacement);
+                return this;
+            }
+
+            @Override
+            public String findAndReplaceAllIn(String text)
+            {
+                String result = text;
+
+                for (Map.Entry<String, String> exactMatchTokenAndValue : this.exactMatchTokenToValue.entrySet())
+                {
+                    result = org.apache.commons.lang3.StringUtils.replace(result, exactMatchTokenAndValue.getKey(), exactMatchTokenAndValue.getValue());
+                }
+
+                for (Map.Entry<String, String> regExAndReplacement : this.regexToReplacement.entrySet())
+                {
+                    result = org.apache.commons.lang3.RegExUtils.replaceAll(result, regExAndReplacement.getKey(), regExAndReplacement.getValue());
+                }
+
+                return result;
+            }
+        };
+    }
+
+    /**
+     * @see #findAndReplaceAllIn(String)
+     * @author omnaest
+     */
+    public static interface Replacer
+    {
+        public Replacer addExactMatchReplacement(String matchToken, String value);
+
+        public Replacer addExactMatchReplacements(Map<String, String> matchTokenToValue);
+
+        public Replacer addRegExMatchReplacement(String regEx, String replacement);
+
+        public String findAndReplaceAllIn(String text);
+
     }
 }

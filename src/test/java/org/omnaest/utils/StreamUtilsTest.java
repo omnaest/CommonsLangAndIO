@@ -24,8 +24,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -34,6 +36,7 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.omnaest.utils.StreamUtils.Drainage;
+import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.lar.LeftAndRight;
 
 public class StreamUtilsTest
@@ -456,5 +459,33 @@ public class StreamUtilsTest
                                                                StringUtils.equalsAnyFilter("a", "c"), StringUtils.equalsAnyFilter("b"),
                                                                group -> Stream.of(group.collect(Collectors.toList())));
         assertEquals(Arrays.asList(Arrays.asList("a", "b"), Arrays.asList("c")), aggregate.collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testRedundant() throws Exception
+    {
+        assertEquals(Arrays.asList("a", "ab"), Stream.of("a")
+                                                     .flatMap(StreamUtils.redundant(element -> element, element -> element + "b"))
+                                                     .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testSplitOne() throws Exception
+    {
+        {
+            BiElement<Optional<String>, Stream<String>> oneAndRest = StreamUtils.splitOne(Arrays.asList("a", "b", "c")
+                                                                                                .stream());
+            assertEquals("a", oneAndRest.getFirst()
+                                        .get());
+            assertEquals(Arrays.asList("b", "c"), oneAndRest.getSecond()
+                                                            .collect(Collectors.toList()));
+        }
+        {
+            BiElement<Optional<String>, Stream<String>> oneAndRest = StreamUtils.splitOne(null);
+            assertEquals(false, oneAndRest.getFirst()
+                                          .isPresent());
+            assertEquals(Collections.emptyList(), oneAndRest.getSecond()
+                                                            .collect(Collectors.toList()));
+        }
     }
 }
