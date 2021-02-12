@@ -80,6 +80,16 @@ public interface BiElement<E1, E2>
     }
 
     /**
+     * Returns true, if both values are not null
+     * 
+     * @return
+     */
+    public default boolean hasNoNullValue()
+    {
+        return this.isFirstValueNotNull() && this.isSecondValueNotNull();
+    }
+
+    /**
      * Returns true, if {@link #getSecond()} returns null
      * 
      * @return

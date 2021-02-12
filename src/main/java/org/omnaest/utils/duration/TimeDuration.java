@@ -1,7 +1,10 @@
 package org.omnaest.utils.duration;
 
 import java.time.Duration;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
+
+import org.omnaest.utils.optional.NullOptional;
 
 /**
  * A {@link TimeDuration} wraps a duration and a {@link TimeUnit}
@@ -30,9 +33,17 @@ public class TimeDuration
         return new TimeDuration(duration, timeUnit);
     }
 
+    /**
+     * Returns a {@link TimeDuration} for the given {@link Duration}.<br>
+     * <br>
+     * Be aware that a {@link TimeDuration} is always the absolute duration and cannot indicate a negative duration compared to {@link Duration}.
+     * 
+     * @param duration
+     * @return
+     */
     public static TimeDuration of(Duration duration)
     {
-        return new TimeDuration(duration.toNanos(), TimeUnit.NANOSECONDS);
+        return new TimeDuration(Math.abs(duration.toNanos()), TimeUnit.NANOSECONDS);
     }
 
     public long getDuration()
@@ -86,6 +97,59 @@ public class TimeDuration
     public boolean isSmallerThan(TimeDuration timeDuration)
     {
         return this.duration < timeDuration.as(this.timeUnit);
+    }
+
+    /**
+     * Returns a {@link TimeDuration} representing the absolute distance between two {@link Date} instances. If any or both {@link Date} instance is null, then
+     * a {@link TimeDuration} of 0 is returned.
+     * 
+     * @param firstDate
+     * @param secondDate
+     * @return
+     */
+    public static TimeDuration between(Date firstDate, Date secondDate)
+    {
+        return NullOptional.ofTwoNullable(firstDate, secondDate)
+                           .map(bi -> of(Duration.between(bi.getFirst()
+                                                            .toInstant(),
+                                                          bi.getSecond()
+                                                            .toInstant())))
+                           .orElse(of(0, TimeUnit.NANOSECONDS));
+    }
+
+    @Override
+    public int hashCode()
+    {
+        long value = this.as(TimeUnit.NANOSECONDS);
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (int) (value ^ (value >>> 32));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        long value = this.as(TimeUnit.NANOSECONDS);
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null)
+        {
+            return false;
+        }
+        if (this.getClass() != obj.getClass())
+        {
+            return false;
+        }
+        TimeDuration other = (TimeDuration) obj;
+        long otherValue = other.as(TimeUnit.NANOSECONDS);
+        if (value != otherValue)
+        {
+            return false;
+        }
+        return true;
     }
 
 }

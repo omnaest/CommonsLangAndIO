@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import org.omnaest.utils.duration.DurationCapture;
 import org.omnaest.utils.duration.DurationCapture.DisplayableDuration;
 import org.omnaest.utils.duration.DurationCapture.DurationMeasurement;
+import org.omnaest.utils.duration.DurationCapture.MeasurementResult;
 
 /**
  * @see DurationProgressCounter
@@ -36,10 +37,27 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
     }
 
     @Override
+    public Optional<DisplayableDuration> getPassedTime()
+    {
+        return Optional.ofNullable(this.durationMeasurement.get())
+                       .map(DurationMeasurement::stop)
+                       .map(MeasurementResult::asTimeUnitDisplay);
+    }
+
+    @Override
     public DurationProgressCounter doWithETA(Consumer<DisplayableDuration> etaConsumer)
     {
         Optional.ofNullable(etaConsumer)
                 .ifPresent(consumer -> this.getETA()
+                                           .ifPresent(consumer::accept));
+        return this;
+    }
+
+    @Override
+    public DurationProgressCounter doWithPassedTime(Consumer<DisplayableDuration> passedTimeConsumer)
+    {
+        Optional.ofNullable(passedTimeConsumer)
+                .ifPresent(consumer -> this.getPassedTime()
                                            .ifPresent(consumer::accept));
         return this;
     }
@@ -124,6 +142,7 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
         this.progressCounter.ifModulo(modulo, (Progress progressCounter) ->
         {
             Optional<DisplayableDuration> eta = this.getETA();
+            Optional<DisplayableDuration> passedTime = this.getPassedTime();
             durationProgressConsumer.accept(new DurationProgress()
             {
                 @Override
@@ -148,6 +167,12 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
                 public String getProgressAsString()
                 {
                     return progressCounter.getProgressAsString();
+                }
+
+                @Override
+                public Optional<DisplayableDuration> getPassedTime()
+                {
+                    return passedTime;
                 }
             });
         });

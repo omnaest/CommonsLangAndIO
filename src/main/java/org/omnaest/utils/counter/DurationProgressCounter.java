@@ -19,7 +19,11 @@ public interface DurationProgressCounter extends ProgressCounter
 
     public Optional<DisplayableDuration> getETA();
 
+    public Optional<DisplayableDuration> getPassedTime();
+
     public DurationProgressCounter doWithETA(Consumer<DisplayableDuration> etaConsumer);
+
+    public DurationProgressCounter doWithPassedTime(Consumer<DisplayableDuration> passedTimeConsumer);
 
     @Override
     public DurationProgressCounter withMaximumProvider(Supplier<Long> maximumProvider);
@@ -66,5 +70,7 @@ public interface DurationProgressCounter extends ProgressCounter
     public static interface DurationProgress extends Progress
     {
         public Optional<DisplayableDuration> getETA();
+
+        public Optional<DisplayableDuration> getPassedTime();
     }
 }
