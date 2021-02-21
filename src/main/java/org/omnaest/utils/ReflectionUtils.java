@@ -83,6 +83,24 @@ public class ReflectionUtils
         {
             return (FieldReflectionTyped<T2>) this;
         }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <R> R getValueFrom(T instance)
+        {
+            try
+            {
+                if (!this.field.isAccessible())
+                {
+                    this.field.setAccessible(true);
+                }
+                return (R) this.field.get(instance);
+            }
+            catch (IllegalArgumentException | IllegalAccessException e)
+            {
+                throw new IllegalArgumentException(e);
+            }
+        }
     }
 
     private static class MethodImpl<T> implements Method<T>
@@ -280,6 +298,8 @@ public class ReflectionUtils
     public static interface Field<T> extends UntypedField
     {
 
+        public <R> R getValueFrom(T instance);
+
     }
 
     public static interface TypeReflection<T>
@@ -293,6 +313,8 @@ public class ReflectionUtils
         public Stream<Method<T>> getMethods();
 
         public Optional<Field<T>> getField(String fieldName);
+
+        public Stream<Field<T>> getFields();
     }
 
     public static <T> TypeReflection<T> of(Class<T> type)
@@ -341,6 +363,31 @@ public class ReflectionUtils
             {
                 return Optional.ofNullable(this.determineRawField(type, fieldName))
                                .map(rawField -> ReflectionUtils.of(type, rawField));
+            }
+
+            @Override
+            public Stream<Field<T>> getFields()
+            {
+                return this.determineRawFields(type)
+                           .map(rawField -> ReflectionUtils.of(type, rawField));
+            }
+
+            private Stream<java.lang.reflect.Field> determineRawFields(Class<T> type)
+            {
+                return StreamUtils.fromStreams(() -> Stream.of(type), () -> this.getSuperTypesAndInterfaces())
+                                  .flatMap(t ->
+                                  {
+                                      try
+                                      {
+                                          return Arrays.asList(t.getDeclaredFields())
+                                                       .stream();
+                                      }
+                                      catch (Exception e)
+                                      {
+                                          return null;
+                                      }
+                                  })
+                                  .filter(field -> field != null);
             }
 
             private java.lang.reflect.Field determineRawField(Class<T> type, String fieldName)
