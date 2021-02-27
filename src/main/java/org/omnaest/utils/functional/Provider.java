@@ -1,5 +1,6 @@
 package org.omnaest.utils.functional;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -10,4 +11,15 @@ import java.util.function.Supplier;
  */
 public interface Provider<E> extends Supplier<E>
 {
+
+    /**
+     * Allows to chain a mapper {@link Function} to the current provider
+     * 
+     * @param mapper
+     * @return
+     */
+    public default <R> Provider<R> and(Function<E, R> mapper)
+    {
+        return () -> mapper.apply(get());
+    }
 }

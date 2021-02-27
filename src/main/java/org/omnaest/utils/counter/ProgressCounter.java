@@ -19,6 +19,13 @@ public interface ProgressCounter extends Counter
 
     public double getProgress();
 
+    /**
+     * Returns a formatted progress {@link String} like e.g. '15%'
+     * 
+     * @return
+     */
+    public String getProgressAsString();
+
     public ProgressCounter doWithProgress(DoubleConsumer progressConsumer);
 
     @Override

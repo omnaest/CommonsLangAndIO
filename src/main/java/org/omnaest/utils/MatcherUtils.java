@@ -18,19 +18,25 @@
 */
 package org.omnaest.utils;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.cached.CachedElement;
+import org.omnaest.utils.functional.Provider;
 
 /**
  * Helper for {@link MatchFinderBuilder} operations
@@ -69,6 +75,22 @@ public class MatcherUtils
          * @return
          */
         public MatchFinder ofExact(String str);
+
+        /**
+         * Matches any of the given {@link String}s
+         * 
+         * @param exactMatchTokens
+         * @return
+         */
+        public MatchFinder ofAnyExact(Collection<String> exactMatchTokens);
+
+        /**
+         * Similar to {@link #ofAnyExact(Collection)}
+         * 
+         * @param exactMatchTokens
+         * @return
+         */
+        public MatchFinder ofAnyExact(String... exactMatchTokens);
     }
 
     /**
@@ -104,6 +126,10 @@ public class MatcherUtils
         public String replace(Function<String, String> replacerFunction);
 
         public Optional<Match> getFirst();
+
+        public boolean hasMatches();
+
+        MatchResult withNoCaching();
     }
 
     /**
@@ -239,6 +265,22 @@ public class MatcherUtils
             }
 
             @Override
+            public MatchFinder ofAnyExact(Collection<String> exactMatchTokens)
+            {
+                return this.ofRegEx(Optional.ofNullable(exactMatchTokens)
+                                            .orElse(Collections.emptyList())
+                                            .stream()
+                                            .map(token -> Pattern.quote(token))
+                                            .collect(Collectors.joining("|")));
+            }
+
+            @Override
+            public MatchFinder ofAnyExact(String... exactMatchTokens)
+            {
+                return this.ofAnyExact(Arrays.asList(exactMatchTokens));
+            }
+
+            @Override
             public MatchFinder of(Pattern pattern)
             {
                 return new MatchFinder()
@@ -266,9 +308,17 @@ public class MatcherUtils
                     public MatchResult findInAnd(String input)
                     {
                         AssertionUtils.assertIsNotNull("Pattern must not be null", pattern);
-
                         return new MatchResult()
                         {
+                            private Supplier<Stream<Match>> matches = this.createMatchesSupplier();
+
+                            @Override
+                            public MatchResult withNoCaching()
+                            {
+                                this.matches = this.createMatchStreamSupplier();
+                                return this;
+                            }
+
                             @Override
                             public Iterator<Match> iterator()
                             {
@@ -278,6 +328,24 @@ public class MatcherUtils
 
                             @Override
                             public Stream<Match> stream()
+                            {
+                                return this.matches.get();
+                            }
+
+                            private Supplier<Stream<Match>> createMatchesSupplier()
+                            {
+                                Supplier<List<Match>> matchesProvider = CachedElement.of(this.createMatchStreamSupplier()
+                                                                                             .and(stream -> stream.collect(Collectors.toList())));
+                                return () -> matchesProvider.get()
+                                                            .stream();
+                            }
+
+                            private Provider<Stream<Match>> createMatchStreamSupplier()
+                            {
+                                return () -> this.generateMatches();
+                            }
+
+                            private Stream<Match> generateMatches()
                             {
                                 if (input != null)
                                 {
@@ -296,6 +364,13 @@ public class MatcherUtils
                             {
                                 return this.stream()
                                            .findFirst();
+                            }
+
+                            @Override
+                            public boolean hasMatches()
+                            {
+                                return this.getFirst()
+                                           .isPresent();
                             }
 
                             @Override

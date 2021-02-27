@@ -52,6 +52,12 @@ public class DefaultProgressCounter implements ProgressCounter
     }
 
     @Override
+    public String getProgressAsString()
+    {
+        return formatProgress(this.getProgress());
+    }
+
+    @Override
     public ProgressCounter doWithProgress(DoubleConsumer progressConsumer)
     {
         Optional.ofNullable(progressConsumer)
@@ -122,12 +128,17 @@ public class DefaultProgressCounter implements ProgressCounter
                 @Override
                 public String getProgressAsString()
                 {
-                    return Math.round(progress * 100) + "%";
+                    return formatProgress(progress);
                 }
 
             });
         });
         return this;
+    }
+
+    private static String formatProgress(double progress)
+    {
+        return Math.round(progress * 100) + "%";
     }
 
     @Override

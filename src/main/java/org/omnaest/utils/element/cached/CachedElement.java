@@ -27,6 +27,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.omnaest.utils.duration.TimeDuration;
+import org.omnaest.utils.functional.Provider;
 
 /**
  * A single cached element
@@ -35,7 +36,7 @@ import org.omnaest.utils.duration.TimeDuration;
  * @author omnaest
  * @param <E>
  */
-public interface CachedElement<E> extends Supplier<E>
+public interface CachedElement<E> extends Provider<E>
 {
     /**
      * Returns the cached element of if the cached element is null will resolve a new element from the {@link Supplier}

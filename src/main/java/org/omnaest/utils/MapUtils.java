@@ -27,7 +27,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -707,6 +710,64 @@ public class MapUtils
     public static <K, V> BinaryOperator<Map<K, V>> merger()
     {
         return (map1, map2) -> merge(map1, map2);
+    }
+
+    public static <K, V, VR> Map<K, VR> mapValues(Map<K, V> map, Function<V, VR> valueMapper)
+    {
+        return Optional.ofNullable(map)
+                       .map(Map::entrySet)
+                       .map(Set::stream)
+                       .orElse(Stream.empty())
+                       .collect(Collectors.toMap(Entry::getKey, entry -> valueMapper.apply(entry.getValue())));
+    }
+
+    /**
+     * Returns a {@link SortedMap} with a natural comparator based on the values of the {@link Map}
+     * 
+     * @param map
+     * @return
+     */
+    public static <K, V extends Comparable<V>> Map<K, V> toValueSortedMap(Map<K, V> map)
+    {
+        Function<K, V> keyToValueMapper = key -> map.get(key);
+        return toSortedMap(map, ComparatorUtils.chainedComparator(ComparatorUtils.builder()
+                                                                                 .of(keyToValueMapper)
+                                                                                 .natural(),
+                                                                  ComparatorUtils.natural()));
+    }
+
+    /**
+     * Similar to {@link #toValueSortedMap(Map)} but with reverse order
+     * 
+     * @param map
+     * @return
+     */
+    public static <K, V extends Comparable<V>> Map<K, V> toReverseValueSortedMap(Map<K, V> map)
+    {
+        Function<K, V> keyToValueMapper = key -> map.get(key);
+        return toSortedMap(map, ComparatorUtils.reverse(ComparatorUtils.chainedComparator(ComparatorUtils.builder()
+                                                                                                         .of(keyToValueMapper)
+                                                                                                         .natural(),
+                                                                                          ComparatorUtils.natural())));
+    }
+
+    /**
+     * Returns a {@link SortedMap} using the given {@link Comparator} with the content of the given {@link Map}
+     * 
+     * @param map
+     * @param comparator
+     * @return
+     */
+    public static <K, V extends Comparable<V>> Map<K, V> toSortedMap(Map<K, V> map, Comparator<K> comparator)
+    {
+        return Optional.ofNullable(map)
+                       .map(sourceMap ->
+                       {
+                           TreeMap<K, V> result = new TreeMap<>(comparator);
+                           result.putAll(sourceMap);
+                           return (Map<K, V>) result;
+                       })
+                       .orElse(Collections.emptyMap());
     }
 
 }

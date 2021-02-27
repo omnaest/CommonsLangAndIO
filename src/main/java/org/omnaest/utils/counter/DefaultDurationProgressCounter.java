@@ -29,6 +29,12 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
     }
 
     @Override
+    public String getProgressAsString()
+    {
+        return this.progressCounter.getProgressAsString();
+    }
+
+    @Override
     public Optional<DisplayableDuration> getETA()
     {
         return Optional.ofNullable(this.durationMeasurement.get())
@@ -42,6 +48,15 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
         return Optional.ofNullable(this.durationMeasurement.get())
                        .map(DurationMeasurement::stop)
                        .map(MeasurementResult::asTimeUnitDisplay);
+    }
+
+    @Override
+    public String getProgressAndETAasString()
+    {
+        return this.getProgressAsString() + this.getETA()
+                                                .map(DisplayableDuration::asCanonicalString)
+                                                .map(eta -> " ( " + eta + " )")
+                                                .orElse("");
     }
 
     @Override

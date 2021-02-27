@@ -21,6 +21,8 @@ public interface DurationProgressCounter extends ProgressCounter
 
     public Optional<DisplayableDuration> getPassedTime();
 
+    public String getProgressAndETAasString();
+
     public DurationProgressCounter doWithETA(Consumer<DisplayableDuration> etaConsumer);
 
     public DurationProgressCounter doWithPassedTime(Consumer<DisplayableDuration> passedTimeConsumer);
@@ -61,6 +63,18 @@ public interface DurationProgressCounter extends ProgressCounter
     public static DurationProgressCounter of(ProgressCounter progressCounter)
     {
         return new DefaultDurationProgressCounter(progressCounter);
+    }
+
+    public static DurationProgressCounter fromZero()
+    {
+        return Counter.fromZero()
+                      .asDurationProgressCounter();
+    }
+
+    public static DurationProgressCounter from(int start)
+    {
+        return Counter.from(start)
+                      .asDurationProgressCounter();
     }
 
     public static interface DurationProgressConsumer extends Consumer<DurationProgress>

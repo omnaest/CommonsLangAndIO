@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.omnaest.utils.optional.NullOptional;
 
 public class ComparatorUtils
 {
@@ -267,6 +268,15 @@ public class ComparatorUtils
         public <T> TypedComparatorBuilder<T> of(Class<? super T> type);
 
         public <T> ExecutableComparatorBuilder<T> of(T o1, T o2);
+
+        public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper);
+    }
+
+    public static interface MapperComparatorBuilder<S, T>
+    {
+        public Comparator<S> natural();
+
+        public Comparator<S> with(Comparator<T> comparator);
     }
 
     public static interface TypedComparatorBuilder<T>
@@ -414,6 +424,25 @@ public class ComparatorUtils
                     }
                 };
             }
+
+            @Override
+            public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper)
+            {
+                return new MapperComparatorBuilder<S, T>()
+                {
+                    @Override
+                    public Comparator<S> natural()
+                    {
+                        return this.with(ComparatorUtils.natural());
+                    }
+
+                    @Override
+                    public Comparator<S> with(Comparator<T> comparator)
+                    {
+                        return (v1, v2) -> comparator.compare(mapper.apply(v1), mapper.apply(v2));
+                    }
+                };
+            }
         };
     }
 
@@ -426,6 +455,35 @@ public class ComparatorUtils
     {
         return (o1, o2) -> extractFunction.apply(o1)
                                           .compareTo(extractFunction.apply(o2));
+    }
+
+    public static <T> boolean isBefore(Comparator<T> comparator, T value1, T value2)
+    {
+        return comparator.compare(value1, value2) < 0;
+    }
+
+    public static <T> boolean isAfter(Comparator<T> comparator, T value1, T value2)
+    {
+        return comparator.compare(value1, value2) > 0;
+    }
+
+    public static <T> boolean isEqual(Comparator<T> comparator, T value1, T value2)
+    {
+        return comparator.compare(value1, value2) == 0;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Comparator<T> natural()
+    {
+        return (c1, c2) -> NullOptional.ofNullable(c1)
+                                       .filter(value -> value instanceof Comparable)
+                                       .map(value -> (Comparable<T>) value)
+                                       .map(value -> value.compareTo(c2))
+                                       .orElseGetAndFlatMap(() -> NullOptional.ofNullable(c2)
+                                                                              .filter(v -> v instanceof Comparable)
+                                                                              .map(v -> (Comparable<T>) v)
+                                                                              .map(v -> -1 * v.compareTo(c2)))
+                                       .orElse(0);
     }
 
 }

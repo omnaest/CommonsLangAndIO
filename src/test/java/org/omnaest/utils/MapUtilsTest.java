@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
@@ -267,5 +268,45 @@ public class MapUtilsTest
                                             .put("key3", "value3")
                                             .put("key2", "value2")
                                             .build()));
+    }
+
+    @Test
+    public void testMapValues() throws Exception
+    {
+        assertEquals(MapUtils.builder()
+                             .put("a", 1)
+                             .build(),
+                     MapUtils.mapValues(MapUtils.builder()
+                                                .put("a", new AtomicInteger(1))
+                                                .build(),
+                                        AtomicInteger::get));
+    }
+
+    @Test
+    public void testToValueSortedMap() throws Exception
+    {
+        assertEquals(Arrays.asList("c", "b1", "b2", "a"), MapUtils.toValueSortedMap(MapUtils.builder()
+                                                                                            .put("a", "3")
+                                                                                            .put("b1", "2")
+                                                                                            .put("b2", "2")
+                                                                                            .put("c", "1")
+                                                                                            .build())
+                                                                  .keySet()
+                                                                  .stream()
+                                                                  .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testToReverseValueSortedMap() throws Exception
+    {
+        assertEquals(Arrays.asList("c", "b2", "b1", "a"), MapUtils.toReverseValueSortedMap(MapUtils.builder()
+                                                                                                   .put("a", "1")
+                                                                                                   .put("b1", "2")
+                                                                                                   .put("b2", "2")
+                                                                                                   .put("c", "3")
+                                                                                                   .build())
+                                                                  .keySet()
+                                                                  .stream()
+                                                                  .collect(Collectors.toList()));
     }
 }
