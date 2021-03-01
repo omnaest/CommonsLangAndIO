@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021 Danny Kunz
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.  You may obtain a copy
+ * of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ ******************************************************************************/
 /*
 
 	Copyright 2017 Danny Kunz
@@ -172,13 +187,86 @@ public class StringUtils
     }
 
     /**
-     * Returns a {@link StringBuilder}
+     * Returns a {@link StringTextBuilder}
      * 
      * @return
      */
-    public static StringBuilder builder()
+    public static StringTextBuilder builder()
     {
-        return new StringBuilder();
+        return new StringTextBuilder()
+        {
+            private StringBuilder builder       = new StringBuilder();
+            private String        lineSeparator = System.lineSeparator();
+
+            @Override
+            public StringTextBuilder withLineSeparator(String lineSeparator)
+            {
+                this.lineSeparator = lineSeparator;
+                return this;
+            }
+
+            @Override
+            public StringTextBuilder add(String text)
+            {
+                this.builder.append(text);
+                return this;
+            }
+
+            @Override
+            public String build()
+            {
+                return this.builder.toString();
+            }
+
+            @Override
+            public StringTextBuilder add(long value)
+            {
+                this.builder.append(value);
+                return this;
+            }
+
+            @Override
+            public StringTextBuilder addLineBreak()
+            {
+                return this.add(this.lineSeparator);
+            }
+
+            @Override
+            public StringTextBuilder addLine(String line)
+            {
+                return this.add(line)
+                           .addLineBreak();
+            }
+
+            @Override
+            public String toString()
+            {
+                return this.build();
+            }
+        };
+    }
+
+    public static interface StringTextBuilder
+    {
+        public StringTextBuilder add(String text);
+
+        public StringTextBuilder add(long value);
+
+        public StringTextBuilder addLineBreak();
+
+        public StringTextBuilder withLineSeparator(String lineSeparator);
+
+        public String build();
+
+        /**
+         * Adds a text and a line break
+         * 
+         * @see #add(String)
+         * @see #addLineBreak()
+         * @param line
+         * @return
+         */
+        public StringTextBuilder addLine(String line);
     }
 
     /**

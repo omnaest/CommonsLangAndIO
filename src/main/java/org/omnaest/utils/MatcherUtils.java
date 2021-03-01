@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021 Danny Kunz
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.  You may obtain a copy
+ * of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ ******************************************************************************/
 /*
 
 	Copyright 2017 Danny Kunz
@@ -564,20 +579,20 @@ public class MatcherUtils
                                         public RegionReplacer asReplacer(Supplier<String> replacements)
                                         {
                                             return input -> StringUtils.builder()
-                                                                       .append(input.substring(0, start))
-                                                                       .append(replacements.get())
-                                                                       .append(input.substring(end))
-                                                                       .toString();
+                                                                       .add(input.substring(0, start))
+                                                                       .add(replacements.get())
+                                                                       .add(input.substring(end))
+                                                                       .build();
                                         }
 
                                         @Override
                                         public RegionReplacer asSubRegionReplacer(Supplier<String> replacements)
                                         {
                                             return input -> StringUtils.builder()
-                                                                       .append(input.substring(regionStart, start))
-                                                                       .append(replacements.get())
-                                                                       .append(input.substring(regionEnd))
-                                                                       .toString();
+                                                                       .add(input.substring(regionStart, start))
+                                                                       .add(replacements.get())
+                                                                       .add(input.substring(regionEnd))
+                                                                       .build();
                                         }
 
                                     };

@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021 Danny Kunz
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.  You may obtain a copy
+ * of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ ******************************************************************************/
 /*
 
 	Copyright 2017 Danny Kunz
@@ -24,6 +39,8 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.omnaest.utils.StringUtils.StringTextBuilder;
 
 /**
  * Helper with time formatting
@@ -112,9 +129,9 @@ public class TimeFormatUtils
                     public String asString()
                     {
                         return StringUtils.builder()
-                                          .append(duration)
-                                          .append(timeUnitToName.get(timeUnit))
-                                          .toString();
+                                          .add(duration)
+                                          .add(timeUnitToName.get(timeUnit))
+                                          .build();
                     }
 
                     @Override
@@ -126,7 +143,7 @@ public class TimeFormatUtils
                     @Override
                     public String asCanonicalString(TimeUnit... timeUnits)
                     {
-                        StringBuilder stringBuilder = StringUtils.builder();
+                        StringTextBuilder stringBuilder = StringUtils.builder();
 
                         AtomicLong decreasingDuration = new AtomicLong(duration);
                         TimeUnit lastTimeUnit = ArrayUtils.last(timeUnits);
@@ -146,14 +163,14 @@ public class TimeFormatUtils
                                               decreasingDuration.getAndAdd(-timeUnit.convert(timeUnitAndDuration.getDuration(),
                                                                                              timeUnitAndDuration.getTimeUnit()));
 
-                                              stringBuilder.append(format().duration(timeUnitAndDuration.getDuration(), timeUnitAndDuration.getTimeUnit())
-                                                                           .asString())
-                                                           .append(" ");
+                                              stringBuilder.add(format().duration(timeUnitAndDuration.getDuration(), timeUnitAndDuration.getTimeUnit())
+                                                                        .asString())
+                                                           .add(" ");
                                               forceDisplay.set(true);
                                           });
                               });
 
-                        return stringBuilder.toString()
+                        return stringBuilder.build()
                                             .trim();
                     }
 
