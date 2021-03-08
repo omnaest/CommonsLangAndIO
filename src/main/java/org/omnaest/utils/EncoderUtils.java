@@ -92,6 +92,17 @@ public class EncoderUtils
         };
     }
 
+    public static interface TextEncoderAndDecoderFactory
+    {
+        public TextEncoderAndDecoder forAlphaNumericText();
+
+        public TextEncoderAndDecoderBuilder forText();
+    }
+
+    public static interface TextEncoderAndDecoder extends UnaryEncoderAndDecoder<String>
+    {
+    }
+
     public static interface TextEncoderAndDecoderBuilder extends Builder<TextEncoderAndDecoder>
     {
         public TextEncoderAndDecoderBuilder withAllowedCharacters(List<String> characters);
@@ -101,13 +112,6 @@ public class EncoderUtils
         public TextEncoderAndDecoderBuilder withAllowedCharactersRegEx(String regex);
 
         public TextEncoderAndDecoderBuilder withAllowedCharactersRegEx(Pattern pattern);
-    }
-
-    public static interface TextEncoderAndDecoderFactory
-    {
-        public TextEncoderAndDecoder forAlphaNumericText();
-
-        public TextEncoderAndDecoderBuilder forText();
     }
 
     public static interface EncoderAndDecoderFactory extends TextEncoderAndDecoderFactory
@@ -120,10 +124,6 @@ public class EncoderUtils
     }
 
     public static interface UnaryEncoderAndDecoder<T> extends EncoderAndDecoder<T, T, T>
-    {
-    }
-
-    public static interface TextEncoderAndDecoder extends UnaryEncoderAndDecoder<String>
     {
     }
 

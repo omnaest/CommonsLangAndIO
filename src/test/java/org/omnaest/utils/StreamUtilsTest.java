@@ -38,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -502,5 +503,29 @@ public class StreamUtilsTest
             assertEquals(Collections.emptyList(), oneAndRest.getSecond()
                                                             .collect(Collectors.toList()));
         }
+    }
+
+    @Test
+    public void testRecursiveFlattened() throws Exception
+    {
+        assertEquals(Arrays.asList(1, 2, 3, 11, 12, 13, 101, 102, 103), StreamUtils.recursiveFlattened(Arrays.asList(1, 11, 101)
+                                                                                                             .stream(),
+                                                                                                       value -> value % 10 <= 2 ? Stream.of(value + 1)
+                                                                                                               : Stream.empty())
+                                                                                   .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testFilterAndConsume() throws Exception
+    {
+        List<String> consumedElements = new ArrayList<>();
+        List<String> filteredElements = StreamUtils.filterAndConsume(Arrays.asList("a", "b", "B", "c")
+                                                                           .stream(),
+                                                                     value -> value.toLowerCase()
+                                                                                   .equals("b"),
+                                                                     value -> consumedElements.add(value))
+                                                   .collect(Collectors.toList());
+        assertEquals(Arrays.asList("a", "c"), filteredElements);
+        assertEquals(Arrays.asList("b", "B"), consumedElements);
     }
 }

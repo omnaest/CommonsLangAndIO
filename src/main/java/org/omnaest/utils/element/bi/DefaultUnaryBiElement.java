@@ -17,6 +17,7 @@ package org.omnaest.utils.element.bi;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -116,6 +117,12 @@ public class DefaultUnaryBiElement<E> implements UnaryBiElement<E>
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean hasEqualValues()
+    {
+        return Objects.equals(this.element1, this.element2);
     }
 
 }

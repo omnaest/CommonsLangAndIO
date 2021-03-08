@@ -43,4 +43,11 @@ public interface UnaryBiElement<E> extends BiElement<E, E>
     {
         return new DefaultUnaryBiElement<E>(element1, element2);
     }
+
+    /**
+     * Returns true, if all values are {@link #equals(Object)}
+     * 
+     * @return
+     */
+    public boolean hasEqualValues();
 }

@@ -785,4 +785,14 @@ public class MapUtils
                        .orElse(Collections.emptyMap());
     }
 
+    public static <K, V> Comparator<? super K> comparatorByMapValue(Map<K, V> map)
+    {
+        return ComparatorUtils.builder()
+                              .of(map::get)
+                              .natural()
+                              .thenComparing(ComparatorUtils.builder()
+                                                            .of(MapperUtils.identity())
+                                                            .natural());
+    }
+
 }

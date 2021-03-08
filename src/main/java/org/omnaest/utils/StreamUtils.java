@@ -79,8 +79,10 @@ import org.omnaest.utils.counter.DurationProgressCounter.DurationProgressConsume
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.cached.CachedFunction;
 import org.omnaest.utils.element.lar.LeftAndRight;
+import org.omnaest.utils.functional.PredicateConsumer;
 import org.omnaest.utils.stream.DefaultSupplierStream;
 import org.omnaest.utils.stream.FilterAllOnFirstFilterFailStreamDecorator;
+import org.omnaest.utils.stream.FilterMapper;
 import org.omnaest.utils.stream.SupplierStream;
 import org.omnaest.utils.supplier.OptionalSupplier;
 
@@ -1454,6 +1456,108 @@ public class StreamUtils
                                        .orElse(Stream.empty())
                                        .iterator();
         return BiElement.of(fromIterator(iterator).limit(index), fromIterator(iterator));
+    }
+
+    /**
+     * Filters out elements of the given {@link Stream} matched by the given {@link Predicate} and applies them to the given {@link Consumer}.
+     * 
+     * @param stream
+     * @param filterAndConsumer
+     * @return
+     */
+    public static <E> Stream<E> filterAndConsume(Stream<E> stream, Predicate<E> filter, Consumer<E> consumer)
+    {
+        return filterAndConsume(stream, PredicateConsumer.of(filter, consumer));
+    }
+
+    /**
+     * Similar to {@link #filterAndConsume(Stream, Predicate, Consumer)} but using a {@link PredicateConsumer}
+     * 
+     * @param stream
+     * @param filterAndConsumer
+     * @return
+     */
+    public static <E> Stream<E> filterAndConsume(Stream<E> stream, PredicateConsumer<E> filterAndConsumer)
+    {
+        return Optional.ofNullable(stream)
+                       .orElse(Stream.empty())
+                       .filter(filterConsumer(filterAndConsumer));
+    }
+
+    /**
+     * @see #filterAndConsume(Stream, Predicate, Consumer)
+     * @param filter
+     * @param consumer
+     * @return
+     */
+    public static <E> Predicate<E> filterConsumer(Predicate<E> filter, Consumer<E> consumer)
+    {
+        return filterConsumer(PredicateConsumer.of(filter, consumer));
+    }
+
+    /**
+     * @see #filterAndConsume(Stream, PredicateConsumer)
+     * @param filterAndConsumer
+     * @return
+     */
+    public static <E> Predicate<E> filterConsumer(PredicateConsumer<E> filterAndConsumer)
+    {
+        return element ->
+        {
+            boolean matched = filterAndConsumer.test(element);
+            if (matched)
+            {
+                filterAndConsumer.accept(element);
+            }
+            return !matched;
+        };
+    }
+
+    /**
+     * Recursively flattens the given {@link Stream} using the flattening mapper. The result {@link Stream} will contain the original elements but also the
+     * elements created by the flattener function and this recursively until the flattener function does return an empty {@link Stream}.
+     * 
+     * @param stream
+     * @param flattener
+     * @return
+     */
+    public static <E> Stream<E> recursiveFlattened(Stream<E> stream, Function<E, Stream<E>> flattener)
+    {
+        return Optional.ofNullable(stream)
+                       .orElse(Stream.empty())
+                       .flatMap(createRecursiveFlattener(flattener));
+    }
+
+    public static <E> Function<E, Stream<E>> createRecursiveFlattener(Function<E, Stream<E>> flattener)
+    {
+        return element -> Stream.concat(Stream.of(element), flattener.apply(element)
+                                                                     .flatMap(createRecursiveFlattener(flattener)));
+    }
+
+    /**
+     * Creates a {@link FilterMapper} based on the given {@link Predicate} and {@link Function}
+     * 
+     * @param filter
+     * @param mapper
+     * @return
+     */
+    public static <E, R> FilterMapper<E, R> filterMapper(Predicate<E> filter, Function<E, R> mapper)
+    {
+        return new FilterMapper<E, R>()
+        {
+            @Override
+            public boolean test(E t)
+            {
+                return filter.test(t);
+            }
+
+            @Override
+            public R apply(E t)
+            {
+                return mapper.apply(t);
+            }
+        };
+
     }
 
 }

@@ -53,4 +53,10 @@ public interface ExceptionHandler extends EventHandler<Exception>
     {
         return new NoOperationExceptionHandler();
     }
+
+    public static ExceptionHandler rethrowingExceptionHandler()
+    {
+        return new RethrowingExceptionHandler();
+    }
+
 }
