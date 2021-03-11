@@ -144,4 +144,14 @@ public interface BiElement<E1, E2>
         return this.getFirst() != null;
     }
 
+    /**
+     * Returns a new {@link BiElement} with the inverse elements order
+     * 
+     * @return
+     */
+    public default BiElement<E2, E1> reverse()
+    {
+        return BiElement.of(this.getSecond(), this.getFirst());
+    }
+
 }

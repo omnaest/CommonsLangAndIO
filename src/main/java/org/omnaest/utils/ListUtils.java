@@ -49,6 +49,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -313,10 +314,22 @@ public class ListUtils
      */
     public static <E> List<E> ensureSize(List<E> list, int size, Supplier<E> elementSupplier)
     {
-        while (list.size() < size)
-        {
-            list.add(elementSupplier.get());
-        }
+        return ensureSize(list, size, index -> elementSupplier.get());
+    }
+
+    /**
+     * Similar to {@link #ensureSize(List, int, Supplier)} but providing an {@link IntFunction} that gets the element index supplied
+     * 
+     * @param list
+     * @param size
+     * @param elementFactory
+     * @return
+     */
+    public static <E> List<E> ensureSize(List<E> list, int size, IntFunction<E> elementFactory)
+    {
+        IntStream.range(list.size(), size)
+                 .mapToObj(elementFactory)
+                 .forEach(element -> list.add(element));
         return list;
     }
 
