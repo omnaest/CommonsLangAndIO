@@ -46,9 +46,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,6 +60,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -64,7 +69,8 @@ import java.util.stream.Stream;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.omnaest.utils.FileUtils.BatchFileReader.BatchFileReaderLoaded;
-import org.omnaest.utils.exception.ExceptionHandler;
+import org.omnaest.utils.exception.RuntimeIOException;
+import org.omnaest.utils.exception.handler.ExceptionHandler;
 import org.omnaest.utils.functional.Accessor;
 
 /**
@@ -699,6 +705,118 @@ public class FileUtils
         Consumer<String> consumer = toConsumer(file);
         Supplier<String> supplier = toSupplier(file);
         return Accessor.of(supplier, consumer);
+    }
+
+    public static RandomFileAccessor toRandomFileAccessor(File file)
+    {
+        return new RandomFileAccessorImpl(file);
+    }
+
+    private static class RandomFileAccessorImpl implements RandomFileAccessor
+    {
+        private final File file;
+        private long       position = 0;
+
+        private RandomFileAccessorImpl(File file)
+        {
+            this.file = file;
+        }
+
+        @Override
+        public FileAccessPosition write(String text)
+        {
+            return this.write(Optional.ofNullable(text)
+                                      .map(String::getBytes)
+                                      .orElse(null));
+        }
+
+        @Override
+        public FileAccessPosition write(byte[] data)
+        {
+            long newPosition = this.position;
+
+            if (data != null)
+            {
+                Path filePath = RandomFileAccessorImpl.this.file.toPath();
+
+                ByteBuffer buffer = ByteBuffer.wrap(data);
+
+                try (FileChannel fileChannel = (FileChannel.open(filePath, StandardOpenOption.READ, StandardOpenOption.WRITE)))
+                {
+                    fileChannel.position(this.position);
+                    fileChannel.write(buffer);
+                    newPosition += data.length;
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeIOException(e);
+                }
+            }
+
+            return this.atPosition(newPosition);
+        }
+
+        @Override
+        public long getAsLong()
+        {
+            return this.position;
+        }
+
+        @Override
+        public FileAccessPosition atPosition(long position)
+        {
+            this.position = position;
+            return this;
+        }
+
+        @Override
+        public FileAccessPosition readStringInto(int length, Consumer<String> textConsumer)
+        {
+            long newPosition = this.position;
+            String text = this.readString(length);
+            textConsumer.accept(text);
+            return this.atPosition(newPosition + text.getBytes().length);
+        }
+
+        @Override
+        public String readString(int length)
+        {
+            Path filePath = this.file.toPath();
+            ByteBuffer buffer = ByteBuffer.allocate(length * 4);
+            try (FileChannel fileChannel = (FileChannel.open(filePath, StandardOpenOption.READ)))
+            {
+                fileChannel.position(this.position);
+                fileChannel.read(buffer);
+                buffer.flip();
+                String result = Charset.forName("UTF-8")
+                                       .decode(buffer)
+                                       .toString()
+                                       .substring(0, length);
+                this.atPosition(this.position + result.getBytes().length);
+                return result;
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeIOException(e);
+            }
+        }
+    }
+
+    public static interface RandomFileAccessor extends FileAccessPosition
+    {
+    }
+
+    public static interface FileAccessPosition extends LongSupplier
+    {
+        public FileAccessPosition write(String text);
+
+        public FileAccessPosition write(byte[] data);
+
+        public FileAccessPosition atPosition(long position);
+
+        public String readString(int length);
+
+        public FileAccessPosition readStringInto(int length, Consumer<String> textConsumer);
     }
 
     /**

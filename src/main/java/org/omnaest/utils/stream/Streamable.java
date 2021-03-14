@@ -16,6 +16,9 @@
 package org.omnaest.utils.stream;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -39,5 +42,27 @@ public interface Streamable<E> extends Iterable<E>
     {
         return this.stream()
                    .iterator();
+    }
+
+    /**
+     * Returns a new {@link List} instance with the elements of the {@link Streamable}
+     * 
+     * @return
+     */
+    public default List<E> toList()
+    {
+        return this.stream()
+                   .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a new {@link Set} instance with the elements of the {@link Streamable}
+     * 
+     * @return
+     */
+    public default Set<E> toSet()
+    {
+        return this.stream()
+                   .collect(Collectors.toSet());
     }
 }

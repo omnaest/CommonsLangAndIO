@@ -61,25 +61,25 @@ public class ExceptionUtilsTest
     }
 
     @Test(expected = RuntimeException.class)
-        public void testExecuteThrowingSilentVoidUncatched() throws Exception
+    public void testExecuteThrowingSilentVoidUncatched() throws Exception
+    {
+        ExceptionUtils.executeSilentVoid(() ->
         {
-            ExceptionUtils.executeSilentVoid(() ->
-            {
-                throw new RuntimeException("test");
-            }, e ->
-            {
-                throw e;
-            });
-        }
+            throw new RuntimeException("test");
+        }, e ->
+        {
+            throw new RuntimeException(e);
+        });
+    }
 
     @Test
-        public void testExecuteThrowingSilentVoidCatched() throws Exception
+    public void testExecuteThrowingSilentVoidCatched() throws Exception
+    {
+        ExceptionUtils.executeSilentVoid(() ->
         {
-            ExceptionUtils.executeSilentVoid(() ->
-            {
-                throw new RuntimeException("test");
-            }, e ->
-            {
-            });
-        }
+            throw new RuntimeException("test");
+        }, e ->
+        {
+        });
+    }
 }

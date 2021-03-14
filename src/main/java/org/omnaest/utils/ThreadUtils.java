@@ -38,7 +38,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 import org.omnaest.utils.duration.TimeDuration;
-import org.omnaest.utils.exception.ExceptionHandler;
+import org.omnaest.utils.exception.handler.ExceptionHandler;
 
 public class ThreadUtils
 {

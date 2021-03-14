@@ -13,8 +13,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.utils.exception;
+package org.omnaest.utils.exception.handler.internal;
 
+import org.omnaest.utils.exception.handler.ExceptionHandler;
+
+/**
+ * @see ExceptionHandler#noOperationExceptionHandler()
+ * @author omnaest
+ */
 public class NoOperationExceptionHandler implements ExceptionHandler
 {
     @Override

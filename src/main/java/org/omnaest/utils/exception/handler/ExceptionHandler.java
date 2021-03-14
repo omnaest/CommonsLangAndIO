@@ -31,9 +31,11 @@
 
 
 */
-package org.omnaest.utils.exception;
+package org.omnaest.utils.exception.handler;
 
 import org.omnaest.utils.events.EventHandler;
+import org.omnaest.utils.exception.handler.internal.DefaultRethrowingExceptionHandler;
+import org.omnaest.utils.exception.handler.internal.NoOperationExceptionHandler;
 
 /**
  * {@link EventHandler} for {@link Exception}s
@@ -56,7 +58,7 @@ public interface ExceptionHandler extends EventHandler<Exception>
 
     public static ExceptionHandler rethrowingExceptionHandler()
     {
-        return new RethrowingExceptionHandler();
+        return new DefaultRethrowingExceptionHandler();
     }
 
 }

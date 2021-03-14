@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.omnaest.utils.exception.ExceptionHandler;
+import org.omnaest.utils.exception.handler.ExceptionHandler;
 
 /**
  * Helper for {@link ExecutorService} instances and to achieve parallel execution.

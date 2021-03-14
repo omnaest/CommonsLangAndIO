@@ -137,4 +137,24 @@ public class FileUtilsTest
                                       .getName());
     }
 
+    @Test
+    public void testToRandomFileAccessor() throws Exception
+    {
+        File tempFile = FileUtils.createRandomTempFile();
+        FileUtils.toRandomFileAccessor(tempFile)
+                 .write("first")
+                 .atPosition(7)
+                 .write("test")
+                 .write("me")
+                 .atPosition(5)
+                 .write("of");
+
+        assertEquals("firstoftestme", FileUtils.toSupplier(tempFile)
+                                               .get());
+
+        assertEquals("oftest", FileUtils.toRandomFileAccessor(tempFile)
+                                        .atPosition(5)
+                                        .readString(6));
+    }
+
 }

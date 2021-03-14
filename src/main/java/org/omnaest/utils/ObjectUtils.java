@@ -41,7 +41,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.omnaest.utils.ExceptionUtils.Operation;
-import org.omnaest.utils.ExceptionUtils.RuntimeExceptionHandler;
 
 /**
  * Helper for common {@link Object} instances

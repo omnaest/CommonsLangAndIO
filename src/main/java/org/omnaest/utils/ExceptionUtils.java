@@ -13,25 +13,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-/*
 
-	Copyright 2017 Danny Kunz
-
-	Licensed under the Apache License, Version 2.0 (the "License");
-	you may not use this file except in compliance with the License.
-	You may obtain a copy of the License at
-
-		http://www.apache.org/licenses/LICENSE-2.0
-
-	Unless required by applicable law or agreed to in writing, software
-	distributed under the License is distributed on an "AS IS" BASIS,
-	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	See the License for the specific language governing permissions and
-	limitations under the License.
-
-
-*/
 package org.omnaest.utils;
+
+import java.util.Arrays;
+
+import org.omnaest.utils.exception.handler.ExceptionHandler;
+import org.omnaest.utils.exception.handler.RethrowingExceptionHandler;
+import org.omnaest.utils.exception.handler.RuntimeExceptionHandler;
 
 /**
  * Helper for {@link Exception} handling
@@ -40,11 +29,13 @@ package org.omnaest.utils;
  */
 public class ExceptionUtils
 {
+    @FunctionalInterface
     public static interface Operation<R>
     {
         public R execute();
     }
 
+    @FunctionalInterface
     public static interface VoidOperationWithException
     {
         public void execute() throws Exception;
@@ -55,16 +46,6 @@ public class ExceptionUtils
         public R execute() throws Exception;
     }
 
-    public static interface ExceptionHandler
-    {
-        public void handle(Exception e) throws Exception;
-    }
-
-    public static interface RuntimeExceptionHandler
-    {
-        public void handle(RuntimeException e);
-    }
-
     /**
      * Similar to {@link #executeSilent(Operation, RuntimeExceptionHandler...)} but throwing an {@link Exception}
      * 
@@ -73,7 +54,7 @@ public class ExceptionUtils
      * @return
      * @throws Exception
      */
-    public static <R> R execute(OperationWithException<R> operation, ExceptionHandler... exceptionHandlers) throws Exception
+    public static <R> R execute(OperationWithException<R> operation, RethrowingExceptionHandler... exceptionHandlers) throws Exception
     {
         R retval = null;
 
@@ -85,9 +66,9 @@ public class ExceptionUtils
         {
             if (exceptionHandlers != null)
             {
-                for (ExceptionHandler exceptionHandler : exceptionHandlers)
+                for (RethrowingExceptionHandler exceptionHandler : exceptionHandlers)
                 {
-                    exceptionHandler.handle(e);
+                    exceptionHandler.accept(e);
                 }
             }
         }
@@ -102,13 +83,25 @@ public class ExceptionUtils
      * @param exceptionHandlers
      * @return
      */
+
     public static void executeSilentVoid(VoidOperationWithException operation, ExceptionHandler... exceptionHandlers)
     {
         executeThrowingSilent((OperationWithException<Void>) () ->
         {
             operation.execute();
             return null;
-        }, exceptionHandlers);
+        }, Arrays.asList(exceptionHandlers)
+                 .stream()
+                 .filter(PredicateUtils.notNull())
+                 .map(exceptionHandler -> new RethrowingExceptionHandler()
+                 {
+                     @Override
+                     public void accept(Exception e) throws Exception
+                     {
+                         exceptionHandler.accept(e);
+                     }
+                 })
+                 .toArray(size -> new RethrowingExceptionHandler[size]));
     }
 
     /**
@@ -140,7 +133,8 @@ public class ExceptionUtils
         return retval;
     }
 
-    public static <R> R executeThrowingSilent(OperationWithException<R> operation, ExceptionHandler... exceptionHandlers)
+    @SafeVarargs
+    public static <R> R executeThrowingSilent(OperationWithException<R> operation, RethrowingExceptionHandler... exceptionHandlers)
     {
         R retval = null;
 
@@ -152,11 +146,11 @@ public class ExceptionUtils
         {
             if (exceptionHandlers != null)
             {
-                for (ExceptionHandler exceptionHandler : exceptionHandlers)
+                for (RethrowingExceptionHandler exceptionHandler : exceptionHandlers)
                 {
                     try
                     {
-                        exceptionHandler.handle(e);
+                        exceptionHandler.accept(e);
                     }
                     catch (Exception e1)
                     {
