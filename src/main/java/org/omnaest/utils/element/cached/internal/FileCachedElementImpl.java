@@ -31,7 +31,7 @@
 
 
 */
-package org.omnaest.utils.element.cached;
+package org.omnaest.utils.element.cached.internal;
 
 import java.io.File;
 import java.io.Reader;
@@ -43,6 +43,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.omnaest.utils.FileUtils;
+import org.omnaest.utils.element.cached.CachedElement;
+import org.omnaest.utils.element.cached.CachedElement.InputOutputStreamSerializerAndDeserializer;
 
 /**
  * @see CachedElement#of(Supplier)
@@ -77,6 +79,18 @@ public class FileCachedElementImpl<E> implements CachedElement<E>
 
         this.fromFileSupplier = FileUtils.toReaderSupplierUTF8(file)
                                          .toSupplier(deserializer);
+        this.supplier.set(supplier);
+    }
+
+    public FileCachedElementImpl(Supplier<E> supplier, File file, InputOutputStreamSerializerAndDeserializer<E> serializerAndDeserializer)
+    {
+        super();
+        this.file = file;
+        this.toFileConsumer = FileUtils.toOutputSupplier(file)
+                                       .toConsumerWith(serializerAndDeserializer);
+
+        this.fromFileSupplier = FileUtils.toInputSupplier(file)
+                                         .toSupplier(serializerAndDeserializer);
         this.supplier.set(supplier);
     }
 

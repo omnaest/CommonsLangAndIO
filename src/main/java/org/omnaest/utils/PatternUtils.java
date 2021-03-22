@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.omnaest.utils.MatcherUtils.MatchFinderBuilder;
+import org.omnaest.utils.MatcherUtils.MatchFinderFactory;
 
 public class PatternUtils
 {
@@ -69,7 +69,7 @@ public class PatternUtils
      * @see MatcherUtils#matcher()
      * @return
      */
-    public static MatchFinderBuilder matcher()
+    public static MatchFinderFactory matcher()
     {
         return MatcherUtils.matcher();
     }

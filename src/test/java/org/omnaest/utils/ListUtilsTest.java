@@ -344,4 +344,13 @@ public class ListUtilsTest
         assertEquals(Arrays.asList(2, 3), ListUtils.sublist(Arrays.asList(1, 2, 3), 1));
         assertEquals(Arrays.asList(), ListUtils.sublist(null, 1));
     }
+
+    @Test
+    public void testShingle() throws Exception
+    {
+        assertEquals(Arrays.asList("a", "b", "c", "ab", "bc", "abc"), ListUtils.shingle(Arrays.asList("a", "b", "c"))
+                                                                               .map(list -> list.stream()
+                                                                                                .collect(Collectors.joining()))
+                                                                               .collect(Collectors.toList()));
+    }
 }

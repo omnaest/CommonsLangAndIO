@@ -34,6 +34,8 @@
 package org.omnaest.utils.element.cached;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
@@ -42,6 +44,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.omnaest.utils.duration.TimeDuration;
+import org.omnaest.utils.element.cached.internal.ByteArrayInputOutputStreamSerializerAndDeserializer;
+import org.omnaest.utils.element.cached.internal.FileCachedElementImpl;
 import org.omnaest.utils.functional.Provider;
 
 /**
@@ -178,6 +182,12 @@ public interface CachedElement<E> extends Provider<E>
         return this;
     }
 
+    public default CachedElement<E> withFileCache(File file, InputOutputStreamSerializerAndDeserializer<E> serializerAndDeserializer)
+    {
+        this.setSupplier(new FileCachedElementImpl<E>(this.asNonCachedSupplier(), file, serializerAndDeserializer));
+        return this;
+    }
+
     /**
      * Returns a new {@link CachedElement} which is {@link Thread}safe
      * 
@@ -200,4 +210,11 @@ public interface CachedElement<E> extends Provider<E>
         return new SynchronizedCachedElementWrapper<>(this);
     }
 
+    public static interface InputOutputStreamSerializerAndDeserializer<E> extends BiConsumer<E, OutputStream>, Function<InputStream, E>
+    {
+        public static InputOutputStreamSerializerAndDeserializer<byte[]> newByteArrayInstance()
+        {
+            return new ByteArrayInputOutputStreamSerializerAndDeserializer();
+        }
+    }
 }

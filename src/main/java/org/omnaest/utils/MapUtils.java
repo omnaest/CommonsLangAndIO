@@ -707,6 +707,33 @@ public class MapUtils
     }
 
     /**
+     * Similar to {@link #merge(Map...)} but allows to define a merge function, which decides about the result in key collision cases
+     * 
+     * @param valueMergeFunction
+     * @param maps
+     * @return
+     */
+    @SafeVarargs
+    public static <K, V> Map<K, V> merge(BinaryOperator<V> valueMergeFunction, Map<K, V>... maps)
+    {
+        Map<K, V> result = new HashMap<>();
+
+        if (maps != null)
+        {
+            for (Map<K, V> map : maps)
+            {
+                if (map != null)
+                {
+                    map.forEach((key, value) -> result.compute(key, (k, previousValue) -> previousValue != null ? valueMergeFunction.apply(previousValue, value)
+                            : value));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Returns true if the given {@link Map} is not null or empty.
      * 
      * @param map
@@ -718,13 +745,25 @@ public class MapUtils
     }
 
     /**
-     * Returns a reducer which {@link #merge(Map...)}s the given {@link Map}s
+     * Returns a reducer which {@link #merge(Map...)}s the given {@link Map}s. This will overwrite values in collision cases. Please consider
+     * {@link #merger(BinaryOperator)} in cases where collisions should be handled more gracefully.
      * 
      * @return
      */
     public static <K, V> BinaryOperator<Map<K, V>> merger()
     {
         return (map1, map2) -> merge(map1, map2);
+    }
+
+    /**
+     * Returns a reducer which {@link #merge(BinaryOperator, Map...)}s the given {@link Map}s
+     * 
+     * @param valueMergeFunction
+     * @return
+     */
+    public static <K, V> BinaryOperator<Map<K, V>> merger(BinaryOperator<V> valueMergeFunction)
+    {
+        return (map1, map2) -> merge(valueMergeFunction, map1, map2);
     }
 
     public static <K, V, VR> Map<K, VR> mapValues(Map<K, V> map, Function<V, VR> valueMapper)
@@ -793,6 +832,33 @@ public class MapUtils
                               .thenComparing(ComparatorUtils.builder()
                                                             .of(MapperUtils.identity())
                                                             .natural());
+    }
+
+    /**
+     * Returns a {@link Function} which translates the keys of a {@link Map} into its values
+     * 
+     * @param map
+     * @return
+     */
+    public static <K, V> Function<K, V> toKeyToValueMapper(Map<K, V> map)
+    {
+        V defaultValue = null;
+        return toKeyToValueMapper(map, defaultValue);
+    }
+
+    /**
+     * Similar to {@link #toKeyToValueMapper(Map)} allowing to specify a default value, if the {@link Map} would return null.
+     * 
+     * @param map
+     * @param defaultValue
+     * @return
+     */
+    public static <K, V> Function<K, V> toKeyToValueMapper(Map<K, V> map, V defaultValue)
+    {
+        return key -> Optional.ofNullable(map)
+                              .orElse(Collections.emptyMap())
+                              .getOrDefault(key, defaultValue);
+
     }
 
 }

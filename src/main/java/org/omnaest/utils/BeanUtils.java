@@ -150,6 +150,8 @@ public class BeanUtils
         public boolean hasPrimitiveType();
 
         public Class<?> getType();
+
+        public <A extends Annotation> Optional<A> getFieldAnnotation(Class<A> fieldAnnotationType);
     }
 
     public static interface AccessMethods<T>
@@ -313,7 +315,22 @@ public class BeanUtils
 
         public T newProxy(Consumer<BeanPropertyAccessorRegistry> registerStream);
 
-        public MapProxyFactory<T> toMapProxyFactory();
+        /**
+         * A {@link MapToProxyMapper} wraps a given {@link Map} instances with a bean proxy. The underlying type should be an interface and not a class.
+         * 
+         * @see #toMapToBeanMapper()
+         * @return
+         */
+        public MapToProxyMapper<T> toMapToProxyMapper();
+
+        /**
+         * A {@link MapToBeanMapper} takes the content of a given {@link Map} instance and applies it to a new instance of the given underlying type. The given
+         * class
+         * type should be able to be instantiated with the default constructor.
+         * 
+         * @return
+         */
+        public MapToBeanMapper<T> toMapToBeanMapper();
 
         public <A extends Annotation> Stream<A> resolveTypeAnnotation(Class<A> annotationType);
 
@@ -323,9 +340,15 @@ public class BeanUtils
          * @return
          */
         public Class<T> getType();
+
     }
 
-    public static interface MapProxyFactory<T> extends Function<Map<String, ? extends Object>, T>
+    public static interface MapToBeanMapper<T> extends Function<Map<String, ? extends Object>, T>
+    {
+        public <F extends Annotation> MapToBeanMapper<T> withFieldNameDeterminigAnnotation(Class<F> annotation);
+    }
+
+    public static interface MapToProxyMapper<T> extends Function<Map<String, ? extends Object>, T>
     {
 
     }
@@ -370,6 +393,8 @@ public class BeanUtils
     public static interface PropertyAccessorMap extends Map<String, UnknownTypePropertyAccessor>
     {
 
+        public PropertyAccessorMap withFieldAnnotation(Class<Annotation> fieldAnnotationType);
+
     }
 
     public static interface FlattenedPropertyAccessorMap extends Map<List<String>, UnknownTypePropertyAccessor>
@@ -412,10 +437,35 @@ public class BeanUtils
 
     private static class PropertyAccessorMapImpl extends MapDecorator<String, UnknownTypePropertyAccessor> implements PropertyAccessorMap
     {
-
         public PropertyAccessorMapImpl(Map<String, UnknownTypePropertyAccessor> map)
         {
             super(map);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public PropertyAccessorMap withFieldAnnotation(Class<Annotation> fieldAnnotationType)
+        {
+            this.keySet()
+                .stream()
+                .collect(Collectors.toSet())
+                .forEach(key ->
+                {
+                    UnknownTypePropertyAccessor accessor = this.get(key);
+                    accessor.getFieldAnnotation(fieldAnnotationType)
+                            .ifPresent(annotation ->
+                            {
+                                ReflectionUtils.of((Class<Object>) annotation.getClass())
+                                               .getMethod("value")
+                                               .ifPresent(valueMethod ->
+                                               {
+                                                   String fieldName = valueMethod.access(annotation)
+                                                                                 .getValue();
+                                                   this.put(fieldName, accessor);
+                                               });
+                            });
+                });
+            return this;
         }
 
     }
@@ -488,9 +538,15 @@ public class BeanUtils
         }
 
         @Override
-        public MapProxyFactory<T> toMapProxyFactory()
+        public MapToProxyMapper<T> toMapToProxyMapper()
         {
-            return this.analyzer.toMapProxyFactory();
+            return this.analyzer.toMapToProxyMapper();
+        }
+
+        @Override
+        public MapToBeanMapper<T> toMapToBeanMapper()
+        {
+            return this.analyzer.toMapToBeanMapper();
         }
 
         @Override
@@ -585,9 +641,9 @@ public class BeanUtils
             }
 
             @Override
-            public MapProxyFactory<T> toMapProxyFactory()
+            public MapToProxyMapper<T> toMapToProxyMapper()
             {
-                return new MapProxyFactory<T>()
+                return new MapToProxyMapper<T>()
                 {
                     @Override
                     public T apply(Map<String, ? extends Object> map)
@@ -621,6 +677,48 @@ public class BeanUtils
             {
                 return this.newProxy(registry -> registry.attachIf(property -> accessors.containsKey(property.getName()), accessors.get(registry.getProperty()
                                                                                                                                                 .getName())));
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public MapToBeanMapper<T> toMapToBeanMapper()
+            {
+                return new MapToBeanMapper<T>()
+                {
+                    private Class<Annotation> fieldAnnotationType;
+
+                    @Override
+                    public T apply(Map<String, ? extends Object> map)
+                    {
+                        T instance = ReflectionUtils.newInstance(type);
+
+                        if (map != null)
+                        {
+                            PropertyAccessorMap propertyAccessorMap = access(instance).asMap()
+                                                                                      .withFieldAnnotation(this.fieldAnnotationType);
+
+                            map.keySet()
+                               .forEach(key ->
+                               {
+                                   Optional.ofNullable(propertyAccessorMap.get(key))
+                                           .ifPresent(accessor ->
+                                           {
+                                               accessor.as((Class<Object>) accessor.getType())
+                                                       .set(map.get(key));
+                                           });
+                               });
+                        }
+
+                        return instance;
+                    }
+
+                    @Override
+                    public <F extends Annotation> MapToBeanMapper<T> withFieldNameDeterminigAnnotation(Class<F> fieldAnnotation)
+                    {
+                        this.fieldAnnotationType = (Class<Annotation>) fieldAnnotation;
+                        return this;
+                    }
+                };
             }
 
             @Override
@@ -764,8 +862,15 @@ public class BeanUtils
                             @Override
                             public void set(E element)
                             {
-                                writeMethod.access(instance.get())
-                                           .setValue(element);
+                                if (writeMethod != null)
+                                {
+                                    writeMethod.access(instance.get())
+                                               .setValue(element);
+                                }
+                                else if (field != null)
+                                {
+                                    field.setValueTo(instance.get(), element);
+                                }
                             }
 
                             @Override
@@ -788,6 +893,13 @@ public class BeanUtils
                                 return (Class<E>) ObjectUtils.defaultIfNull(readMethod != null ? readMethod.getReturnType() : null,
                                                                             ListUtils.first(writeMethod != null ? writeMethod.getParameterTypes() : null));
 
+                            }
+
+                            @Override
+                            public <A extends Annotation> Optional<A> getFieldAnnotation(Class<A> fieldAnnotationType)
+                            {
+                                return field.getAnnotations(fieldAnnotationType)
+                                            .findFirst();
                             }
                         };
                     }

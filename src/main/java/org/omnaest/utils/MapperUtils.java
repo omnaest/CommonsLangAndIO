@@ -138,7 +138,7 @@ public class MapperUtils
     }
 
     /**
-     * Returns a {@link Function} which adds a count to the given element
+     * Returns a {@link Function} which adds a count to the given element. Count start with 0, 1, 2, ...
      * 
      * @return
      */

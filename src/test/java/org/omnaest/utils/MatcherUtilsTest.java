@@ -35,7 +35,9 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -154,6 +156,28 @@ public class MatcherUtilsTest
         assertEquals("bbbbc", MatcherUtils.replacer()
                                           .addRegExMatchReplacement("[ad]", "b")
                                           .findAndReplaceAllIn("abdac"));
+    }
+
+    @Test
+    public void testMatcherBuilder() throws Exception
+    {
+        assertEquals(Arrays.asList("abc", "def")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     MatcherUtils.matcherBuilder()
+                                 .ofAnyExact("abc", "def")
+                                 .build()
+                                 .findInAnd("abcxxxxzzzzdeftttt")
+                                 .getMatchedTokens());
+        assertEquals(Arrays.asList("abcs", "def", "ghies")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     MatcherUtils.matcherBuilder()
+                                 .ofAnyExact("abc", "def", "ghi")
+                                 .withExactOptionalSuffixes("s", "es")
+                                 .build()
+                                 .findInAnd("abcsxxghiesxxzzzzdeftttt")
+                                 .getMatchedTokens());
     }
 
 }

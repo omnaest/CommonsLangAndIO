@@ -1560,4 +1560,15 @@ public class StreamUtils
 
     }
 
+    public static <E1, E2> Stream<BiElement<E1, E2>> cartesianProductOf(Stream<E1> streamLeft, Stream<E2> streamRight)
+    {
+        List<E2> rightElements = Optional.ofNullable(streamRight)
+                                         .orElse(Stream.empty())
+                                         .collect(Collectors.toList());
+        return Optional.ofNullable(streamLeft)
+                       .orElse(Stream.empty())
+                       .flatMap(left -> rightElements.stream()
+                                                     .map(right -> BiElement.of(left, right)));
+    }
+
 }

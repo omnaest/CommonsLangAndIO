@@ -35,6 +35,9 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Map;
 
 import org.junit.Test;
@@ -42,56 +45,6 @@ import org.omnaest.utils.BeanUtils.Property;
 
 public class BeanUtilsTest
 {
-
-    protected static interface Bean
-    {
-        String getField();
-
-        void setField(String field);
-    }
-
-    protected static interface ParentBean extends Bean
-    {
-        Bean getParent();
-    }
-
-    protected static class BeanImpl implements ParentBean
-    {
-        private Bean   parent = null;
-        private String field;
-
-        public BeanImpl(String field)
-        {
-            super();
-            this.field = field;
-        }
-
-        public BeanImpl(Bean parent, String field)
-        {
-            super();
-            this.parent = parent;
-            this.field = field;
-        }
-
-        @Override
-        public String getField()
-        {
-            return this.field;
-        }
-
-        @Override
-        public void setField(String field)
-        {
-            this.field = field;
-        }
-
-        @Override
-        public Bean getParent()
-        {
-            return this.parent;
-        }
-
-    }
 
     @Test
     public void testAnalyze() throws Exception
@@ -154,7 +107,7 @@ public class BeanUtilsTest
     public void testProxyOfMap()
     {
         Bean bean = BeanUtils.analyze(Bean.class)
-                             .toMapProxyFactory()
+                             .toMapToProxyMapper()
                              .apply(MapUtils.builder()
                                             .put("field", "value")
                                             .build());
@@ -163,6 +116,101 @@ public class BeanUtilsTest
 
         bean.setField("value1");
         assertEquals("value1", bean.getField());
+    }
+
+    @Test
+    public void testInstanceFromMap() throws Exception
+    {
+        Bean bean = BeanUtils.analyze(BeanImpl.class)
+                             .toMapToBeanMapper()
+                             .apply(MapUtils.builder()
+                                            .put("field", "value")
+                                            .build());
+
+        assertEquals("value", bean.getField());
+
+        bean.setField("value1");
+        assertEquals("value1", bean.getField());
+    }
+
+    @Test
+    public void testWithFieldAnnotation() throws Exception
+    {
+        Bean bean = BeanUtils.analyze(BeanImpl.class)
+                             .toMapToBeanMapper()
+                             .withFieldNameDeterminigAnnotation(FieldDefinition.class)
+                             .apply(MapUtils.builder()
+                                            .put("alternativeField", "value")
+                                            .build());
+
+        assertEquals("value", bean.getField());
+
+        bean.setField("value1");
+        assertEquals("value1", bean.getField());
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    public static @interface FieldDefinition
+    {
+        public String value() default "";
+    }
+
+    protected static interface Bean
+    {
+        String getField();
+
+        void setField(String field);
+    }
+
+    protected static interface ParentBean extends Bean
+    {
+        Bean getParent();
+    }
+
+    protected static class BeanImpl implements ParentBean
+    {
+        private Bean parent = null;
+
+        @FieldDefinition("alternativeField")
+        private String field;
+
+        public BeanImpl(String field)
+        {
+            super();
+            this.field = field;
+        }
+
+        public BeanImpl(Bean parent, String field)
+        {
+            super();
+            this.parent = parent;
+            this.field = field;
+        }
+
+        protected BeanImpl()
+        {
+            super();
+        }
+
+        @Override
+        public String getField()
+        {
+            return this.field;
+        }
+
+        @Override
+        public void setField(String field)
+        {
+            this.field = field;
+        }
+
+        @Override
+        public Bean getParent()
+        {
+            return this.parent;
+        }
+
     }
 
 }

@@ -285,10 +285,14 @@ public class ComparatorUtils
         public <T> ExecutableComparatorBuilder<T> of(T o1, T o2);
 
         public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper);
+
+        public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper, Class<S> primaryType);
     }
 
     public static interface MapperComparatorBuilder<S, T>
     {
+        public <U> MapperComparatorBuilder<S, U> and(Function<T, U> mapper);
+
         public Comparator<S> natural();
 
         public Comparator<S> with(Comparator<T> comparator);
@@ -456,7 +460,19 @@ public class ComparatorUtils
                     {
                         return (v1, v2) -> comparator.compare(mapper.apply(v1), mapper.apply(v2));
                     }
+
+                    @Override
+                    public <U> MapperComparatorBuilder<S, U> and(Function<T, U> secondMapper)
+                    {
+                        return of(mapper.andThen(secondMapper));
+                    }
                 };
+            }
+
+            @Override
+            public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper, Class<S> primaryType)
+            {
+                return this.of(mapper);
             }
         };
     }

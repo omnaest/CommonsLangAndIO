@@ -44,6 +44,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class ReflectionUtils
 {
@@ -60,8 +61,10 @@ public class ReflectionUtils
         public Stream<Annotation> getAnnotations()
         {
             return Optional.ofNullable(this.field)
-                           .map(f -> Arrays.asList(f.getDeclaredAnnotations())
-                                           .stream())
+                           .map(java.lang.reflect.Field::getDeclaredAnnotations)
+                           .map(Arrays::asList)
+                           .map(List::stream)
+                           .filter(PredicateUtils.notNull())
                            .orElse(Stream.empty());
         }
 
@@ -70,7 +73,7 @@ public class ReflectionUtils
         public <A extends Annotation> Stream<A> getAnnotations(Class<A> annotationType)
         {
             return this.getAnnotations()
-                       .filter(annotation -> annotationType.isAssignableFrom(annotation.getClass()))
+                       .filter(annotation -> annotationType != null && annotationType.isAssignableFrom(annotation.getClass()))
                        .map(a -> (A) a);
         }
 
@@ -115,6 +118,21 @@ public class ReflectionUtils
             {
                 throw new IllegalArgumentException(e);
             }
+        }
+
+        @Override
+        public Field<T> setValueTo(T instance, Object value)
+        {
+            try
+            {
+                this.field.setAccessible(true);
+                this.field.set(instance, value);
+            }
+            catch (Exception e)
+            {
+                throw new IllegalStateException(e);
+            }
+            return this;
         }
     }
 
@@ -315,6 +333,8 @@ public class ReflectionUtils
 
         public <R> R getValueFrom(T instance);
 
+        public Field<T> setValueTo(T instance, Object value);
+
     }
 
     public static interface TypeReflection<T>
@@ -330,6 +350,8 @@ public class ReflectionUtils
         public Optional<Field<T>> getField(String fieldName);
 
         public Stream<Field<T>> getFields();
+
+        public Optional<Method<T>> getMethod(String methodName);
     }
 
     public static <T> TypeReflection<T> of(Class<T> type)
@@ -424,6 +446,14 @@ public class ReflectionUtils
                                   .orElse(null);
             }
 
+            @Override
+            public Optional<Method<T>> getMethod(String methodName)
+            {
+                return this.getMethods()
+                           .filter(method -> StringUtils.equals(method.getName(), methodName))
+                           .findFirst();
+            }
+
         };
     }
 
@@ -485,7 +515,7 @@ public class ReflectionUtils
     @SuppressWarnings("unchecked")
     private static <T> Optional<T> tryToInstantiateByConstructor(Class<T> type, Class<?>[] providedParameterTypes, Object... parameters)
     {
-        return Arrays.asList(type.getConstructors())
+        return Arrays.asList(type.getDeclaredConstructors())
                      .stream()
                      .filter(c -> determineMatchingParameterTypes(providedParameterTypes, c.getParameterTypes()))
                      .findFirst()

@@ -55,10 +55,22 @@ import org.omnaest.utils.iterator.QueueIterator;
  */
 public class IteratorUtils
 {
-    public static <E> Iterator<E> roundRobinIterator(Collection<E> collection)
+
+    public static interface RoundRobinIterator<E> extends Iterator<E>
+    {
+        /**
+         * Forwards the {@link RoundRobinIterator} for the given number of elements
+         * 
+         * @param numberOfElements
+         * @return
+         */
+        public RoundRobinIterator<E> forward(int numberOfElements);
+    }
+
+    public static <E> RoundRobinIterator<E> roundRobinIterator(Collection<E> collection)
     {
         Supplier<Iterator<E>> supplier = () -> collection.iterator();
-        return new Iterator<E>()
+        return new RoundRobinIterator<E>()
         {
             private AtomicReference<Iterator<E>> currentIterator = new AtomicReference<>();
 
@@ -98,6 +110,16 @@ public class IteratorUtils
             private void resetIterator()
             {
                 this.currentIterator.set(supplier.get());
+            }
+
+            @Override
+            public RoundRobinIterator<E> forward(int numberOfElements)
+            {
+                for (int ii = 0; ii < numberOfElements && this.hasNext(); ii++)
+                {
+                    this.next();
+                }
+                return this;
             }
         };
     }

@@ -528,4 +528,18 @@ public class StreamUtilsTest
         assertEquals(Arrays.asList("a", "c"), filteredElements);
         assertEquals(Arrays.asList("b", "B"), consumedElements);
     }
+
+    @Test
+    public void testCartesianProductOf() throws Exception
+    {
+        List<BiElement<String, String>> product = StreamUtils.cartesianProductOf(Arrays.asList("a", "b")
+                                                                                       .stream(),
+                                                                                 Arrays.asList("1", "2")
+                                                                                       .stream())
+                                                             .collect(Collectors.toList());
+        assertEquals(4, product.size());
+        assertEquals("a1,a2,b1,b2", product.stream()
+                                           .map(bi -> bi.getFirst() + bi.getSecond())
+                                           .collect(Collectors.joining(",")));
+    }
 }

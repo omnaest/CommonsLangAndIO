@@ -823,4 +823,18 @@ public class ListUtils
                                         .orElse(0));
     }
 
+    /**
+     * Returns all neighbor pair combinations of all sizes
+     * 
+     * @param elements
+     * @return
+     */
+    public static <E> Stream<List<E>> shingle(List<E> elements)
+    {
+        return IntStream.range(1, elements.size() + 1)
+                        .boxed()
+                        .flatMap(limit -> IntStream.range(0, elements.size() - limit + 1)
+                                                   .mapToObj(start -> elements.subList(start, start + limit)));
+    }
+
 }

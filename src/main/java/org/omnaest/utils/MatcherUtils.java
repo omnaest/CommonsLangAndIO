@@ -33,6 +33,7 @@
 */
 package org.omnaest.utils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +43,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -54,7 +56,7 @@ import org.omnaest.utils.element.cached.CachedElement;
 import org.omnaest.utils.functional.Provider;
 
 /**
- * Helper for {@link MatchFinderBuilder} operations
+ * Helper for {@link MatchFinderFactory} operations
  * 
  * @author omnaest
  */
@@ -64,7 +66,7 @@ public class MatcherUtils
      * @see #of(Pattern)
      * @author omnaest
      */
-    public static interface MatchFinderBuilder
+    public static interface MatchFinderFactory
     {
         /**
          * Matches using a given {@link Pattern}
@@ -132,6 +134,7 @@ public class MatcherUtils
         public MatchResult findInAnd(String input);
 
         public Optional<Match> matchAgainst(String input);
+
     }
 
     public static interface MatchResult extends Iterable<Match>
@@ -144,7 +147,14 @@ public class MatcherUtils
 
         public boolean hasMatches();
 
-        MatchResult withNoCaching();
+        public MatchResult withNoCaching();
+
+        /**
+         * Returns the {@link Match#getMatchRegion()} tokens of all {@link Match}es as {@link Set}
+         * 
+         * @return
+         */
+        public Set<String> getMatchedTokens();
     }
 
     /**
@@ -262,9 +272,209 @@ public class MatcherUtils
     {
     }
 
-    public static MatchFinderBuilder matcher()
+    /**
+     * Builder of a {@link MatchFinder}
+     * 
+     * @see #build()
+     * @author omnaest
+     */
+    public static interface MatchFinderBuilder
+    {
+
+        /**
+         * Matches a given regEx like {@link #of(Pattern)}
+         * 
+         * @see #of(Pattern)
+         * @param regEx
+         * @return
+         */
+        public MatchFinderBuilder ofRegEx(String regEx);
+
+        /**
+         * Matches the exact {@link String}
+         * 
+         * @param str
+         * @return
+         */
+        public MatchFinderBuilder ofExact(String str);
+
+        /**
+         * Matches any of the given {@link String}s
+         * 
+         * @param exactMatchTokens
+         * @return
+         */
+        public MatchFinderBuilder ofAnyExact(Collection<String> exactMatchTokens);
+
+        /**
+         * Similar to {@link #ofAnyExact(Collection)}
+         * 
+         * @param exactMatchTokens
+         * @return
+         */
+        public MatchFinderBuilder ofAnyExact(String... exactMatchTokens);
+
+        /**
+         * Adds a regular expression suffix match token to all the
+         * 
+         * @param regExSuffix
+         * @return
+         */
+        public MatchFinderBuilder withRegExSuffix(String regExSuffix);
+
+        /**
+         * Similar to {@link #withRegExSuffix(String)} but for exact words and no as regular expression treated suffix tokens
+         * 
+         * @param exactSuffix
+         * @return
+         */
+        public MatchFinderBuilder withExactSuffix(String exactSuffix);
+
+        /**
+         * Similar to {@link #withExactSuffix(String)} but the whole token is marked as optional
+         * 
+         * @param exactSuffix
+         * @return
+         */
+        public MatchFinderBuilder withExactOptionalSuffix(String exactSuffix);
+
+        /**
+         * Similar to {@link #withExactOptionalSuffix(String)} for multiple suffix tokens which are applied in an OR conjunction.
+         * 
+         * @param exactSuffix
+         * @return
+         */
+        public MatchFinderBuilder withExactOptionalSuffixes(String... exactSuffix);
+
+        /**
+         * Creates a {@link MatchFinder} instance
+         * 
+         * @return
+         */
+        public MatchFinder build();
+
+        MatchFinderBuilder withRegExOptionalSuffix(String regExSuffix);
+    }
+
+    /**
+     * Creates a {@link MatchFinderBuilder} which allows to combine exact and regular expression matches in a OR conjunction
+     * 
+     * @se {@link #matcher()}
+     * @return
+     */
+    public static MatchFinderBuilder matcherBuilder()
     {
         return new MatchFinderBuilder()
+        {
+            private List<String> regExParts            = new ArrayList<>();
+            private List<String> regExSuffixes         = new ArrayList<>();
+            private List<String> regExOptionalSuffixes = new ArrayList<>();
+
+            @Override
+            public MatchFinderBuilder ofRegEx(String regEx)
+            {
+                this.regExParts.add(regEx);
+                return this;
+            }
+
+            @Override
+            public MatchFinderBuilder ofExact(String str)
+            {
+                return this.ofAnyExact(Arrays.asList(str));
+            }
+
+            @Override
+            public MatchFinderBuilder ofAnyExact(Collection<String> exactMatchTokens)
+            {
+                this.regExParts.addAll(Optional.ofNullable(exactMatchTokens)
+                                               .orElse(Collections.emptyList())
+                                               .stream()
+                                               .map(token -> Pattern.quote(token))
+                                               .collect(Collectors.toList()));
+                return this;
+            }
+
+            @Override
+            public MatchFinderBuilder ofAnyExact(String... exactMatchTokens)
+            {
+                return this.ofAnyExact(Arrays.asList(exactMatchTokens));
+            }
+
+            @Override
+            public MatchFinderBuilder withRegExSuffix(String regExSuffix)
+            {
+                Optional.ofNullable(regExSuffix)
+                        .ifPresent(this.regExSuffixes::add);
+                return this;
+            }
+
+            @Override
+            public MatchFinderBuilder withRegExOptionalSuffix(String regExSuffix)
+            {
+                Optional.ofNullable(regExSuffix)
+                        .ifPresent(this.regExOptionalSuffixes::add);
+                return this;
+            }
+
+            @Override
+            public MatchFinderBuilder withExactSuffix(String exactSuffix)
+            {
+                return this.withRegExSuffix(Pattern.quote(exactSuffix));
+            }
+
+            @Override
+            public MatchFinderBuilder withExactOptionalSuffix(String exactSuffix)
+            {
+                return this.withRegExOptionalSuffix(this.encloseInNonCapturingGroup(Pattern.quote(exactSuffix)));
+            }
+
+            @Override
+            public MatchFinderBuilder withExactOptionalSuffixes(String... exactSuffixes)
+            {
+                Optional.ofNullable(exactSuffixes)
+                        .map(Arrays::asList)
+                        .orElse(Collections.emptyList())
+                        .forEach(this::withExactOptionalSuffix);
+                return this;
+            }
+
+            @Override
+            public MatchFinder build()
+            {
+                String suffixRegEx = this.regExSuffixes.isEmpty() ? ""
+                        : this.encloseInNonCapturingGroup(this.regExSuffixes.stream()
+                                                                            .map(this::encloseInNonCapturingGroup)
+                                                                            .collect(Collectors.joining("|")));
+                String optionalSuffixRegEx = this.regExOptionalSuffixes.isEmpty() ? ""
+                        : this.encloseInNonCapturingGroup(this.regExOptionalSuffixes.stream()
+                                                                                    .map(this::encloseInNonCapturingGroup)
+                                                                                    .collect(Collectors.joining("|")))
+                                + "?";
+                String regEx = this.regExParts.stream()
+                                              .map(part -> part + suffixRegEx + optionalSuffixRegEx)
+                                              .map(this::encloseInNonCapturingGroup)
+                                              .collect(Collectors.joining("|"));
+                return matcher().ofRegEx(regEx);
+            }
+
+            private String encloseInNonCapturingGroup(String token)
+            {
+                return "(?:" + token + ")";
+            }
+
+        };
+    }
+
+    /**
+     * Creates a {@link MatchFinderFactory} which allows to create a {@link MatchFinder} instance. For combination of multiple tokens please consider using
+     * {@link #matcherBuilder()} instead.
+     * 
+     * @see #matcherBuilder()
+     * @return
+     */
+    public static MatchFinderFactory matcher()
+    {
+        return new MatchFinderFactory()
         {
 
             @Override
@@ -345,6 +555,14 @@ public class MatcherUtils
                             public Stream<Match> stream()
                             {
                                 return this.matches.get();
+                            }
+
+                            @Override
+                            public Set<String> getMatchedTokens()
+                            {
+                                return this.stream()
+                                           .map(match -> match.getMatchRegion())
+                                           .collect(Collectors.toSet());
                             }
 
                             private Supplier<Stream<Match>> createMatchesSupplier()

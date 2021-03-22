@@ -42,7 +42,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
@@ -848,6 +850,18 @@ public class FileUtils
         }
     }
 
+    public static InputStream toInputStream(File file)
+    {
+        try
+        {
+            return new BufferedInputStream(new FileInputStream(file));
+        }
+        catch (FileNotFoundException e)
+        {
+            return null;
+        }
+    }
+
     public static interface FileReaderSupplier extends Supplier<Reader>
     {
         public <E> Supplier<E> toSupplier(Function<Reader, E> acceptor);
@@ -886,6 +900,40 @@ public class FileUtils
     {
         ensureParentFolderExists(file);
         return new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), charset);
+    }
+
+    public static interface FileInputSupplier extends Supplier<InputStream>
+    {
+        public <E> Supplier<E> toSupplier(Function<InputStream, E> acceptor);
+    }
+
+    public static FileInputSupplier toInputSupplier(File file)
+    {
+        return new FileInputSupplier()
+        {
+            private Supplier<InputStream> supplier = () ->
+            {
+                return toInputStream(file);
+            };
+
+            @Override
+            public InputStream get()
+            {
+                return this.supplier.get();
+            }
+
+            @Override
+            public <E> Supplier<E> toSupplier(Function<InputStream, E> acceptor)
+            {
+                return () -> acceptor.apply(this.get());
+            }
+        };
+    }
+
+    public static OutputStream toOutputStream(File file) throws FileNotFoundException
+    {
+        ensureParentFolderExists(file);
+        return new BufferedOutputStream(new FileOutputStream(file));
     }
 
     private static void ensureParentFolderExists(File file)
@@ -940,6 +988,52 @@ public class FileUtils
                     try (Writer writer = this.get())
                     {
                         acceptor.accept(t, writer);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new IllegalStateException(e);
+                    }
+                };
+            }
+        };
+
+    }
+
+    public static interface FileOutputSupplier extends Supplier<OutputStream>
+    {
+        public <E> Consumer<E> toConsumerWith(BiConsumer<E, OutputStream> acceptor);
+    }
+
+    public static FileOutputSupplier toOutputSupplier(File file)
+    {
+        return new FileOutputSupplier()
+        {
+            private Supplier<OutputStream> supplier = () ->
+            {
+                try
+                {
+                    return toOutputStream(file);
+                }
+                catch (FileNotFoundException e)
+                {
+                    throw new IllegalStateException(e);
+                }
+            };
+
+            @Override
+            public OutputStream get()
+            {
+                return this.supplier.get();
+            }
+
+            @Override
+            public <E> Consumer<E> toConsumerWith(BiConsumer<E, OutputStream> acceptor)
+            {
+                return t ->
+                {
+                    try (OutputStream outputStream = this.get())
+                    {
+                        acceptor.accept(t, outputStream);
                     }
                     catch (IOException e)
                     {
