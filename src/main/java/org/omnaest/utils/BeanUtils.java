@@ -455,7 +455,7 @@ public class BeanUtils
                     accessor.getFieldAnnotation(fieldAnnotationType)
                             .ifPresent(annotation ->
                             {
-                                ReflectionUtils.of((Class<Object>) annotation.getClass())
+                                ReflectionUtils.of((Class<Annotation>) annotation.getClass())
                                                .getMethod("value")
                                                .ifPresent(valueMethod ->
                                                {
