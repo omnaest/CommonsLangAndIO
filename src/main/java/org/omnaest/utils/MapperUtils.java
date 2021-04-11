@@ -16,6 +16,7 @@
 package org.omnaest.utils;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -146,6 +147,32 @@ public class MapperUtils
     {
         AtomicInteger counter = new AtomicInteger();
         return element -> BiElement.of(element, counter.getAndIncrement());
+    }
+
+    /**
+     * Maps an element to boolean true if the element is not null, otherwise to false
+     * 
+     * @return
+     */
+    public static <E> Function<E, Boolean> isNotNull()
+    {
+        return element -> element != null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E, E2 extends E> Function<E, E2> castToType(Class<E2> type)
+    {
+        return element -> (E2) element;
+    }
+
+    /**
+     * Maps an {@link Optional} to its value by calling {@link Optional#orElse(Object)} and returning null as default.
+     * 
+     * @return
+     */
+    public static <E> Function<Optional<E>, E> mapOptionalToValue()
+    {
+        return element -> element.orElse(null);
     }
 
 }

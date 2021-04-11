@@ -85,13 +85,29 @@ public class FileUtils
 
     private static abstract class AbstractFileContentConsumer<E, FCC extends FileContentConsumer<E, FCC>> implements FileContentConsumer<E, FCC>
     {
-        protected File    file;
-        protected Charset charset = StandardCharsets.UTF_8;
+        protected File file;
 
         public AbstractFileContentConsumer(File file)
         {
             super();
             this.file = file;
+        }
+
+        @Override
+        public <T> Consumer<T> with(Function<T, E> serializer)
+        {
+            return serializationObject -> this.accept(serializer.apply(serializationObject));
+        }
+    }
+
+    private static abstract class AbstractCharacterSetFileContentConsumer<E, FCC extends FileCharacterSetContentConsumer<E, FCC>>
+            extends AbstractFileContentConsumer<E, FCC> implements FileCharacterSetContentConsumer<E, FCC>
+    {
+        protected Charset charset = StandardCharsets.UTF_8;
+
+        public AbstractCharacterSetFileContentConsumer(File file)
+        {
+            super(file);
         }
 
         @SuppressWarnings("unchecked")
@@ -108,14 +124,9 @@ public class FileUtils
             return this.using(StandardCharsets.UTF_8);
         }
 
-        @Override
-        public <T> Consumer<T> with(Function<T, E> serializer)
-        {
-            return serializationObject -> this.accept(serializer.apply(serializationObject));
-        }
     }
 
-    private static class FileStringContentConsumerImpl extends AbstractFileContentConsumer<String, FileStringContentConsumer>
+    private static class FileStringContentConsumerImpl extends AbstractCharacterSetFileContentConsumer<String, FileStringContentConsumer>
             implements FileStringContentConsumer
     {
         private FileStringContentConsumerImpl(File file)
@@ -146,7 +157,38 @@ public class FileUtils
 
     }
 
-    private static class FileStreamContentConsumerImpl extends AbstractFileContentConsumer<Stream<String>, FileStreamContentConsumer>
+    private static class FileByteArrayContentConsumerImpl extends AbstractFileContentConsumer<byte[], FileByteArrayContentConsumer>
+            implements FileByteArrayContentConsumer
+    {
+        private FileByteArrayContentConsumerImpl(File file)
+        {
+            super(file);
+        }
+
+        @Override
+        public void accept(byte[] data)
+        {
+            try
+            {
+                if (data != null)
+                {
+                    org.apache.commons.io.FileUtils.writeByteArrayToFile(this.file, data);
+                }
+                else
+                {
+                    org.apache.commons.io.FileUtils.deleteQuietly(this.file);
+                }
+            }
+            catch (IOException e)
+            {
+                throw new FileAccessException(e);
+            }
+
+        }
+
+    }
+
+    private static class FileStreamContentConsumerImpl extends AbstractCharacterSetFileContentConsumer<Stream<String>, FileStreamContentConsumer>
             implements FileStreamContentConsumer
     {
         private FileStreamContentConsumerImpl(File file)
@@ -182,7 +224,17 @@ public class FileUtils
      * 
      * @author omnaest
      */
-    public static interface FileStringContentConsumer extends FileContentConsumer<String, FileStringContentConsumer>
+    public static interface FileByteArrayContentConsumer extends FileContentConsumer<byte[], FileByteArrayContentConsumer>
+    {
+
+    }
+
+    /**
+     * {@link Consumer} of {@link String} which will be written into the underlying {@link File}
+     * 
+     * @author omnaest
+     */
+    public static interface FileStringContentConsumer extends FileCharacterSetContentConsumer<String, FileStringContentConsumer>
     {
 
     }
@@ -192,7 +244,7 @@ public class FileUtils
      * 
      * @author omnaest
      */
-    public static interface FileStreamContentConsumer extends FileContentConsumer<Stream<String>, FileStreamContentConsumer>
+    public static interface FileStreamContentConsumer extends FileCharacterSetContentConsumer<Stream<String>, FileStreamContentConsumer>
     {
 
     }
@@ -205,9 +257,6 @@ public class FileUtils
      */
     public static interface FileContentConsumer<E, FCC extends FileContentConsumer<E, FCC>> extends Consumer<E>
     {
-        public FCC using(Charset charset);
-
-        public FCC usingUTF8();
 
         /**
          * Writes the given {@link String} to the underlying {@link File}.<br>
@@ -228,6 +277,20 @@ public class FileUtils
          * @return
          */
         public <T> Consumer<T> with(Function<T, E> serializer);
+    }
+
+    /**
+     * {@link FileContentConsumer} which writes into an underlying {@link File} using {@link Charset} encoding
+     * 
+     * @author omnaest
+     * @param <E>
+     */
+    public static interface FileCharacterSetContentConsumer<E, FCC extends FileCharacterSetContentConsumer<E, FCC>> extends FileContentConsumer<E, FCC>
+    {
+        public FCC using(Charset charset);
+
+        public FCC usingUTF8();
+
     }
 
     /**
@@ -292,6 +355,17 @@ public class FileUtils
     public static FileStringContentConsumer toConsumer(File file)
     {
         return new FileStringContentConsumerImpl(file);
+    }
+
+    /**
+     * Returns a {@link FileByteArrayContentConsumer} for the given {@link File}
+     * 
+     * @param file
+     * @return
+     */
+    public static FileByteArrayContentConsumer toByteArrayConsumer(File file)
+    {
+        return new FileByteArrayContentConsumerImpl(file);
     }
 
     /**

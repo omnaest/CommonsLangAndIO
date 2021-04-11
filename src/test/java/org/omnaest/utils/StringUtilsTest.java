@@ -34,6 +34,8 @@
 package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -254,6 +256,13 @@ public class StringUtilsTest
         assertEquals(true, filter.test("c"));
         assertEquals(false, filter.test("b"));
         assertEquals(false, filter.test("a"));
+    }
+
+    @Test
+    public void testContainsAnyIgnoreCase() throws Exception
+    {
+        assertTrue(StringUtils.containsAnyIgnoreCase("aBcDeF", "def", "xyz"));
+        assertFalse(StringUtils.containsAnyIgnoreCase("aBcGhi", "def", "xyz"));
     }
 
 }

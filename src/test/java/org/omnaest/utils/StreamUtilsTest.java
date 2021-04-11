@@ -542,4 +542,19 @@ public class StreamUtilsTest
                                            .map(bi -> bi.getFirst() + bi.getSecond())
                                            .collect(Collectors.joining(",")));
     }
+
+    @Test
+    public void testEnsureNumberOfElements() throws Exception
+    {
+        assertEquals(Arrays.asList("0"), StreamUtils.ensureNumberOfElements(Stream.empty(), 1, index -> "" + index)
+                                                    .collect(Collectors.toList()));
+        assertEquals(Arrays.asList("0", "1"), StreamUtils.ensureNumberOfElements(Stream.empty(), 2, index -> "" + index)
+                                                         .collect(Collectors.toList()));
+        assertEquals(Arrays.asList("A"), StreamUtils.ensureNumberOfElements(Stream.of("A"), 1, index -> "" + index)
+                                                    .collect(Collectors.toList()));
+        assertEquals(Arrays.asList("A", "0"), StreamUtils.ensureNumberOfElements(Stream.of("A"), 2, index -> "" + index)
+                                                         .collect(Collectors.toList()));
+        assertEquals(Collections.emptyList(), StreamUtils.ensureNumberOfElements(Stream.empty(), 0, index -> "" + index)
+                                                         .collect(Collectors.toList()));
+    }
 }

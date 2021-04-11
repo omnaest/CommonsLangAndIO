@@ -17,8 +17,11 @@ package org.omnaest.utils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -144,6 +147,71 @@ public class PredicateUtils
     public static <E> Predicate<? super List<E>> listNotEmpty()
     {
         return list -> list != null && !list.isEmpty();
+    }
+
+    public static <E> Predicate<? super E> isContainedIn(Set<E> elements)
+    {
+        return element -> elements.contains(element);
+    }
+
+    public static <E, R> PredicateMapping<E, R> map(Function<E, R> mapper)
+    {
+        return new PredicateMapping<E, R>()
+        {
+            @Override
+            public Predicate<E> and(Predicate<? super R> predicate)
+            {
+                return element -> predicate.test(mapper.apply(element));
+            }
+
+            @Override
+            public Predicate<E> andNotNull()
+            {
+                return this.and(notNull());
+            }
+
+            @Override
+            public Predicate<E> andIsContainedIn(Set<R> elements)
+            {
+                return this.and(isContainedIn(elements));
+            }
+        };
+    }
+
+    public static interface PredicateMapping<E, R>
+    {
+        public Predicate<E> and(Predicate<? super R> predicate);
+
+        public Predicate<E> andNotNull();
+
+        public Predicate<E> andIsContainedIn(Set<R> elements);
+    }
+
+    /**
+     * Returns true until the given {@link Predicate} filter returns true once.
+     * 
+     * @param filter
+     * @return
+     */
+    public static <E> Predicate<E> until(Predicate<E> filter)
+    {
+        AtomicBoolean onceMatched = new AtomicBoolean(false);
+        return element ->
+        {
+            boolean test = filter.test(element);
+            onceMatched.compareAndSet(false, test);
+            return !onceMatched.get() && !test;
+        };
+    }
+
+    /**
+     * Filters on non empty {@link Optional} instances and tests negative for {@link Optional#empty()}
+     * 
+     * @return
+     */
+    public static <E> Predicate<Optional<E>> filterNonEmptyOptional()
+    {
+        return element -> element != null && element.isPresent();
     }
 
 }

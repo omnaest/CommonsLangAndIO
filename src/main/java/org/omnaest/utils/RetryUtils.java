@@ -261,6 +261,13 @@ public class RetryUtils
      */
     public static <E> E retry(int times, int durationInBetween, TimeUnit timeUnit, RetryGetOperation<E> operation) throws Exception
     {
+        Predicate<E> validResultFilter = element -> true;
+        return retry(times, durationInBetween, timeUnit, operation, validResultFilter);
+    }
+
+    public static <E> E retry(int times, int durationInBetween, TimeUnit timeUnit, RetryGetOperation<E> operation, Predicate<E> validResultFilter)
+            throws Exception
+    {
         E retval = null;
 
         for (int ii = 0; ii < times; ii++)
@@ -269,6 +276,14 @@ public class RetryUtils
             {
                 //
                 retval = operation.run();
+
+                if (validResultFilter != null)
+                {
+                    if (!validResultFilter.test(retval))
+                    {
+                        throw new IllegalStateException("Result was invalid");
+                    }
+                }
 
                 //
                 break;
@@ -288,4 +303,18 @@ public class RetryUtils
 
         return retval;
     }
+
+    public static boolean retryOnFalse(int times, int durationInBetween, TimeUnit timeUnit, RetryGetOperation<Boolean> operation)
+    {
+        try
+        {
+            Predicate<Boolean> validResultFilter = result -> result;
+            return retry(times, durationInBetween, timeUnit, operation, validResultFilter);
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+
 }

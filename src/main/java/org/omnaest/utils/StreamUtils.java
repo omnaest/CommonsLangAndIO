@@ -59,6 +59,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 import java.util.function.IntSupplier;
 import java.util.function.Predicate;
@@ -1569,6 +1570,24 @@ public class StreamUtils
                        .orElse(Stream.empty())
                        .flatMap(left -> rightElements.stream()
                                                      .map(right -> BiElement.of(left, right)));
+    }
+
+    /**
+     * Ensures that the returned {@link Stream} contains all the elements of the given {@link Stream} but at least the given number of elements. If the original
+     * {@link Stream} does not provide enough element the given {@link IntFunction} is used as element factory.
+     * 
+     * @param stream
+     * @param numberOfElements
+     * @param elementFactory
+     * @return
+     */
+    public static <E> Stream<E> ensureNumberOfElements(Stream<E> stream, int numberOfElements, IntFunction<E> elementFactory)
+    {
+        AtomicInteger counter = new AtomicInteger();
+        Stream<E> secondStream = Stream.of(1)
+                                       .flatMap(dummy -> IntStream.range(0, Math.max(0, numberOfElements - counter.get()))
+                                                                  .mapToObj(elementFactory));
+        return Stream.concat(stream.peek(element -> counter.incrementAndGet()), secondStream);
     }
 
 }

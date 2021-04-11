@@ -39,6 +39,7 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedHashMap;
@@ -243,6 +244,23 @@ public class StringUtils
             {
                 return this.build();
             }
+
+            @Override
+            public StringTextBuilder addLines(List<String> lines)
+            {
+                Optional.ofNullable(lines)
+                        .orElse(Collections.emptyList())
+                        .forEach(this::addLine);
+                return this;
+            }
+
+            @Override
+            public StringTextBuilder addLines(String... lines)
+            {
+                return this.addLines(Optional.ofNullable(lines)
+                                             .map(Arrays::asList)
+                                             .orElse(Collections.emptyList()));
+            }
         };
     }
 
@@ -267,6 +285,22 @@ public class StringUtils
          * @return
          */
         public StringTextBuilder addLine(String line);
+
+        /**
+         * Similar to {@link #addLine(String)} but applied to all {@link List} items
+         * 
+         * @param lines
+         * @return
+         */
+        public StringTextBuilder addLines(List<String> lines);
+
+        /**
+         * Similar to {@link #addLines(List)}
+         * 
+         * @param lines
+         * @return
+         */
+        public StringTextBuilder addLines(String... lines);
     }
 
     /**
@@ -637,6 +671,14 @@ public class StringUtils
     public static Predicate<String> equalsAnyFilter(String... matchValue)
     {
         return value -> org.apache.commons.lang3.StringUtils.equalsAny(value, matchValue);
+    }
+
+    public static boolean containsAnyIgnoreCase(String text, String... tokens)
+    {
+        return Optional.ofNullable(tokens)
+                       .map(Stream::of)
+                       .orElse(Stream.empty())
+                       .anyMatch(token -> org.apache.commons.lang3.StringUtils.containsIgnoreCase(text, token));
     }
 
 }

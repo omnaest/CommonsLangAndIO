@@ -33,21 +33,34 @@
 */
 package org.omnaest.utils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
 public class PredicateUtilsTest
 {
 
-	@Test
-	public void testNotNull() throws Exception
-	{
-		assertTrue(PredicateUtils	.notNull()
-									.test(1));
-		assertFalse(PredicateUtils	.notNull()
-									.test(null));
-	}
+    @Test
+    public void testNotNull() throws Exception
+    {
+        assertTrue(PredicateUtils.notNull()
+                                 .test(1));
+        assertFalse(PredicateUtils.notNull()
+                                  .test(null));
+    }
+
+    @Test
+    public void testUntil() throws Exception
+    {
+        assertEquals(Arrays.asList("a", "b"), Arrays.asList("a", "b", "c", "d")
+                                                    .stream()
+                                                    .filter(PredicateUtils.until(e -> e.equals("c")))
+                                                    .collect(Collectors.toList()));
+    }
 
 }
