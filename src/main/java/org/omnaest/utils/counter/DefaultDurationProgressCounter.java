@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
+import java.util.function.Function;
 import java.util.function.LongConsumer;
 import java.util.function.Supplier;
 
@@ -70,7 +71,7 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
     {
         return this.getProgressAsString() + this.getETA()
                                                 .map(DisplayableDuration::asCanonicalString)
-                                                .map(eta -> " ( " + eta + " )")
+                                                .map(this.createEtaToStringMapper())
                                                 .orElse("");
     }
 
@@ -204,9 +205,24 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
                 {
                     return passedTime;
                 }
+
+                @Override
+                public String getProgressAndETAasString()
+                {
+                    return this.getProgressAsString() + this.getETA()
+                                                            .map(DisplayableDuration::asCanonicalString)
+                                                            .map(DefaultDurationProgressCounter.this.createEtaToStringMapper())
+                                                            .orElse("");
+                }
+
             });
         });
         return this;
+    }
+
+    private Function<String, String> createEtaToStringMapper()
+    {
+        return eta -> " ( " + eta + " )";
     }
 
     @Override

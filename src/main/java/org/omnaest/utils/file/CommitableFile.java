@@ -18,11 +18,14 @@ package org.omnaest.utils.file;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.FileUtils;
+import org.omnaest.utils.element.cached.CachedElement;
 import org.omnaest.utils.exception.RuntimeIOException;
 
 /**
@@ -37,7 +40,9 @@ public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
 {
     private static final int DEFAULT_SLOT = 0;
 
-    private File file;
+    private final CachedElement<Byte> commitFileState = CachedElement.of(() -> this.determineCommitFileStateFromFile());
+
+    private final File file;
 
     private CommitableFile(File file)
     {
@@ -60,7 +65,45 @@ public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
 
         public Transaction accept(String content);
 
+        /**
+         * Allows direct access to the underlying {@link File}s. Be aware that for partial updates of the file, both underlying files A/B have to be written
+         * twice, which can be achieved with calling {@link TransactionWithPartialUpdate#commitFull()}.
+         * 
+         * @param slot
+         * @param fileConsumer
+         * @return
+         */
+        public TransactionWithPartialUpdate operateOnFile(int slot, FileConsumer fileConsumer);
+
+        public TransactionWithPartialUpdate operateOnFiles(FileSlotConsumer fileSlotConsumer);
+
         public CommitableFile commit();
+
+    }
+
+    public static interface TransactionWithPartialUpdate extends Transaction
+    {
+        public CommitableFile commitFull();
+    }
+
+    public static interface FileConsumer
+    {
+        void accept(File file) throws IOException;
+    }
+
+    public static interface FileSlotConsumer
+    {
+        void accept(FileProvider fileProvider) throws IOException;
+    }
+
+    public static interface FileSlotFunction<R>
+    {
+        R accept(FileProvider fileProvider) throws IOException;
+    }
+
+    public static interface FileProvider
+    {
+        public File apply(int slot);
     }
 
     /**
@@ -70,25 +113,40 @@ public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
      */
     public Transaction transaction()
     {
-        byte commitFileState = this.determineCommitFileState();
-        byte newCommitFileState = (byte) ((commitFileState + 1) % 2);
-        return new Transaction()
+        CachedElement<Byte> newCommitFileState = CachedElement.of(() -> this.calculateNewCommitFileState());
+        return new TransactionWithPartialUpdate()
         {
             private boolean success = true;
+
+            private List<Runnable> operations = new ArrayList<>();
 
             @Override
             public Transaction accept(byte[] content, int slot)
             {
-                try
+                return this.operateOnFile(slot, targetFile -> FileUtils.writeByteArrayToFile(targetFile, content));
+            }
+
+            @Override
+            public TransactionWithPartialUpdate operateOnFile(int slot, FileConsumer fileConsumer)
+            {
+                return this.operateOnFiles(fileProvider -> fileConsumer.accept(fileProvider.apply(slot)));
+            }
+
+            @Override
+            public TransactionWithPartialUpdate operateOnFiles(FileSlotConsumer fileSlotConsumer)
+            {
+                this.operations.add(() ->
                 {
-                    File targetFile = CommitableFile.this.determineTargetFile(newCommitFileState, slot);
-                    FileUtils.writeByteArrayToFile(targetFile, content);
-                }
-                catch (IOException e)
-                {
-                    this.success = false;
-                    throw new RuntimeIOException(e);
-                }
+                    try
+                    {
+                        fileSlotConsumer.accept(slot -> CommitableFile.this.determineTargetFile(newCommitFileState.get(), slot));
+                    }
+                    catch (IOException e)
+                    {
+                        this.success = false;
+                        throw new RuntimeIOException(e);
+                    }
+                });
                 return this;
             }
 
@@ -105,11 +163,14 @@ public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
             @Override
             public CommitableFile commit()
             {
+                this.operations.forEach(Runnable::run);
                 if (this.success)
                 {
                     try
                     {
-                        FileUtils.writeByteArrayToFile(CommitableFile.this.determineCommitFile(), new byte[] { newCommitFileState });
+                        Byte newState = newCommitFileState.getAndReset();
+                        FileUtils.writeByteArrayToFile(CommitableFile.this.determineCommitFile(), new byte[] { newState });
+                        CommitableFile.this.commitFileState.setSuppliedValue(newState);
                     }
                     catch (IOException e)
                     {
@@ -130,7 +191,26 @@ public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
             {
                 return this.accept(content, DEFAULT_SLOT);
             }
+
+            @Override
+            public CommitableFile commitFull()
+            {
+                // two commits, so A / B files are written
+                this.commit();
+                return this.commit();
+            }
+
         };
+    }
+
+    private byte calculateNewCommitFileState()
+    {
+        return this.calculateNewCommitFileState(this.determineCommitFileState());
+    }
+
+    private byte calculateNewCommitFileState(byte commitFileState)
+    {
+        return (byte) ((commitFileState + 1) % 2);
     }
 
     private File determineCommitFile()
@@ -149,6 +229,11 @@ public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
     }
 
     private byte determineCommitFileState()
+    {
+        return this.commitFileState.get();
+    }
+
+    private byte determineCommitFileStateFromFile()
     {
         return Optional.ofNullable(this.determineCommitFile())
                        .filter(File::exists)
@@ -243,6 +328,37 @@ public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
         return Optional.ofNullable(this.get(slot))
                        .map(content -> new String(content, StandardCharsets.UTF_8))
                        .orElse(null);
+    }
+
+    /**
+     * Operates on the current commited files
+     * 
+     * @param fileSlotConsumer
+     * @return
+     */
+    public CommitableFile operateOnCurrentFiles(FileSlotConsumer fileSlotConsumer)
+    {
+        try
+        {
+            fileSlotConsumer.accept(slot -> this.determineCurrentTargetFile(slot));
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeIOException(e);
+        }
+        return this;
+    }
+
+    public <R> R operateOnCurrentFiles(FileSlotFunction<R> fileSlotFunction)
+    {
+        try
+        {
+            return fileSlotFunction.accept(slot -> this.determineCurrentTargetFile(slot));
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeIOException(e);
+        }
     }
 
     public CommitableFile delete()

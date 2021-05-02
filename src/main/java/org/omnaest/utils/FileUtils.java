@@ -66,6 +66,7 @@ import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.LineIterator;
@@ -633,7 +634,7 @@ public class FileUtils
                     {
                         return FileUtils.toLineStream(file, this.encoding);
                     }
-                    catch (IOException e)
+                    catch (RuntimeIOException e)
                     {
                         throw new FileAccessRuntimeException(e);
                     }
@@ -731,13 +732,13 @@ public class FileUtils
     }
 
     /**
-     * Returns the lines of a {@link File} as {@link Stream}
+     * Returns the lines of a {@link File} as {@link Stream}. Uses {@link StandardCharsets#UTF_8} encoding.
      * 
      * @param file
      * @return
      * @throws IOException
      */
-    public static Stream<String> toLineStream(File file) throws IOException
+    public static Stream<String> toLineStream(File file)
     {
         return toLineStream(file, StandardCharsets.UTF_8);
     }
@@ -748,24 +749,30 @@ public class FileUtils
      * @param file
      * @param charset
      * @return
-     * @throws IOException
+     * @throws RuntimeIOException
      */
-    public static Stream<String> toLineStream(File file, Charset charset) throws IOException
+    public static Stream<String> toLineStream(File file, Charset charset)
     {
-        LineIterator iterator = org.apache.commons.io.FileUtils.lineIterator(file, charset.toString());
-        return StreamUtils.fromIterator(iterator)
-                          .onClose(() ->
-                          {
-                              try
+        try
+        {
+            LineIterator iterator = org.apache.commons.io.FileUtils.lineIterator(file, charset.toString());
+            return StreamUtils.fromIterator(iterator)
+                              .onClose(() ->
                               {
-                                  iterator.close();
-                              }
-                              catch (IOException e)
-                              {
-                                  throw new IllegalStateException(e);
-                              }
-                          });
-
+                                  try
+                                  {
+                                      iterator.close();
+                                  }
+                                  catch (IOException e)
+                                  {
+                                      throw new RuntimeIOException(e);
+                                  }
+                              });
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeIOException(e);
+        }
     }
 
     /**
@@ -791,7 +798,8 @@ public class FileUtils
     private static class RandomFileAccessorImpl implements RandomFileAccessor
     {
         private final File file;
-        private long       position = 0;
+        private long       position       = 0;
+        private long       markedPosition = 0;
 
         private RandomFileAccessorImpl(File file)
         {
@@ -813,11 +821,12 @@ public class FileUtils
 
             if (data != null)
             {
+                ensureParentFolderExists(this.file);
                 Path filePath = RandomFileAccessorImpl.this.file.toPath();
 
                 ByteBuffer buffer = ByteBuffer.wrap(data);
 
-                try (FileChannel fileChannel = (FileChannel.open(filePath, StandardOpenOption.READ, StandardOpenOption.WRITE)))
+                try (FileChannel fileChannel = (FileChannel.open(filePath, StandardOpenOption.CREATE, StandardOpenOption.WRITE)))
                 {
                     fileChannel.position(this.position);
                     fileChannel.write(buffer);
@@ -825,11 +834,55 @@ public class FileUtils
                 }
                 catch (IOException e)
                 {
-                    throw new RuntimeIOException(e);
+                    throw new RuntimeIOException("Exception writing data(lengeth=" + data.length + ") at position " + this.position, e);
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException("Unexpected exception writing data(lengeth=" + data.length + ") at position " + this.position, e);
                 }
             }
 
             return this.atPosition(newPosition);
+        }
+
+        @Override
+        public FileAccessPosition write(int[] data)
+        {
+            IntStream.range(0, data.length)
+                     .forEach(index -> this.write(data[index]));
+            return this;
+        }
+
+        @Override
+        public FileAccessPosition write(int value)
+        {
+            return this.write(ByteArrayUtils.encodeIntegerAsByteArray(value));
+        }
+
+        @Override
+        public int[] readIntegers(int length)
+        {
+            return ByteArrayUtils.decodeIntegersFromByteArray(this.readBytes(length * Integer.BYTES));
+        }
+
+        @Override
+        public int readInteger()
+        {
+            int[] values = this.readIntegers(1);
+            return values.length >= 1 ? values[0] : 0;
+        }
+
+        @Override
+        public long readLong()
+        {
+            long[] values = this.readLongs(1);
+            return values.length >= 1 ? values[0] : 0;
+        }
+
+        @Override
+        public long[] readLongs(int length)
+        {
+            return ByteArrayUtils.decodeLongsFromByteArray(this.readBytes(length * Long.BYTES));
         }
 
         @Override
@@ -846,40 +899,78 @@ public class FileUtils
         }
 
         @Override
+        public FileAccessPosition markPosition()
+        {
+            this.markedPosition = this.position;
+            return this;
+        }
+
+        @Override
+        public FileAccessPosition skip(int length)
+        {
+            return this.atPosition(this.position + length);
+        }
+
+        @Override
+        public FileAccessPosition resetPositionToLastMark()
+        {
+            return this.atPosition(this.markedPosition);
+        }
+
+        @Override
         public FileAccessPosition readStringInto(int length, Consumer<String> textConsumer)
         {
-            long newPosition = this.position;
-            String text = this.readString(length);
-            textConsumer.accept(text);
-            return this.atPosition(newPosition + text.getBytes().length);
+            textConsumer.accept(this.readString(length));
+            return this;
         }
 
         @Override
         public String readString(int length)
         {
+            long previousPosition = this.position;
+            byte[] bytes = this.readBytes(length * 4);
+            String result = Charset.forName("UTF-8")
+                                   .decode(ByteBuffer.wrap(bytes))
+                                   .toString()
+                                   .substring(0, length);
+            this.atPosition(previousPosition + result.getBytes().length);
+            return result;
+        }
+
+        @Override
+        public FileAccessPosition readBytesInto(int length, Consumer<byte[]> consumer)
+        {
+            consumer.accept(this.readBytes(length));
+            return this;
+        }
+
+        @Override
+        public byte[] readBytes(int length)
+        {
             Path filePath = this.file.toPath();
-            ByteBuffer buffer = ByteBuffer.allocate(length * 4);
+            ByteBuffer buffer = ByteBuffer.allocate(length);
             try (FileChannel fileChannel = (FileChannel.open(filePath, StandardOpenOption.READ)))
             {
                 fileChannel.position(this.position);
                 fileChannel.read(buffer);
                 buffer.flip();
-                String result = Charset.forName("UTF-8")
-                                       .decode(buffer)
-                                       .toString()
-                                       .substring(0, length);
-                this.atPosition(this.position + result.getBytes().length);
-                return result;
+                this.atPosition(this.position + length);
+                return buffer.array();
             }
             catch (IOException e)
             {
                 throw new RuntimeIOException(e);
+            }
+            catch (Exception e)
+            {
+                throw e;
             }
         }
     }
 
     public static interface RandomFileAccessor extends FileAccessPosition
     {
+
     }
 
     public static interface FileAccessPosition extends LongSupplier
@@ -888,11 +979,40 @@ public class FileUtils
 
         public FileAccessPosition write(byte[] data);
 
+        public FileAccessPosition write(int[] data);
+
+        public int readInteger();
+
+        public int[] readIntegers(int length);
+
+        public long readLong();
+
+        public long[] readLongs(int length);
+
+        public FileAccessPosition write(int value);
+
         public FileAccessPosition atPosition(long position);
 
         public String readString(int length);
 
         public FileAccessPosition readStringInto(int length, Consumer<String> textConsumer);
+
+        public byte[] readBytes(int length);
+
+        public FileAccessPosition readBytesInto(int length, Consumer<byte[]> consumer);
+
+        public FileAccessPosition markPosition();
+
+        public FileAccessPosition resetPositionToLastMark();
+
+        /**
+         * Skips the given number of bytes
+         * 
+         * @param length
+         * @return
+         */
+        public FileAccessPosition skip(int length);
+
     }
 
     /**

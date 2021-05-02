@@ -16,18 +16,25 @@
 package org.omnaest.utils;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.DoubleConsumer;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.Charsets;
+import org.apache.commons.io.LineIterator;
 import org.omnaest.utils.counter.Counter;
+import org.omnaest.utils.exception.RuntimeIOException;
 
 import com.google.common.io.ByteProcessor;
 import com.google.common.io.ByteStreams;
@@ -39,6 +46,8 @@ import com.google.common.io.ByteStreams;
  */
 public class IOUtils
 {
+
+    private static final String COMPRESS_DEFAULT_ENTRY_NAME = "data";
 
     public static void copyWithProgess(InputStream inputStream, ByteArrayOutputStream outputStream, long size, int steps, DoubleConsumer progessConsumer)
             throws IOException
@@ -150,6 +159,90 @@ public class IOUtils
                     first = false;
                 }
             }
+        }
+    }
+
+    public static byte[] compress(byte[] data)
+    {
+        return compress(data, COMPRESS_DEFAULT_ENTRY_NAME);
+    }
+
+    public static byte[] compress(byte[] data, String name)
+    {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); ZipOutputStream zos = new ZipOutputStream(baos))
+        {
+            ZipEntry entry = new ZipEntry(name);
+            zos.putNextEntry(entry);
+            org.apache.commons.io.IOUtils.copy(new ByteArrayInputStream(data), zos);
+            zos.close();
+            return baos.toByteArray();
+        }
+        catch (IOException e)
+        {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public static byte[] uncompress(byte[] data)
+    {
+        return uncompress(data, COMPRESS_DEFAULT_ENTRY_NAME);
+    }
+
+    public static byte[] uncompress(byte[] data, String name)
+    {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ByteArrayInputStream bais = new ByteArrayInputStream(data);
+                ZipInputStream zis = new ZipInputStream(bais))
+        {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null)
+            {
+                if (name == null || org.apache.commons.lang3.StringUtils.equals(zipEntry.getName(), name))
+                {
+                    org.apache.commons.io.IOUtils.copy(zis, baos);
+                }
+                zis.closeEntry();
+                zipEntry = zis.getNextEntry();
+            }
+            baos.flush();
+            return baos.toByteArray();
+        }
+        catch (IOException e)
+        {
+            throw new IllegalStateException(e);
+        }
+
+    }
+
+    /**
+     * Returns a {@link Stream} of lines for the given {@link InputStream} and {@link Charset}
+     * 
+     * @see StandardCharsets
+     * @param inputStream
+     * @param charset
+     * @return
+     */
+    public static Stream<String> toLineStream(InputStream inputStream, Charset charset)
+    {
+        try
+        {
+            LineIterator iterator = org.apache.commons.io.IOUtils.lineIterator(inputStream, charset);
+            return StreamUtils.fromIterator(iterator)
+                              .onClose(() ->
+                              {
+                                  try
+                                  {
+                                      iterator.close();
+                                  }
+                                  catch (IOException e)
+                                  {
+                                      throw new RuntimeIOException(e);
+                                  }
+                              });
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeIOException(e);
         }
     }
 }

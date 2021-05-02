@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
+import org.omnaest.utils.element.bi.BiElement;
+
 /**
  * Helper for {@link Optional}s
  * 
@@ -27,5 +29,25 @@ public class OptionalUtils
                        .filter(Optional::isPresent)
                        .findFirst()
                        .orElse(Optional.empty());
+    }
+
+    /**
+     * Returns an {@link Optional} of a {@link BiElement} containing both values of each individual {@link Optional#get()}, only if both {@link Optional}s have
+     * values present.
+     * 
+     * @param firstOptional
+     * @param secondOptional
+     * @return
+     */
+    public static <O1, O2> Optional<BiElement<O1, O2>> both(Optional<O1> firstOptional, Optional<O2> secondOptional)
+    {
+        return Optional.of(BiElement.of(firstOptional, secondOptional))
+                       .filter(bi -> bi.hasNoNullValue())
+                       .filter(bi -> bi.getFirst()
+                                       .isPresent())
+                       .filter(bi -> bi.getSecond()
+                                       .isPresent())
+                       .map(bi -> bi.applyToFirstArgument(Optional::get))
+                       .map(bi -> bi.applyToSecondArgument(Optional::get));
     }
 }

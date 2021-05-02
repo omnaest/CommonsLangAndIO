@@ -46,6 +46,25 @@ public class CommitableFileTest
     }
 
     @Test
+    public void testPartialUpdate() throws Exception
+    {
+        File tempDirectory = FileUtils.createRandomTempDirectory();
+        CommitableFile file = CommitableFile.of(new File(tempDirectory, "test_partial.dat"));
+
+        IntStream.range(0, 10)
+                 .forEach(counter ->
+                 {
+                     String content = "12345" + counter;
+                     file.transaction()
+                         .operateOnFile(0, targetFile -> FileUtils.toConsumer(targetFile)
+                                                                  .accept(content))
+                         .commitFull();
+                     assertEquals(content, file.getAsString());
+                     assertEquals(content, file.getAsString());
+                 });
+    }
+
+    @Test
     public void testGetAsString() throws Exception
     {
         File tempDirectory = FileUtils.createRandomTempDirectory();

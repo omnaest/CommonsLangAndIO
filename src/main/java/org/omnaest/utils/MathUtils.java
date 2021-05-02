@@ -87,4 +87,15 @@ public class MathUtils
     {
         return Math.random() >= 0.5;
     }
+
+    /**
+     * Returns 2^power, which means 0 -> 2^0=1, 1 -> 2^1 = 2 , 2 -> 2^2 = 4, ...
+     * 
+     * @param power
+     * @return
+     */
+    public static int pow2(int power)
+    {
+        return 1 << power;
+    }
 }

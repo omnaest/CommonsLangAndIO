@@ -101,5 +101,8 @@ public interface DurationProgressCounter extends ProgressCounter
         public Optional<DisplayableDuration> getETA();
 
         public Optional<DisplayableDuration> getPassedTime();
+
+        public String getProgressAndETAasString();
+
     }
 }

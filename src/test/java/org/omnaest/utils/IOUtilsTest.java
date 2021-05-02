@@ -15,13 +15,17 @@
  ******************************************************************************/
 package org.omnaest.utils;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -61,5 +65,28 @@ public class IOUtilsTest
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         IOUtils.writeLines(Stream.of("a", "b"), outputStream, StandardCharsets.UTF_8, "\n");
         assertEquals("a\nb", new String(outputStream.toByteArray(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testCompress() throws Exception
+    {
+        byte[] data = ("This text should be compressed " + StringUtils.repeat("-", 500)).getBytes();
+        byte[] compressedData = IOUtils.compress(data);
+        byte[] uncompressedData = IOUtils.uncompress(compressedData);
+        assertArrayEquals(data, uncompressedData);
+        assertTrue(compressedData.length < uncompressedData.length);
+    }
+
+    @Test
+    public void testToLineStream() throws Exception
+    {
+        String content = "abc\ndef\nghi";
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        org.apache.commons.io.IOUtils.copy(new StringReader(content), outputStream, StandardCharsets.UTF_8);
+        List<String> lines = IOUtils.toLineStream(new ByteArrayInputStream(outputStream.toByteArray()), StandardCharsets.UTF_8)
+                                    .collect(Collectors.toList());
+        assertNotNull(lines);
+        assertEquals(3, lines.size());
+        assertEquals(Arrays.asList("abc", "def", "ghi"), lines);
     }
 }

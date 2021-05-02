@@ -60,4 +60,13 @@ public class MathUtilsTest
                      assertTrue(MathUtils.random(-0.3, 0.5) >= -0.3);
                  });
     }
+
+    @Test
+    public void testPow2() throws Exception
+    {
+        assertEquals(1, MathUtils.pow2(0));
+        assertEquals(2, MathUtils.pow2(1));
+        assertEquals(4, MathUtils.pow2(2));
+        assertEquals(8, MathUtils.pow2(3));
+    }
 }
