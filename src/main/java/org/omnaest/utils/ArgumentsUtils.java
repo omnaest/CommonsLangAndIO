@@ -65,6 +65,12 @@ public class ArgumentsUtils
                                    {
                                        return mapper.apply(this.get());
                                    }
+
+                                   @Override
+                                   public int getAsInt()
+                                   {
+                                       return NumberUtils.toInt(this.get());
+                                   }
                                });
             }
 
@@ -176,6 +182,8 @@ public class ArgumentsUtils
     public static interface Argument extends Supplier<String>
     {
         public <R> R mapTo(Function<String, R> mapper);
+
+        public int getAsInt();
     }
 
     public static interface Parameter

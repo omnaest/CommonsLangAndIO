@@ -265,4 +265,22 @@ public class StringUtilsTest
         assertFalse(StringUtils.containsAnyIgnoreCase("aBcGhi", "def", "xyz"));
     }
 
+    @Test
+    public void testLeftPadding() throws Exception
+    {
+        assertEquals("  ", StringUtils.leftPadding("  abc       "));
+        assertEquals("", StringUtils.leftPadding("abc       "));
+        assertEquals("  ", StringUtils.leftPadding("  abc d      "));
+        assertEquals("", StringUtils.leftPadding(null));
+    }
+
+    @Test
+    public void testRightPadding() throws Exception
+    {
+        assertEquals("       ", StringUtils.rightPadding("  abc       "));
+        assertEquals("       ", StringUtils.rightPadding("  abc d       "));
+        assertEquals("", StringUtils.rightPadding("  abc"));
+        assertEquals("", StringUtils.rightPadding(null));
+    }
+
 }

@@ -681,4 +681,39 @@ public class StringUtils
                        .anyMatch(token -> org.apache.commons.lang3.StringUtils.containsIgnoreCase(text, token));
     }
 
+    public static String leftPadding(String text)
+    {
+        StringBuilder sb = new StringBuilder();
+        if (text != null)
+        {
+            for (int ii = 0; ii < text.length(); ii++)
+            {
+                if (!org.apache.commons.lang3.StringUtils.equals(org.apache.commons.lang3.StringUtils.substring(text, ii, ii + 1), " "))
+                {
+                    break;
+                }
+                sb.append(" ");
+            }
+        }
+        return sb.toString();
+
+    }
+
+    public static String rightPadding(String text)
+    {
+        StringBuilder sb = new StringBuilder();
+        if (text != null)
+        {
+            for (int ii = text.length() - 1; ii >= 0; ii--)
+            {
+                if (!org.apache.commons.lang3.StringUtils.equals(org.apache.commons.lang3.StringUtils.substring(text, ii, ii + 1), " "))
+                {
+                    break;
+                }
+                sb.append(" ");
+            }
+        }
+        return sb.toString();
+    }
+
 }

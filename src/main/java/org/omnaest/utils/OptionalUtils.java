@@ -32,6 +32,18 @@ public class OptionalUtils
     }
 
     /**
+     * Similar to {@link #both(Optional, Optional)} but wraps the given arguments using {@link Optional#ofNullable(Object)}
+     * 
+     * @param first
+     * @param second
+     * @return
+     */
+    public static <O1, O2> Optional<BiElement<O1, O2>> bothOfNullable(O1 first, O2 second)
+    {
+        return both(Optional.ofNullable(first), Optional.ofNullable(second));
+    }
+
+    /**
      * Returns an {@link Optional} of a {@link BiElement} containing both values of each individual {@link Optional#get()}, only if both {@link Optional}s have
      * values present.
      * 

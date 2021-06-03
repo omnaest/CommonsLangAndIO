@@ -1285,6 +1285,24 @@ public class FileUtils
         }
     }
 
+    public static void forceMkdirSilently(File file)
+    {
+        forceMkdir(file, ExceptionHandler.noOperationExceptionHandler());
+    }
+
+    public static void forceMkdir(File file, ExceptionHandler exceptionHandler)
+    {
+        try
+        {
+            org.apache.commons.io.FileUtils.forceMkdir(file);
+        }
+        catch (IOException e)
+        {
+            Optional.ofNullable(exceptionHandler)
+                    .ifPresent(consumer -> consumer.accept(e));
+        }
+    }
+
     public static Stream<File> listDirectoryFiles(File directory)
     {
         return listDirectoryFiles(directory, file -> true);
