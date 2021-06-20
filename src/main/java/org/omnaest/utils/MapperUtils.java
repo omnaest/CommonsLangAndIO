@@ -83,6 +83,18 @@ public class MapperUtils
     }
 
     /**
+     * Returns an {@link UnaryOperator} which casts to the given type and maps to the identity
+     * 
+     * @param type
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <F, T> Function<F, T> identityCast(Class<T> type)
+    {
+        return i -> (T) i;
+    }
+
+    /**
      * Returns an {@link LongFunction} which maps to the identity
      * 
      * @return
