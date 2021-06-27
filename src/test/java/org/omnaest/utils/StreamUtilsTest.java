@@ -53,6 +53,7 @@ import java.util.stream.Stream;
 import org.junit.Test;
 import org.omnaest.utils.StreamUtils.Drainage;
 import org.omnaest.utils.element.bi.BiElement;
+import org.omnaest.utils.element.bi.IntUnaryBiElement;
 import org.omnaest.utils.element.lar.LeftAndRight;
 
 public class StreamUtilsTest
@@ -427,6 +428,13 @@ public class StreamUtilsTest
                                                            .unlimitedWithTerminationPredicate(ii -> ii > 3)
                                                            .mapToObj(v -> v)
                                                            .collect(Collectors.toList()));
+
+        assertEquals(Arrays.asList(IntUnaryBiElement.of(0, 0), IntUnaryBiElement.of(0, 1), IntUnaryBiElement.of(1, 0), IntUnaryBiElement.of(1, 1)),
+                     StreamUtils.generate()
+                                .biIntStream()
+                                .withLeftSide(0, 2)
+                                .withRightSide(0, 2)
+                                .collect(Collectors.toList()));
     }
 
     @Test

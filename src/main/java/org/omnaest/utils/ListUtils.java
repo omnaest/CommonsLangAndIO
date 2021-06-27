@@ -837,4 +837,38 @@ public class ListUtils
                                                    .mapToObj(start -> elements.subList(start, start + limit)));
     }
 
+    /**
+     * Returns a {@link ListBuilder} instance
+     * 
+     * @return
+     */
+    public static ListBuilder<?> builder()
+    {
+        return new ListBuilder<Object>()
+        {
+            private List<Object> list = new ArrayList<>();
+
+            @Override
+            public List<Object> build()
+            {
+                return this.list;
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public <E2> ListBuilder<E2> add(E2 element)
+            {
+                this.list.add(element);
+                return (ListBuilder<E2>) this;
+            }
+        };
+    }
+
+    public static interface ListBuilder<E>
+    {
+        public <E2> ListBuilder<E2> add(E2 element);
+
+        public List<E> build();
+    }
+
 }

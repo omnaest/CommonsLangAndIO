@@ -25,6 +25,7 @@ import org.omnaest.utils.element.tri.TriElement;
  * Wrapper around two elements
  * 
  * @see TriElement
+ * @see IntUnaryBiElement
  * @author omnaest
  * @param <E1>
  * @param <E2>

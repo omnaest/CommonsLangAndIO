@@ -16,6 +16,7 @@
 package org.omnaest.utils.element.bi;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * {@link BiElement} with two elements of the same type
@@ -31,6 +32,11 @@ public interface UnaryBiElement<E> extends BiElement<E, E>
      * @return
      */
     public List<E> asList();
+
+    public default Stream<E> asStream()
+    {
+        return Stream.of(this.getFirst(), this.getSecond());
+    }
 
     /**
      * Returns a new {@link UnaryBiElement} for the given elements

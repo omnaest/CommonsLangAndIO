@@ -353,4 +353,13 @@ public class ListUtilsTest
                                                                                                 .collect(Collectors.joining()))
                                                                                .collect(Collectors.toList()));
     }
+
+    @Test
+    public void testBuilder() throws Exception
+    {
+        assertEquals(Arrays.asList("a", "b"), ListUtils.builder()
+                                                       .add("a")
+                                                       .add("b")
+                                                       .build());
+    }
 }

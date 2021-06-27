@@ -20,7 +20,7 @@ import java.util.function.LongConsumer;
 import java.util.function.LongSupplier;
 
 /**
- * Represents an {@link AtomicLong} counter with additional methods for counting support
+ * Represents a thread safe {@link AtomicLong} counter with additional methods for counting support
  * 
  * @see #from(int)
  * @see #from(long)

@@ -78,6 +78,7 @@ import org.omnaest.utils.counter.Counter;
 import org.omnaest.utils.counter.DurationProgressCounter;
 import org.omnaest.utils.counter.DurationProgressCounter.DurationProgressConsumer;
 import org.omnaest.utils.element.bi.BiElement;
+import org.omnaest.utils.element.bi.IntUnaryBiElement;
 import org.omnaest.utils.element.cached.CachedFunction;
 import org.omnaest.utils.element.lar.LeftAndRight;
 import org.omnaest.utils.functional.PredicateConsumer;
@@ -980,6 +981,8 @@ public class StreamUtils
         public <E, S extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function);
 
         public <E, R> Stream<R> recursive(E startElement, Function<E, R> mapper, Function<R, E> nextElementFunction);
+
+        BiIntStreamGenerator biIntStream();
     }
 
     public static interface IntStreamConfigurator
@@ -1172,10 +1175,45 @@ public class StreamUtils
         }
     }
 
+    public static interface BiIntStreamGenerator
+    {
+        public LeftSidedBiIntStreamGenerator withLeftSide(int start, int endExclusive);
+    }
+
+    public static interface LeftSidedBiIntStreamGenerator
+    {
+        public Stream<IntUnaryBiElement> withRightSide(int start, int endExclusive);
+    }
+
     public static StreamGenerator generate()
     {
         return new StreamGenerator()
         {
+
+            @Override
+            public BiIntStreamGenerator biIntStream()
+            {
+                return new BiIntStreamGenerator()
+                {
+
+                    @Override
+                    public LeftSidedBiIntStreamGenerator withLeftSide(int leftSideStartInclusive, int leftSideEndExclusive)
+                    {
+                        return new LeftSidedBiIntStreamGenerator()
+                        {
+                            @Override
+                            public Stream<IntUnaryBiElement> withRightSide(int rightSideStartInclusive, int rightSideEndExclusive)
+                            {
+                                return IntStream.range(leftSideStartInclusive, leftSideEndExclusive)
+                                                .boxed()
+                                                .flatMap(leftSide -> IntStream.range(rightSideStartInclusive, rightSideEndExclusive)
+                                                                              .mapToObj(rightSide -> IntUnaryBiElement.of(leftSide, rightSide)));
+                            }
+                        };
+                    }
+                };
+            }
+
             @Override
             public IntStreamGenerator intStream()
             {
