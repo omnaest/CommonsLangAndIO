@@ -85,34 +85,41 @@ public class ArgumentsUtils
     private static class ArgumentsConditionImpl implements ArgumentsConditionInitializer, ArgumentsCondition
     {
         private final Arguments arguments;
-        private final boolean   success;
+        private final boolean   currentChainSuccess;
+        private final boolean   anyChainSuccess;
 
-        public ArgumentsConditionImpl(Arguments arguments, boolean success)
+        public ArgumentsConditionImpl(Arguments arguments, boolean currentChainSuccess, boolean anyChainSuccess)
         {
             super();
             this.arguments = arguments;
-            this.success = success;
+            this.currentChainSuccess = currentChainSuccess;
+            this.anyChainSuccess = anyChainSuccess;
         }
 
         public ArgumentsConditionImpl(Arguments arguments)
         {
-            this(arguments, false);
+            this(arguments, false, false);
         }
 
         @Override
         public ArgumentsCondition ifAllParametersArePresent(String... allParameterTokens)
         {
-            boolean success = Arrays.asList(allParameterTokens)
-                                    .stream()
-                                    .allMatch(token -> this.arguments.getParameter(token)
-                                                                     .isPresent());
-            return new ArgumentsConditionImpl(this.arguments, success);
+            boolean nextChainSuccess = Arrays.asList(allParameterTokens)
+                                             .stream()
+                                             .allMatch(token -> this.arguments.getParameter(token)
+                                                                              .isPresent());
+            return new ArgumentsConditionImpl(this.arguments, nextChainSuccess, this.determineNextAnyChainSuccess());
+        }
+
+        private boolean determineNextAnyChainSuccess()
+        {
+            return this.currentChainSuccess || this.anyChainSuccess;
         }
 
         @Override
         public ArgumentsCondition then(Consumer<Arguments> argumentsConsumer)
         {
-            if (this.success)
+            if (this.currentChainSuccess)
             {
                 argumentsConsumer.accept(this.arguments);
             }
@@ -122,13 +129,13 @@ public class ArgumentsUtils
         @Override
         public ArgumentsConditionInitializer orElse()
         {
-            return new ArgumentsConditionImpl(this.arguments);
+            return new ArgumentsConditionImpl(this.arguments, false, this.determineNextAnyChainSuccess());
         }
 
         @Override
         public ArgumentsConditionInitializer orElse(Consumer<Arguments> argumentsConsumer)
         {
-            if (!this.success)
+            if (!this.currentChainSuccess && !this.anyChainSuccess)
             {
                 argumentsConsumer.accept(this.arguments);
             }
@@ -138,7 +145,7 @@ public class ArgumentsUtils
         @Override
         public ArgumentsConditionInitializer orElse(Runnable operation)
         {
-            return this.orElse(a -> operation.run());
+            return this.orElse(arguments -> operation.run());
         }
 
     }

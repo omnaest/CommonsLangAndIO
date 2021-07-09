@@ -997,6 +997,8 @@ public class StreamUtils
 
         public IntStream withRandomNumbers(int minValue, int maxValue);
 
+        public IntStream until(IntPredicate terminationPredicate);
+
     }
 
     public static interface LimitedIntStreamConfigurator
@@ -1149,6 +1151,14 @@ public class StreamUtils
         }
 
         @Override
+        public IntStream until(IntPredicate terminationPredicate)
+        {
+            AtomicInteger counter = new AtomicInteger(this.start);
+            return StreamUtils.fromSupplier(() -> counter.getAndAdd(this.increment), count -> terminationPredicate.test(count))
+                              .mapToInt(MapperUtils.identitiyForIntegerAsUnboxed());
+        }
+
+        @Override
         public IntStreamConfigurator withIncrement(int increment)
         {
             this.increment = increment;
@@ -1159,12 +1169,6 @@ public class StreamUtils
         public IntStream fromZero()
         {
             return this.from(0);
-        }
-
-        public IntStreamConfigurator withTerminationPredicate()
-        {
-            // TODO
-            return this;
         }
 
         @Override

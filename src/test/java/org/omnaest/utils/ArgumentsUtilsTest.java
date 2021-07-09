@@ -48,4 +48,18 @@ public class ArgumentsUtilsTest
         assertTrue(elseBlockOperationHasRun.get());
     }
 
+    @Test
+    public void testConditionalElseBlockAfterSuccessAndUnsuccessCondition()
+    {
+        AtomicBoolean operationHasRun = new AtomicBoolean(false);
+        ArgumentsUtils.parse("-buildCache", "-sourceFolder", "/root/folder")
+                      .ifAllParametersArePresent("buildCache")
+                      .then(arguments -> operationHasRun.set(true))
+                      .orElse()
+                      .ifAllParametersArePresent("notAvailableParameter")
+                      .then(arguments -> fail("This if condition should not be called"))
+                      .orElse(() -> fail("Else block should not be called"));
+        assertTrue(operationHasRun.get());
+    }
+
 }

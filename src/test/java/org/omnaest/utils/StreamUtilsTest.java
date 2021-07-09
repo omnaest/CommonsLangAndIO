@@ -565,4 +565,15 @@ public class StreamUtilsTest
         assertEquals(Collections.emptyList(), StreamUtils.ensureNumberOfElements(Stream.empty(), 0, index -> "" + index)
                                                          .collect(Collectors.toList()));
     }
+
+    @Test
+    public void testUntil() throws Exception
+    {
+        assertEquals(Arrays.asList(0, 1), StreamUtils.generate()
+                                                     .intStream()
+                                                     .unlimited()
+                                                     .until(i -> i == 2)
+                                                     .boxed()
+                                                     .collect(Collectors.toList()));
+    }
 }
