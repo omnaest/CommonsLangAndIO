@@ -42,6 +42,7 @@ import java.lang.ref.SoftReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import org.omnaest.utils.duration.TimeDuration;
 import org.omnaest.utils.element.cached.internal.ByteArrayInputOutputStreamSerializerAndDeserializer;
@@ -87,6 +88,25 @@ public interface CachedElement<E> extends Provider<E>
      * @return
      */
     public CachedElement<E> reset();
+
+    /**
+     * Updates the current value
+     * 
+     * @param updateFunction
+     * @return
+     */
+    public CachedElement<E> updateValue(UnaryOperator<E> updateFunction);
+
+    /**
+     * Sets the current value
+     * 
+     * @param value
+     * @return
+     */
+    public default CachedElement<E> set(E value)
+    {
+        return this.updateValue(previousValue -> value);
+    }
 
     /**
      * Returns the underlying {@link Supplier} of the {@link CachedElement}
@@ -201,6 +221,16 @@ public interface CachedElement<E> extends Provider<E>
     }
 
     /**
+     * Returns a {@link CachedElement} which caches the value per {@link Thread}
+     * 
+     * @return
+     */
+    public default CachedElement<E> asThreadLocal()
+    {
+        return new ThreadLocalCachedElementImpl<>(this.asNonCachedSupplier());
+    }
+
+    /**
      * Returns a synchronized {@link CachedElement}
      * 
      * @return
@@ -217,4 +247,16 @@ public interface CachedElement<E> extends Provider<E>
             return new ByteArrayInputOutputStreamSerializerAndDeserializer();
         }
     }
+
+    /**
+     * This ensures that an element is present by resolving an element from the underlying factory {@link Supplier} if not present yet
+     * 
+     * @return
+     */
+    public default CachedElement<E> resolve()
+    {
+        this.get();
+        return this;
+    }
+
 }

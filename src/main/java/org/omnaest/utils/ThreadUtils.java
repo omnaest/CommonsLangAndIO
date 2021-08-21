@@ -35,7 +35,11 @@ package org.omnaest.utils;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
+import java.util.function.IntConsumer;
 
 import org.omnaest.utils.duration.TimeDuration;
 import org.omnaest.utils.exception.handler.ExceptionHandler;
@@ -74,5 +78,51 @@ public class ThreadUtils
         {
             sleepSilently((int) duration.get(ChronoUnit.MILLIS), TimeUnit.MILLISECONDS);
         }
+    }
+
+    public static SleepBuilder sleep()
+    {
+        return new SleepBuilder()
+        {
+            @Override
+            public IntervalSleepBuilder inIntervalOf(int interval, TimeUnit timeUnit)
+            {
+                return new IntervalSleepBuilder()
+                {
+                    private List<IntConsumer> operations = new ArrayList<>();
+
+                    @Override
+                    public void until(BooleanSupplier condition)
+                    {
+                        int counter = 0;
+                        while (!condition.getAsBoolean())
+                        {
+                            sleepSilently(interval, timeUnit);
+                            int currentCount = counter++;
+                            this.operations.forEach(operation -> operation.accept(currentCount));
+                        }
+                    }
+
+                    @Override
+                    public IntervalSleepBuilder andExecute(IntConsumer operation)
+                    {
+                        this.operations.add(operation);
+                        return this;
+                    }
+                };
+            }
+        };
+    }
+
+    public static interface SleepBuilder
+    {
+        IntervalSleepBuilder inIntervalOf(int interval, TimeUnit timeUnit);
+    }
+
+    public static interface IntervalSleepBuilder
+    {
+        void until(BooleanSupplier condition);
+
+        IntervalSleepBuilder andExecute(IntConsumer operation);
     }
 }

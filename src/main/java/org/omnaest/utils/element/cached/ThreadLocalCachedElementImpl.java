@@ -31,73 +31,32 @@
 
 
 */
-package org.omnaest.utils.element.cached.internal;
+package org.omnaest.utils.element.cached;
 
-import java.io.File;
-import java.io.Reader;
-import java.io.Writer;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-
-import org.omnaest.utils.FileUtils;
-import org.omnaest.utils.element.cached.CachedElement;
 
 /**
  * @see CachedElement#of(Supplier)
  * @author omnaest
  * @param <E>
  */
-public class FileCachedElementImpl<E> implements CachedElement<E>
+public class ThreadLocalCachedElementImpl<E> implements CachedElement<E>
 {
+    private ThreadLocal<E>               element  = new ThreadLocal<E>();
     private AtomicReference<Supplier<E>> supplier = new AtomicReference<>();
-    private File                         file;
-    private Consumer<E>                  toFileConsumer;
-    private Supplier<E>                  fromFileSupplier;
 
-    public FileCachedElementImpl(Supplier<E> supplier, File file, Function<E, String> serializer, Function<String, E> deserializer)
+    public ThreadLocalCachedElementImpl(Supplier<E> supplier)
     {
         super();
-        this.file = file;
-        this.toFileConsumer = FileUtils.toConsumer(file)
-                                       .with(serializer);
-
-        this.fromFileSupplier = FileUtils.toSupplier(file)
-                                         .with(deserializer);
-        this.supplier.set(supplier);
-    }
-
-    public FileCachedElementImpl(Supplier<E> supplier, File file, BiConsumer<E, Writer> serializer, Function<Reader, E> deserializer)
-    {
-        super();
-        this.file = file;
-        this.toFileConsumer = FileUtils.toWriterSupplierUTF8(file)
-                                       .toConsumerWith(serializer);
-
-        this.fromFileSupplier = FileUtils.toReaderSupplierUTF8(file)
-                                         .toSupplier(deserializer);
-        this.supplier.set(supplier);
-    }
-
-    public FileCachedElementImpl(Supplier<E> supplier, File file, InputOutputStreamSerializerAndDeserializer<E> serializerAndDeserializer)
-    {
-        super();
-        this.file = file;
-        this.toFileConsumer = FileUtils.toOutputSupplier(file)
-                                       .toConsumerWith(serializerAndDeserializer);
-
-        this.fromFileSupplier = FileUtils.toInputSupplier(file)
-                                         .toSupplier(serializerAndDeserializer);
         this.supplier.set(supplier);
     }
 
     @Override
     public E get()
     {
-        E retval = this.fromFileSupplier.get();
+        E retval = this.element.get();
         retval = this.getFromSupplierIfNull(retval);
         return retval;
     }
@@ -106,9 +65,21 @@ public class FileCachedElementImpl<E> implements CachedElement<E>
     {
         if (retval == null)
         {
+            E currentValue = this.element.get();
+            this.element.set(currentValue == null ? this.supplier.get()
+                                                                 .get()
+                    : currentValue);
+            retval = this.element.get();
+        }
+        return retval;
+    }
+
+    private E getFromSupplierIfNullWithoutCacheUpdate(E retval)
+    {
+        if (retval == null)
+        {
             retval = this.supplier.get()
                                   .get();
-            this.toFileConsumer.accept(retval);
         }
         return retval;
     }
@@ -116,16 +87,16 @@ public class FileCachedElementImpl<E> implements CachedElement<E>
     @Override
     public E getAndReset()
     {
-        E retval = this.fromFileSupplier.get();
-        retval = this.getFromSupplierIfNull(retval);
-        this.toFileConsumer.accept(null);
+        E retval = this.element.get();
+        this.element.set(null);
+        retval = this.getFromSupplierIfNullWithoutCacheUpdate(retval);
         return retval;
     }
 
     @Override
     public CachedElement<E> reset()
     {
-        this.toFileConsumer.accept(null);
+        this.element.set(null);
         return this;
     }
 
@@ -139,7 +110,7 @@ public class FileCachedElementImpl<E> implements CachedElement<E>
     @Override
     public String toString()
     {
-        return "FileCachedElementImpl [supplier=" + this.supplier + ", file=" + this.file + "]";
+        return "AtomicCachedElementImpl [element=" + this.element + ", supplier=" + this.supplier + "]";
     }
 
     @Override
@@ -151,7 +122,7 @@ public class FileCachedElementImpl<E> implements CachedElement<E>
     @Override
     public CachedElement<E> updateValue(UnaryOperator<E> updateFunction)
     {
-        this.toFileConsumer.accept(updateFunction.apply(this.fromFileSupplier.get()));
+        this.element.set(updateFunction.apply(this.element.get()));
         return this;
     }
 

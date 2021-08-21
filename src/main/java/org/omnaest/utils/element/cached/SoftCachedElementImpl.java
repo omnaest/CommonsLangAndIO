@@ -35,6 +35,7 @@ package org.omnaest.utils.element.cached;
 
 import java.lang.ref.SoftReference;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * @see CachedElement#of(Supplier)
@@ -97,6 +98,13 @@ public class SoftCachedElementImpl<E> implements CachedElement<E>
     public String toString()
     {
         return "SoftCachedElementImpl [element=" + this.element + ", supplier=" + this.supplier + "]";
+    }
+
+    @Override
+    public CachedElement<E> updateValue(UnaryOperator<E> updateFunction)
+    {
+        this.element = new SoftReference<E>(updateFunction.apply(this.element.get()));
+        return this;
     }
 
 }

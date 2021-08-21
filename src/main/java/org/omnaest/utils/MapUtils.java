@@ -663,8 +663,12 @@ public class MapUtils
 
     public static <K, V> MapDelta<K, V> delta(Map<K, V> previous, Map<K, V> next)
     {
-        SetDelta<K> keyChanges = SetUtils.delta(previous.keySet(), next.keySet());
-
+        SetDelta<K> keyChanges = SetUtils.delta(Optional.ofNullable(previous)
+                                                        .orElse(Collections.emptyMap())
+                                                        .keySet(),
+                                                Optional.ofNullable(next)
+                                                        .orElse(Collections.emptyMap())
+                                                        .keySet());
         Map<K, ValueDelta<V>> changes = new HashMap<>();
         keyChanges.getAll()
                   .forEach(key ->

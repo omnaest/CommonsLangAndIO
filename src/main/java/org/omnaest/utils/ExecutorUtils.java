@@ -17,6 +17,7 @@ package org.omnaest.utils;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -39,6 +40,7 @@ import org.omnaest.utils.exception.handler.ExceptionHandler;
  */
 public class ExecutorUtils
 {
+
     public static interface ParallelExecution
     {
         public ParallelExecution withNumberOfThreads(int numberOfThreads);
@@ -51,13 +53,17 @@ public class ExecutorUtils
 
         public ParallelExecution withSingleThread();
 
+        public ParallelExecution withTimeout(long duration, TimeUnit timeUnit);
+
         public ParallelExecution execute(Consumer<ParallelExecutionCollector> collectorConsumer);
 
         public <R> ParallelExecutionAndResult<R> executeTasks(Collection<Callable<R>> tasks);
 
-        public ParallelExecution withTimeout(long duration, TimeUnit timeUnit);
-
         public <R> ParallelExecutionAndResult<R> executeTasks(Stream<Callable<R>> tasks);
+
+        public <R> ParallelExecutionAndResult<R> executeOperations(Stream<Runnable> operations);
+
+        ParallelExecution withExceptionHandler(ExceptionHandler exceptionHandler);
 
     }
 
@@ -78,6 +84,14 @@ public class ExecutorUtils
         public Stream<R> get();
 
         public ParallelExecutionAndResult<R> consume(Consumer<Stream<R>> resultConsumer);
+
+        /**
+         * Resolves all {@link Future}s and pass possible {@link Exception}s to the {@link ExceptionHandler} defined before.
+         * 
+         * @see ParallelExecution#with
+         * @return
+         */
+        public ParallelExecutionAndResult<R> handleExceptions();
     }
 
     public static class InterruptedRuntimeException extends RuntimeException
@@ -141,9 +155,15 @@ public class ExecutorUtils
             }
 
             @Override
+            public ParallelExecution withExceptionHandler(ExceptionHandler exceptionHandler)
+            {
+                this.exceptionHandler = exceptionHandler;
+                return this;
+            }
+
+            @Override
             public ParallelExecution execute(Consumer<ParallelExecutionCollector> collectorConsumer)
             {
-
                 this.executeWithService(executorService ->
                 {
                     ParallelExecutionCollector collector = new ParallelExecutionCollector()
@@ -253,6 +273,14 @@ public class ExecutorUtils
                     }
 
                     @Override
+                    public ParallelExecutionAndResult<R> handleExceptions()
+                    {
+                        this.get()
+                            .count();
+                        return this;
+                    }
+
+                    @Override
                     public ParallelExecutionAndResult<R> consume(Consumer<Stream<R>> resultConsumer)
                     {
                         if (resultConsumer != null)
@@ -263,6 +291,18 @@ public class ExecutorUtils
                     }
 
                 };
+            }
+
+            @Override
+            public <R> ParallelExecutionAndResult<R> executeOperations(Stream<Runnable> operations)
+            {
+                return this.executeTasks(Optional.ofNullable(operations)
+                                                 .orElse(Stream.empty())
+                                                 .map(operation -> () ->
+                                                 {
+                                                     operation.run();
+                                                     return null;
+                                                 }));
             }
 
         };

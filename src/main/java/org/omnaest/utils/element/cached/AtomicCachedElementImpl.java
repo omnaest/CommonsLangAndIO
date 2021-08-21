@@ -35,6 +35,7 @@ package org.omnaest.utils.element.cached;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * @see CachedElement#of(Supplier)
@@ -114,6 +115,13 @@ public class AtomicCachedElementImpl<E> implements CachedElement<E>
     public Supplier<E> asNonCachedSupplier()
     {
         return this.supplier.get();
+    }
+
+    @Override
+    public CachedElement<E> updateValue(UnaryOperator<E> updateFunction)
+    {
+        this.element.updateAndGet(updateFunction);
+        return this;
     }
 
 }

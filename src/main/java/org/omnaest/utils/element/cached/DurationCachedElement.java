@@ -18,6 +18,7 @@ package org.omnaest.utils.element.cached;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import org.omnaest.utils.duration.DurationCapture;
 import org.omnaest.utils.duration.DurationCapture.DurationMeasurement;
@@ -85,6 +86,12 @@ public class DurationCachedElement<E> implements CachedElement<E>
     public CachedElement<E> setSupplier(Supplier<E> supplier)
     {
         return this.cachedElement.setSupplier(supplier);
+    }
+
+    @Override
+    public CachedElement<E> updateValue(UnaryOperator<E> updateFunction)
+    {
+        return this.cachedElement.updateValue(updateFunction);
     }
 
 }

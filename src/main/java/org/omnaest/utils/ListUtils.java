@@ -281,6 +281,25 @@ public class ListUtils
         return retlist;
     }
 
+    @SafeVarargs
+    public static <E> List<E> addAllToNew(Collection<E> list, E... elements)
+    {
+        int index = list.size();
+        return addAllToNew(list, index, elements);
+    }
+
+    @SafeVarargs
+    public static <E> List<E> addAllToNew(Collection<E> list, int index, E... elements)
+    {
+        List<E> retlist = new ArrayList<>(list);
+        while (retlist.size() < index)
+        {
+            retlist.add(null);
+        }
+        retlist.addAll(index, Arrays.asList(elements));
+        return retlist;
+    }
+
     public static <E> List<E> setTo(List<E> list, int index, E element)
     {
         if (index >= 0)

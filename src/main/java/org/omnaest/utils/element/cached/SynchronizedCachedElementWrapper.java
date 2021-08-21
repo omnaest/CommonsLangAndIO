@@ -16,6 +16,7 @@
 package org.omnaest.utils.element.cached;
 
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 public class SynchronizedCachedElementWrapper<E> implements CachedElement<E>
 {
@@ -49,6 +50,12 @@ public class SynchronizedCachedElementWrapper<E> implements CachedElement<E>
     public synchronized CachedElement<E> setSupplier(Supplier<E> supplier)
     {
         return this.cachedElement.setSupplier(supplier);
+    }
+
+    @Override
+    public CachedElement<E> updateValue(UnaryOperator<E> updateFunction)
+    {
+        return this.cachedElement.updateValue(updateFunction);
     }
 
     @Override
