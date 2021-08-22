@@ -27,6 +27,48 @@ import org.omnaest.utils.functional.Action;
 
 public class EnumUtils
 {
+    /**
+     * Maps a given source {@link Enum} value to a target {@link Enum} value by name. If the mapping is not possible an {@link Optional#empty()} is returned.
+     * 
+     * @param sourceEnumValue
+     * @param targetEnumType
+     * @return
+     */
+    public static <S extends Enum<S>, T extends Enum<T>> Optional<T> mapByName(S sourceEnumValue, Class<T> targetEnumType)
+    {
+        return mapBy(sourceEnumValue, s -> s.name(), targetEnumType);
+    }
+
+    public static <S extends Enum<S>, T extends Enum<T>> Optional<T> mapBy(S sourceEnumValue, Function<S, String> nameFunction, Class<T> targetEnumType)
+    {
+        try
+        {
+            return Optional.of(Enum.valueOf(targetEnumType, nameFunction.apply(sourceEnumValue)));
+        }
+        catch (Exception e)
+        {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Returns the {@link Enum} value matching the given name.
+     * 
+     * @param name
+     * @param type
+     * @return
+     */
+    public static <E extends Enum<E>> Optional<E> toEnumValue(String name, Class<E> type)
+    {
+        try
+        {
+            return Optional.of(Enum.valueOf(type, name));
+        }
+        catch (Exception e)
+        {
+            return Optional.empty();
+        }
+    }
 
     /**
      * Allows to decide based on the underlying value what to execute
@@ -238,4 +280,5 @@ public class EnumUtils
         }
 
     }
+
 }

@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.utils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -51,6 +52,26 @@ public class EnumUtilsTest
                             .ifAnyEqualTo(Arrays.asList(TestEnum.ONE, TestEnum.TWO), (matches) -> fail("Wrong matches :" + matches))
                             .isEqualToAny(TestEnum.TWO, TestEnum.THREE));
 
+    }
+
+    @Test
+    public void testMapByName() throws Exception
+    {
+        assertEquals(EnumB.A, EnumUtils.mapByName(EnumA.A, EnumB.class)
+                                       .get());
+        assertFalse(EnumUtils.mapByName(EnumA.C, EnumB.class)
+                             .isPresent());
+
+    }
+
+    private static enum EnumA
+    {
+        A, B, C
+    }
+
+    private static enum EnumB
+    {
+        A, B
     }
 
 }
