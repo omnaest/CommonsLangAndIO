@@ -2,8 +2,6 @@ package org.omnaest.utils.counter;
 
 import java.util.function.Consumer;
 
-import org.omnaest.utils.counter.DurationProgressCounter.DurationProgressConsumer;
-
 /**
  * Utils around {@link Counter}, {@link ProgressCounter} and {@link DurationProgressCounter}
  * 
@@ -28,7 +26,7 @@ public class ProgressUtils
                                                                                  .withMaximum(maxCount);
         return element -> durationProgressCounter.increment()
                                                  .ifModulo(stepsInBetween,
-                                                           (DurationProgressConsumer) duration -> messageConsumer.accept(duration.getProgressAndETAasString()));
+                                                           (ImmutableDurationProgressCounter.DurationProgressConsumer) duration -> messageConsumer.accept(duration.getProgressAndETAasString()));
     }
 
     public static ProgressCounter newProgressCounter()

@@ -129,12 +129,12 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
     @Override
     public DurationProgressCounter incrementBy(int delta)
     {
-        this.startDurationMeasurement();
+        this.startDurationMeasurementIfNotStartedYet();
         this.progressCounter.incrementBy(delta);
         return this;
     }
 
-    private void startDurationMeasurement()
+    private void startDurationMeasurementIfNotStartedYet()
     {
         this.durationMeasurement.updateAndGet(previous -> previous != null ? previous : this.durationCapture.start());
     }
@@ -142,7 +142,7 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
     @Override
     public DurationProgressCounter increment()
     {
-        this.startDurationMeasurement();
+        this.startDurationMeasurementIfNotStartedYet();
         this.progressCounter.increment();
         return this;
     }
@@ -241,6 +241,45 @@ public class DefaultDurationProgressCounter implements DurationProgressCounter
     @Override
     public DurationProgressCounter asDurationProgressCounter()
     {
+        return this;
+    }
+
+    @Override
+    public void accept(long value)
+    {
+        this.progressCounter.accept(value);
+    }
+
+    @Override
+    public ProgressCounter setProgress(double progress)
+    {
+        this.startDurationMeasurementIfNotStartedYet();
+        return this.progressCounter.setProgress(progress);
+    }
+
+    @Override
+    public ImmutableDurationProgressCounter asImmutableDurationProgressCounter()
+    {
+        return this;
+    }
+
+    @Override
+    public ImmutableProgressCounter asImmutableProgressCounter()
+    {
+        return this;
+    }
+
+    @Override
+    public DurationProgressCounter synchronizeProgressContinouslyWith(ProgressCounter progressCounter)
+    {
+        this.progressCounter.synchronizeProgressContinouslyWith(progressCounter);
+        return this;
+    }
+
+    @Override
+    public DurationProgressCounter synchronizeCountContinouslyWith(Counter counter)
+    {
+        this.progressCounter.synchronizeCountContinouslyWith(counter);
         return this;
     }
 

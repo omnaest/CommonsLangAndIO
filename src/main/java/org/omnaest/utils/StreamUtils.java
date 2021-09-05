@@ -76,7 +76,7 @@ import org.omnaest.utils.ExecutorUtils.ParallelExecution;
 import org.omnaest.utils.buffer.CyclicBuffer;
 import org.omnaest.utils.counter.Counter;
 import org.omnaest.utils.counter.DurationProgressCounter;
-import org.omnaest.utils.counter.DurationProgressCounter.DurationProgressConsumer;
+import org.omnaest.utils.counter.ImmutableDurationProgressCounter.DurationProgressConsumer;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.bi.IntUnaryBiElement;
 import org.omnaest.utils.element.cached.CachedFunction;

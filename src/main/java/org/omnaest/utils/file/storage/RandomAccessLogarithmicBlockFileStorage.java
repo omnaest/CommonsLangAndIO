@@ -113,13 +113,9 @@ public class RandomAccessLogarithmicBlockFileStorage implements ByteArrayBlockFi
         }
 
         //
-        int length = 0;
-        {
-            for (byte[] subArray : subArrays)
-            {
-                length += subArray.length;
-            }
-        }
+        int length = subArrays.stream()
+                              .mapToInt(subArray -> subArray.length)
+                              .sum();
 
         //
         byte[] result = new byte[length];

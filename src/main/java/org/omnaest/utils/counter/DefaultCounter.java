@@ -25,6 +25,9 @@ import java.util.function.LongConsumer;
 public class DefaultCounter implements Counter
 {
     private AtomicLong counter;
+    private Runnable   synchronizeOperation = () ->
+                                            {
+                                            };
 
     protected DefaultCounter(long start)
     {
@@ -34,7 +37,8 @@ public class DefaultCounter implements Counter
     @Override
     public Counter ifModulo(int modulo, LongConsumer counterConsumer)
     {
-        long count = this.counter.get();
+        this.synchronizeOperation.run();
+        long count = this.getAsLong();
         if (counterConsumer != null && count % modulo == 0)
         {
             counterConsumer.accept(count);
@@ -58,7 +62,21 @@ public class DefaultCounter implements Counter
     @Override
     public long getAsLong()
     {
+        this.synchronizeOperation.run();
         return this.counter.get();
+    }
+
+    @Override
+    public void accept(long value)
+    {
+        this.counter.set(value);
+    }
+
+    @Override
+    public Counter synchronizeCountContinouslyWith(Counter counter)
+    {
+        this.synchronizeOperation = () -> this.accept(counter.getAsLong());
+        return this;
     }
 
     @Override

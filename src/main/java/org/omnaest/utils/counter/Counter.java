@@ -17,7 +17,6 @@ package org.omnaest.utils.counter;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongConsumer;
-import java.util.function.LongSupplier;
 
 /**
  * Represents a thread safe {@link AtomicLong} counter with additional methods for counting support
@@ -29,26 +28,21 @@ import java.util.function.LongSupplier;
  * @see #asDurationProgressCounter()
  * @author omnaest
  */
-public interface Counter extends LongSupplier
+public interface Counter extends LongConsumer, ImmutableCounter
 {
-    public long deltaTo(Counter otherCounter);
-
+    /**
+     * Synchronizes this {@link Counter} from a given source {@link Counter}
+     * 
+     * @param sourceCounter
+     * @return
+     */
     public Counter synchronizeWith(Counter sourceCounter);
 
     public Counter incrementBy(int delta);
 
     public Counter increment();
 
-    /**
-     * Calls the given {@link LongConsumer} for all counted values that have counter % 'modulo' value == 0.<br>
-     * <br>
-     * Be aware that for this method to work the {@link #increment()} and not the {@link #incrementBy(int)} method should be used.
-     * 
-     * @param modulo
-     * @param counterConsumer
-     * @return
-     */
-    public Counter ifModulo(int modulo, LongConsumer counterConsumer);
+    public Counter synchronizeCountContinouslyWith(Counter counter);
 
     /**
      * @see ProgressCounter
@@ -76,4 +70,5 @@ public interface Counter extends LongSupplier
     {
         return new DefaultCounter(start);
     }
+
 }

@@ -38,7 +38,7 @@ import java.util.function.Consumer;
 
 import org.omnaest.utils.counter.Counter;
 import org.omnaest.utils.counter.DurationProgressCounter;
-import org.omnaest.utils.counter.DurationProgressCounter.DurationProgressConsumer;
+import org.omnaest.utils.counter.ImmutableDurationProgressCounter.DurationProgressConsumer;
 
 /**
  * Helper for {@link Consumer} instances

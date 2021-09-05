@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.omnaest.utils.counter.Counter;
 import org.omnaest.utils.counter.ProgressUtils;
 
 /**
@@ -49,5 +50,10 @@ public class PeekUtils
     public static <E> Consumer<E> newDurationProgressCounterLogger(Consumer<String> messageConsumer, int maxCount)
     {
         return ProgressUtils.newDurationProgressCounterLogger(messageConsumer, maxCount);
+    }
+
+    public static <E> Consumer<E> incrementCounter(Counter counter)
+    {
+        return e -> counter.increment();
     }
 }

@@ -29,7 +29,10 @@ import java.util.function.Supplier;
 public class DefaultProgressCounter implements ProgressCounter
 {
     private Counter                         counter;
-    private AtomicReference<Supplier<Long>> maximumProvider = new AtomicReference<Supplier<Long>>(() -> Long.MAX_VALUE);
+    private AtomicReference<Supplier<Long>> maximumProvider      = new AtomicReference<Supplier<Long>>(() -> Long.MAX_VALUE);
+    private Runnable                        synchronizeOperation = () ->
+                                                                 {
+                                                                 };
 
     private DefaultProgressCounter(Counter counter)
     {
@@ -58,12 +61,34 @@ public class DefaultProgressCounter implements ProgressCounter
                                            .get();
         if (Long.MAX_VALUE == maximum || maximum <= 0l)
         {
-            return 1.0 - 1.0 / (1.0 + Math.log10(1.0 + this.counter.getAsLong()));
+            return 1.0 - 1.0 / (1.0 + Math.log10(1.0 + this.getAsLong()));
         }
         else
         {
-            return this.counter.getAsLong() / Math.max(1.0, maximum);
+            return this.getAsLong() / Math.max(1.0, maximum);
         }
+    }
+
+    @Override
+    public ProgressCounter setProgress(double progress)
+    {
+        this.counter.accept(Math.round(progress * this.maximumProvider.get()
+                                                                      .get()));
+        return this;
+    }
+
+    @Override
+    public ProgressCounter synchronizeProgressContinouslyWith(ProgressCounter progressCounter)
+    {
+        this.synchronizeOperation = () -> this.setProgress(progressCounter.getProgress());
+        return this;
+    }
+
+    @Override
+    public ProgressCounter synchronizeCountContinouslyWith(Counter counter)
+    {
+        this.counter.synchronizeCountContinouslyWith(counter);
+        return this;
     }
 
     @Override
@@ -159,6 +184,7 @@ public class DefaultProgressCounter implements ProgressCounter
     @Override
     public long getAsLong()
     {
+        this.synchronizeOperation.run();
         return this.counter.getAsLong();
     }
 
@@ -172,6 +198,18 @@ public class DefaultProgressCounter implements ProgressCounter
     public DurationProgressCounter asDurationProgressCounter()
     {
         return DurationProgressCounter.of(this);
+    }
+
+    @Override
+    public void accept(long value)
+    {
+        this.counter.accept(value);
+    }
+
+    @Override
+    public ImmutableProgressCounter asImmutableProgressCounter()
+    {
+        return this;
     }
 
 }

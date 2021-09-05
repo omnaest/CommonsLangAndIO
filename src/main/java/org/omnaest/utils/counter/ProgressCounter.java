@@ -15,9 +15,6 @@
  ******************************************************************************/
 package org.omnaest.utils.counter;
 
-import java.util.function.Consumer;
-import java.util.function.DoubleConsumer;
-import java.util.function.LongConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -25,23 +22,18 @@ import java.util.function.Supplier;
  * 
  * @author omnaest
  */
-public interface ProgressCounter extends Counter
+public interface ProgressCounter extends Counter, ImmutableProgressCounter
 {
-
     public ProgressCounter withMaximumProvider(Supplier<Long> maximumProvider);
 
     public ProgressCounter withMaximum(long maximum);
 
-    public double getProgress();
+    public ProgressCounter setProgress(double progress);
 
-    /**
-     * Returns a formatted progress {@link String} like e.g. '15%'
-     * 
-     * @return
-     */
-    public String getProgressAsString();
+    public ProgressCounter synchronizeProgressContinouslyWith(ProgressCounter progressCounter);
 
-    public ProgressCounter doWithProgress(DoubleConsumer progressConsumer);
+    @Override
+    public ProgressCounter synchronizeCountContinouslyWith(Counter counter);
 
     @Override
     public ProgressCounter synchronizeWith(Counter sourceCounter);
@@ -51,33 +43,5 @@ public interface ProgressCounter extends Counter
     @Override
     public ProgressCounter increment();
 
-    @Override
-    public ProgressCounter ifModulo(int modulo, LongConsumer counterConsumer);
-
-    /**
-     * Similar to {@link #ifModulo(int, LongConsumer)} but provides a {@link ProgressCounter} via the given {@link ProgressConsumer}
-     * 
-     * @param modulo
-     * @param progressConsumer
-     * @return
-     */
-    public ProgressCounter ifModulo(int modulo, ProgressConsumer progressConsumer);
-
-    public static interface ProgressConsumer extends Consumer<Progress>
-    {
-    }
-
-    public static interface Progress
-    {
-        public long getCounter();
-
-        public double getProgress();
-
-        /**
-         * Returns the progress as integer percentage
-         * 
-         * @return
-         */
-        public String getProgressAsString();
-    }
+    public ImmutableProgressCounter asImmutableProgressCounter();
 }

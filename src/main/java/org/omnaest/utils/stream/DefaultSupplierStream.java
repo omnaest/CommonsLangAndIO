@@ -16,6 +16,7 @@
 package org.omnaest.utils.stream;
 
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -31,8 +32,9 @@ import org.omnaest.utils.StreamUtils;
  */
 public class DefaultSupplierStream<E> extends StreamDecorator<E> implements SupplierStream<E>
 {
-    private Predicate<E> terminationMatcher = e -> false;
-    private boolean      exclusive          = true;
+    private final Predicate<E> defaultTerminationMatcher = e -> false;
+    private Predicate<E>       terminationMatcher        = this.defaultTerminationMatcher;
+    private boolean            exclusive                 = true;
 
     public DefaultSupplierStream(Supplier<E> supplier)
     {
@@ -54,8 +56,10 @@ public class DefaultSupplierStream<E> extends StreamDecorator<E> implements Supp
                 else
                 {
                     this.takeOneElement();
-                    boolean notTerminated = DefaultSupplierStream.this.terminationMatcher.negate()
-                                                                                         .test(this.takenElement.get());
+                    boolean notTerminated = Optional.ofNullable(DefaultSupplierStream.this.terminationMatcher)
+                                                    .orElse(DefaultSupplierStream.this.defaultTerminationMatcher)
+                                                    .negate()
+                                                    .test(this.takenElement.get());
 
                     this.terminated.compareAndSet(false, !notTerminated);
 
