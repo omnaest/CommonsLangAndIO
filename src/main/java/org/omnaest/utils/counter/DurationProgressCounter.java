@@ -15,9 +15,14 @@
  ******************************************************************************/
 package org.omnaest.utils.counter;
 
+import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.LongConsumer;
 import java.util.function.Supplier;
 
+import org.omnaest.utils.counter.internal.DefaultDurationProgressCounter;
 import org.omnaest.utils.duration.DurationCapture;
+import org.omnaest.utils.duration.DurationCapture.DisplayableDuration;
 
 /**
  * {@link ProgressCounter} in combination with a {@link DurationCapture} instance. The duration measurement starts with the first counter {@link #increment()}.
@@ -34,19 +39,52 @@ public interface DurationProgressCounter extends ProgressCounter, ImmutableDurat
     public DurationProgressCounter withMaximum(long maximum);
 
     @Override
-    public DurationProgressCounter synchronizeWith(Counter sourceCounter);
+    public DurationProgressCounter synchronizeFrom(Counter sourceCounter);
 
     @Override
-    public DurationProgressCounter synchronizeProgressContinouslyWith(ProgressCounter progressCounter);
+    public DurationProgressCounter synchronizeProgressContinouslyFrom(ProgressCounter progressCounter);
 
     @Override
-    public DurationProgressCounter synchronizeCountContinouslyWith(Counter counter);
+    public DurationProgressCounter synchronizeProgressContinouslyTo(ProgressCounter progressCounter);
+
+    @Override
+    public DurationProgressCounter synchronizeProgressContinouslyFrom(ProgressCounter progressCounter, double weight);
+
+    @Override
+    public DurationProgressCounter synchronizeCountContinouslyFrom(Counter counter);
+
+    @Override
+    public DurationProgressCounter synchronizeProgressContinouslyToByRegistrationTo(ProgressCounter progressCounter);
+
+    @Override
+    public DurationProgressCounter synchronizeProgressContinouslyFromAndRegisterTo(ProgressCounter progressCounter, double weight);
+
+    @Override
+    public DurationProgressCounter synchronizeProgressContinouslyTo(DoubleConsumer progressConsumer);
+
+    @Override
+    public DurationProgressCounter synchronize();
 
     @Override
     public DurationProgressCounter incrementBy(int delta);
 
     @Override
     public DurationProgressCounter increment();
+
+    @Override
+    public DurationProgressCounter doWithETA(Consumer<DisplayableDuration> etaConsumer);
+
+    @Override
+    public DurationProgressCounter doWithPassedTime(Consumer<DisplayableDuration> passedTimeConsumer);
+
+    @Override
+    public DurationProgressCounter ifModulo(int modulo, DurationProgressConsumer durationProgressConsumer);
+
+    @Override
+    public DurationProgressCounter ifModulo(int modulo, ProgressConsumer progressConsumer);
+
+    @Override
+    public DurationProgressCounter ifModulo(int modulo, LongConsumer counterConsumer);
 
     public ImmutableDurationProgressCounter asImmutableDurationProgressCounter();
 

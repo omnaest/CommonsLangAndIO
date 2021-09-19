@@ -63,4 +63,11 @@ public class PredicateUtilsTest
                                                     .collect(Collectors.toList()));
     }
 
+    @Test
+    public void testMatchesType() throws Exception
+    {
+        assertTrue(PredicateUtils.<Double, Number>matchesType(Double.class)
+                                 .test(1.2));
+    }
+
 }

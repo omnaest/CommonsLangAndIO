@@ -1,5 +1,6 @@
 package org.omnaest.utils.counter;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
@@ -20,15 +21,17 @@ public interface ImmutableDurationProgressCounter extends ImmutableProgressCount
 
     public String getProgressAndETAasString();
 
-    public DurationProgressCounter doWithETA(Consumer<DisplayableDuration> etaConsumer);
+    public ImmutableDurationProgressCounter doWithETA(Consumer<DisplayableDuration> etaConsumer);
 
-    public DurationProgressCounter doWithPassedTime(Consumer<DisplayableDuration> passedTimeConsumer);
+    public ImmutableDurationProgressCounter doWithPassedTime(Consumer<DisplayableDuration> passedTimeConsumer);
+
+    public Optional<Instant> getStartTime();
 
     @Override
-    public DurationProgressCounter ifModulo(int modulo, LongConsumer counterConsumer);
+    public ImmutableDurationProgressCounter ifModulo(int modulo, LongConsumer counterConsumer);
 
     @Override
-    public DurationProgressCounter ifModulo(int modulo, ProgressConsumer progressConsumer);
+    public ImmutableDurationProgressCounter ifModulo(int modulo, ProgressConsumer progressConsumer);
 
     /**
      * Similar to {@link #ifModulo(int, LongConsumer)} but provides a {@link DurationProgress} via a {@link DurationProgressConsumer}
@@ -37,10 +40,10 @@ public interface ImmutableDurationProgressCounter extends ImmutableProgressCount
      * @param durationProgressConsumer
      * @return
      */
-    public DurationProgressCounter ifModulo(int modulo, DurationProgressConsumer durationProgressConsumer);
+    public ImmutableDurationProgressCounter ifModulo(int modulo, DurationProgressConsumer durationProgressConsumer);
 
     @Override
-    public DurationProgressCounter doWithProgress(DoubleConsumer progressConsumer);
+    public ImmutableDurationProgressCounter doWithProgress(DoubleConsumer progressConsumer);
 
     public static interface DurationProgressConsumer extends Consumer<DurationProgress>
     {

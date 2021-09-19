@@ -157,4 +157,12 @@ public class FileUtilsTest
                                         .readString(6));
     }
 
+    @Test
+    public void testToFileSinkInputStreamSupplier() throws Exception
+    {
+        assertEquals("abc", FileUtils.toFileSinkInputStreamSupplier(FileUtils.createRandomTempFile())
+                                     .accept("abc")
+                                     .get());
+    }
+
 }

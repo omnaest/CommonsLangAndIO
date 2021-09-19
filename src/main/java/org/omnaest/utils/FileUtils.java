@@ -1090,10 +1090,17 @@ public class FileUtils
 
     }
 
-    public static Writer toWriter(File file, Charset charset) throws FileNotFoundException
+    public static Writer toWriter(File file, Charset charset)
     {
-        ensureParentFolderExists(file);
-        return new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), charset);
+        try
+        {
+            ensureParentFolderExists(file);
+            return new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), charset);
+        }
+        catch (Exception e)
+        {
+            throw new IllegalStateException(e);
+        }
     }
 
     public static interface FileInputSupplier extends Supplier<InputStream>
@@ -1158,14 +1165,7 @@ public class FileUtils
         {
             private Supplier<Writer> supplier = () ->
             {
-                try
-                {
-                    return toWriter(file, charset);
-                }
-                catch (FileNotFoundException e)
-                {
-                    throw new IllegalStateException(e);
-                }
+                return toWriter(file, charset);
             };
 
             @Override
@@ -1317,5 +1317,184 @@ public class FileUtils
                        .map(List::stream)
                        .map(files -> files.filter(filter))
                        .orElse(Stream.empty());
+    }
+
+    /**
+     * Allows to sink {@link String} or {@link Byte} data into a {@link File} and creates an {@link InputStream} or {@link Reader} on top of the file.
+     * 
+     * @author omnaest
+     */
+    public static interface FileSinkInputStreamSupplier
+    {
+        /**
+         * @param text
+         * @throws RuntimeIOException
+         * @return
+         */
+        public FileSinkedInputStreamSupplier accept(String text);
+
+        public FileSinkedInputStreamSupplier accept(Consumer<Writer> writerConsumer);
+
+        FileSinkInputStreamSupplier withCharset(Charset charset);
+    }
+
+    public static interface FileSinkedInputStreamSupplier extends Supplier<String>
+    {
+
+        /**
+         * @see Supplier#get()
+         * @throws RuntimeIOException
+         */
+        @Override
+        public String get();
+
+        public <E> Supplier<E> toSupplier(Function<Reader, E> readerToElementMapper);
+
+        /**
+         * Returns a {@link Stream} of elements utilizing the given {@link Function} which consumes the given {@link Reader}. The {@link Reader} uses the
+         * {@link Charset} that is defined by {@link #withCharset(Charset)} or {@link StandardCharsets#UTF_8} by default.
+         * 
+         * @see #withCharset(Charset)
+         * @param readerToStreamMapper
+         * @return
+         */
+        public <E> Stream<E> toStream(Function<Reader, Stream<E>> readerToStreamMapper);
+
+        /**
+         * Defines the {@link Charset} that is used in combination with {@link Reader} functions. By default {@link StandardCharsets#UTF_8} is used.
+         * 
+         * @param charset
+         * @return
+         */
+        public FileSinkedInputStreamSupplier withCharset(Charset charset);
+
+        /**
+         * Returns a {@link Reader} for the underlying {@link File}
+         * 
+         * @see #withCharset(Charset)
+         * @return
+         */
+        public Reader toReader();
+
+        /**
+         * Similar to {@link #toReader()} but allows to specify a {@link Charset} directly.
+         * 
+         * @see #toReader()
+         * @see StandardCharsets
+         * @param charset
+         * @return
+         */
+        public Reader toReader(Charset charset);
+
+    }
+
+    /**
+     * A {@link FileSinkInputStreamSupplier} has the purpose of consuming an object and writing it into a {@link File} and then allow to read it again using
+     * e.g. a {@link Supplier} or {@link Stream} approach. This is helpful for reducing memory consumption of large objects.
+     * 
+     * @see FileSinkInputStreamSupplier
+     * @param file
+     * @return
+     */
+    public static FileSinkInputStreamSupplier toFileSinkInputStreamSupplier(File file)
+    {
+        return new FileSinkInputStreamSupplier()
+        {
+            private Charset charset = StandardCharsets.UTF_8;
+
+            @Override
+            public FileSinkedInputStreamSupplier accept(String text)
+            {
+                return this.accept(writer ->
+                {
+                    try
+                    {
+                        writer.append(text);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new RuntimeIOException(e);
+                    }
+                });
+            }
+
+            @Override
+            public FileSinkInputStreamSupplier withCharset(Charset charset)
+            {
+                this.charset = charset;
+                return this;
+            }
+
+            @Override
+            public FileSinkedInputStreamSupplier accept(Consumer<Writer> writerConsumer)
+            {
+                try (Writer writer = toWriter(file, this.charset))
+                {
+                    writerConsumer.accept(writer);
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeIOException(e);
+                }
+
+                return new FileSinkedInputStreamSupplierImpl(file, this.charset);
+            }
+        };
+    }
+
+    private static final class FileSinkedInputStreamSupplierImpl implements FileSinkedInputStreamSupplier
+    {
+        private final File file;
+        private Charset    charset;
+
+        private FileSinkedInputStreamSupplierImpl(File file, Charset charset)
+        {
+            this.file = file;
+            this.charset = charset;
+        }
+
+        @Override
+        public FileSinkedInputStreamSupplier withCharset(Charset charset)
+        {
+            this.charset = charset;
+            return this;
+        }
+
+        @Override
+        public Reader toReader()
+        {
+            return this.toReader(this.charset);
+        }
+
+        @Override
+        public Reader toReader(Charset charset)
+        {
+            return FileUtils.toReader(this.file, charset);
+        }
+
+        @Override
+        public String get()
+        {
+            try
+            {
+                return org.apache.commons.io.IOUtils.toString(this.toReader(this.charset));
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeIOException(e);
+            }
+        }
+
+        @Override
+        public <E> Supplier<E> toSupplier(Function<Reader, E> readerToElementMapper)
+        {
+            return () -> readerToElementMapper.apply(this.toReader(this.charset));
+        }
+
+        @Override
+        public <E> Stream<E> toStream(Function<Reader, Stream<E>> readerToStreamMapper)
+        {
+            return readerToStreamMapper.apply(this.toReader(this.charset));
+        }
     }
 }

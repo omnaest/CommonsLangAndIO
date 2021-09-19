@@ -890,4 +890,19 @@ public class ListUtils
         public List<E> build();
     }
 
+    /**
+     * Returns true, if all elements of the given {@link List} are unique / distinct from each other
+     * 
+     * @param list
+     * @return
+     */
+    public static <E> boolean areElementsDistinct(List<E> list)
+    {
+        List<E> effectiveList = Optional.ofNullable(list)
+                                        .orElse(Collections.emptyList());
+        return effectiveList.size() == (int) effectiveList.stream()
+                                                          .distinct()
+                                                          .count();
+    }
+
 }

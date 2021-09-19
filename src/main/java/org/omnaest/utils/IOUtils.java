@@ -94,7 +94,7 @@ public class IOUtils
                 if (progessConsumer != null && this.previousCounter.deltaTo(this.counter) >= steps)
                 {
                     int available = inputStream.available();
-                    progessConsumer.accept((int) this.previousCounter.synchronizeWith(this.counter)
+                    progessConsumer.accept((int) this.previousCounter.synchronizeFrom(this.counter)
                                                                      .getAsLong(),
                                            available);
                 }

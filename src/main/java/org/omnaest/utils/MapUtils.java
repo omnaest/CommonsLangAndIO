@@ -865,4 +865,36 @@ public class MapUtils
 
     }
 
+    /**
+     * Returns a new {@link Map} containing the given key and value
+     * 
+     * @param key
+     * @param value
+     * @return
+     */
+    public static <K, V> Map<K, V> of(K key, V value)
+    {
+        HashMap<K, V> map = new HashMap<>();
+        map.put(key, value);
+        return map;
+    }
+
+    /**
+     * Partitions the entries of a given {@link Map} instance into a {@link Stream} of {@link Map} instances that contain in the maximum case the partition size
+     * number of entries each.
+     * 
+     * @param map
+     * @param partitionSize
+     * @return
+     */
+    public static <K, V> Stream<Map<K, V>> partition(Map<K, V> map, int partitionSize)
+    {
+        return StreamUtils.framedNonNullAsList(partitionSize, Optional.ofNullable(map)
+                                                                      .orElse(Collections.emptyMap())
+                                                                      .entrySet()
+                                                                      .stream())
+                          .map(entries -> entries.stream()
+                                                 .collect(CollectorUtils.toMap()));
+    }
+
 }

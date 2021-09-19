@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.utils.duration;
+package org.omnaest.utils.duration.internal;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +30,7 @@ public class DefaultDisplayableDuration implements DisplayableDuration
     private long     time;
     private TimeUnit timeUnit;
 
-    protected DefaultDisplayableDuration(long time, TimeUnit timeUnit)
+    public DefaultDisplayableDuration(long time, TimeUnit timeUnit)
     {
         super();
         this.time = time;

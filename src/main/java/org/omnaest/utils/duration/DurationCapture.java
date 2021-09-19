@@ -33,8 +33,12 @@
 */
 package org.omnaest.utils.duration;
 
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
+import org.omnaest.utils.duration.internal.DefaultDisplayableDuration;
+import org.omnaest.utils.duration.internal.DefaultDurationCapture;
 
 /**
  * @see #newInstance()
@@ -123,7 +127,11 @@ public interface DurationCapture
     public static interface DurationMeasurement
     {
         public MeasurementResult stop();
+
+        public Instant getStartTime();
     }
 
     public DurationMeasurement start();
+
+    public DurationMeasurement from(Instant startTime);
 }

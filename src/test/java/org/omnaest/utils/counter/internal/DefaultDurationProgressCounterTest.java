@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.utils.counter;
+package org.omnaest.utils.counter.internal;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,6 +24,9 @@ import java.util.stream.IntStream;
 
 import org.junit.Test;
 import org.omnaest.utils.ThreadUtils;
+import org.omnaest.utils.counter.Counter;
+import org.omnaest.utils.counter.DurationProgressCounter;
+import org.omnaest.utils.counter.internal.DefaultDurationProgressCounter;
 
 /**
  * @see DefaultDurationProgressCounter

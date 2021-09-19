@@ -14,19 +14,40 @@ public class ProgressUtils
         return DurationProgressCounter.fromZero();
     }
 
-    public static <E> Consumer<E> newDurationProgressCounterLogger(Consumer<String> messageConsumer, int maxCount)
+    public static <E> IncrementCounterLogger<E> newDurationProgressCounterLogger(Consumer<String> messageConsumer, int maxCount)
     {
         int stepsInBetween = Math.max(1, maxCount / 100);
         return newDurationProgressCounterLogger(messageConsumer, maxCount, stepsInBetween);
     }
 
-    public static <E> Consumer<E> newDurationProgressCounterLogger(Consumer<String> messageConsumer, int maxCount, int stepsInBetween)
+    public static interface IncrementCounterLogger<E> extends Consumer<E>
+    {
+        public IncrementCounterLogger<E> by(int increment);
+    }
+
+    public static <E> IncrementCounterLogger<E> newDurationProgressCounterLogger(Consumer<String> messageConsumer, int maxCount, int stepsInBetween)
     {
         DurationProgressCounter durationProgressCounter = DurationProgressCounter.fromZero()
                                                                                  .withMaximum(maxCount);
-        return element -> durationProgressCounter.increment()
-                                                 .ifModulo(stepsInBetween,
-                                                           (ImmutableDurationProgressCounter.DurationProgressConsumer) duration -> messageConsumer.accept(duration.getProgressAndETAasString()));
+        return new IncrementCounterLogger<E>()
+        {
+            private int increment = 1;
+
+            @Override
+            public void accept(E element)
+            {
+                durationProgressCounter.incrementBy(this.increment)
+                                       .ifModulo(stepsInBetween,
+                                                 (ImmutableDurationProgressCounter.DurationProgressConsumer) duration -> messageConsumer.accept(duration.getProgressAndETAasString()));
+            }
+
+            @Override
+            public IncrementCounterLogger<E> by(int increment)
+            {
+                this.increment = increment;
+                return this;
+            }
+        };
     }
 
     public static ProgressCounter newProgressCounter()

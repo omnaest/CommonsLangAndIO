@@ -20,10 +20,10 @@ public interface ImmutableProgressCounter extends ImmutableCounter
      */
     public String getProgressAsString();
 
-    public ProgressCounter doWithProgress(DoubleConsumer progressConsumer);
+    public ImmutableProgressCounter doWithProgress(DoubleConsumer progressConsumer);
 
     @Override
-    public ProgressCounter ifModulo(int modulo, LongConsumer counterConsumer);
+    public ImmutableProgressCounter ifModulo(int modulo, LongConsumer counterConsumer);
 
     /**
      * Similar to {@link #ifModulo(int, LongConsumer)} but provides a {@link ProgressCounter} via the given {@link ProgressConsumer}
@@ -32,7 +32,14 @@ public interface ImmutableProgressCounter extends ImmutableCounter
      * @param progressConsumer
      * @return
      */
-    public ProgressCounter ifModulo(int modulo, ProgressConsumer progressConsumer);
+    public ImmutableProgressCounter ifModulo(int modulo, ProgressConsumer progressConsumer);
+
+    /**
+     * Returns the current maximum
+     * 
+     * @return
+     */
+    public long getMaximum();
 
     public static interface ProgressConsumer extends Consumer<Progress>
     {

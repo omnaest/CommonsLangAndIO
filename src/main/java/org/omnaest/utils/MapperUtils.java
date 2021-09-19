@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.LongFunction;
+import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
@@ -28,6 +29,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import org.omnaest.utils.element.bi.BiElement;
+import org.omnaest.utils.stream.FilterMapper;
 
 /**
  * Utils around {@link Stream#map(java.util.function.Function)}
@@ -78,6 +80,16 @@ public class MapperUtils
      * @return
      */
     public static <F extends T, T> Function<F, T> identity()
+    {
+        return i -> i;
+    }
+
+    /**
+     * Similar to {@link #identity()}
+     * 
+     * @return
+     */
+    public static <T> UnaryOperator<T> unaryIdentity()
     {
         return i -> i;
     }
@@ -185,6 +197,17 @@ public class MapperUtils
     public static <E> Function<Optional<E>, E> mapOptionalToValue()
     {
         return element -> element.orElse(null);
+    }
+
+    /**
+     * @see StreamUtils#filterMapper(Predicate, Function)
+     * @param filter
+     * @param mapper
+     * @return
+     */
+    public static <T, R> FilterMapper<T, R> filterMapper(Predicate<T> filter, Function<T, R> mapper)
+    {
+        return StreamUtils.filterMapper(filter, mapper);
     }
 
 }

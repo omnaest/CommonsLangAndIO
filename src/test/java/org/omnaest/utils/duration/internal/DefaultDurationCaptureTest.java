@@ -31,11 +31,12 @@
 
 
 */
-package org.omnaest.utils.duration;
+package org.omnaest.utils.duration.internal;
 
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.omnaest.utils.duration.DurationCapture;
 
 public class DefaultDurationCaptureTest
 {

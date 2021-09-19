@@ -324,4 +324,25 @@ public class MapUtilsTest
                                                                   .stream()
                                                                   .collect(Collectors.toList()));
     }
+
+    @Test
+    public void testPartition() throws Exception
+    {
+        List<Map<String, String>> partitions = MapUtils.partition(MapUtils.builder()
+                                                                          .put("key1", "value1")
+                                                                          .put("key2", "value2")
+                                                                          .put("key3", "value3")
+                                                                          .build(),
+                                                                  2)
+                                                       .collect(Collectors.toList());
+        assertEquals(2, partitions.size());
+        assertEquals(SetUtils.toSet("key1", "key2"), partitions.get(0)
+                                                               .keySet());
+        assertEquals(SetUtils.toSet("key3"), partitions.get(1)
+                                                       .keySet());
+        assertEquals(SetUtils.toSet("value1", "value2"), partitions.get(0)
+                                                                   .values()
+                                                                   .stream()
+                                                                   .collect(Collectors.toSet()));
+    }
 }

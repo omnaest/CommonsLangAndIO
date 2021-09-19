@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.omnaest.utils.counter.Counter;
 import org.omnaest.utils.counter.ProgressUtils;
+import org.omnaest.utils.counter.ProgressUtils.IncrementCounterLogger;
 
 /**
  * Helper for {@link Stream#peek(java.util.function.Consumer)}
@@ -47,13 +48,52 @@ public class PeekUtils
      * @param maxCoun
      * @return
      */
-    public static <E> Consumer<E> newDurationProgressCounterLogger(Consumer<String> messageConsumer, int maxCount)
+    public static <E> IncrementCounterLogger<E> newDurationProgressCounterLogger(Consumer<String> messageConsumer, int maxCount)
     {
         return ProgressUtils.newDurationProgressCounterLogger(messageConsumer, maxCount);
     }
 
-    public static <E> Consumer<E> incrementCounter(Counter counter)
+    /**
+     * Calls {@link Counter#incrementBy(int)} where the increment is defined by IncrementCounter#by(int) called in a chain.
+     * 
+     * @see IncrementCounter#by(int)
+     * @param counter
+     * @return
+     */
+    public static <E> IncrementCounter<E> incrementCounter(Counter counter)
     {
-        return e -> counter.increment();
+        return new IncrementCounter<E>()
+        {
+            private int increment = 1;
+
+            @Override
+            public void accept(E e)
+            {
+                counter.incrementBy(this.increment);
+            }
+
+            @Override
+            public IncrementCounter<E> by(int increment)
+            {
+                this.increment = increment;
+                return this;
+            }
+        };
+    }
+
+    /**
+     * Calls {@link Counter#synchronize()}
+     * 
+     * @param counter
+     * @return
+     */
+    public static <E> Consumer<E> synchronizeCounter(Counter counter)
+    {
+        return e -> counter.synchronize();
+    }
+
+    public static interface IncrementCounter<E> extends Consumer<E>
+    {
+        public IncrementCounter<E> by(int increment);
     }
 }

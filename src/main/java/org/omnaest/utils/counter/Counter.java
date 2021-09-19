@@ -18,6 +18,8 @@ package org.omnaest.utils.counter;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongConsumer;
 
+import org.omnaest.utils.counter.internal.DefaultCounter;
+
 /**
  * Represents a thread safe {@link AtomicLong} counter with additional methods for counting support
  * 
@@ -36,13 +38,24 @@ public interface Counter extends LongConsumer, ImmutableCounter
      * @param sourceCounter
      * @return
      */
-    public Counter synchronizeWith(Counter sourceCounter);
+    public Counter synchronizeFrom(Counter sourceCounter);
 
     public Counter incrementBy(int delta);
 
     public Counter increment();
 
-    public Counter synchronizeCountContinouslyWith(Counter counter);
+    public Counter synchronizeCountContinouslyFrom(Counter counter);
+
+    /**
+     * Synchronizes all registered {@link Counter}s
+     * 
+     * @see #synchronizeCountContinouslyFrom(Counter)
+     * @return
+     */
+    public Counter synchronize();
+
+    @Override
+    public Counter ifModulo(int modulo, LongConsumer counterConsumer);
 
     /**
      * @see ProgressCounter

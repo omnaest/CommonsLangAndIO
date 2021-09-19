@@ -13,37 +13,29 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-package org.omnaest.utils.counter;
+package org.omnaest.utils.counter.internal;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongConsumer;
+
+import org.omnaest.utils.counter.Counter;
+import org.omnaest.utils.counter.DurationProgressCounter;
+import org.omnaest.utils.counter.ProgressCounter;
 
 /**
  * @see Counter
  * @author omnaest
  */
-public class DefaultCounter implements Counter
+public class DefaultCounter extends AbstractImmutableCounter implements Counter
 {
     private AtomicLong counter;
     private Runnable   synchronizeOperation = () ->
                                             {
                                             };
 
-    protected DefaultCounter(long start)
+    public DefaultCounter(long start)
     {
         this.counter = new AtomicLong(start);
-    }
-
-    @Override
-    public Counter ifModulo(int modulo, LongConsumer counterConsumer)
-    {
-        this.synchronizeOperation.run();
-        long count = this.getAsLong();
-        if (counterConsumer != null && count % modulo == 0)
-        {
-            counterConsumer.accept(count);
-        }
-        return this;
     }
 
     @Override
@@ -62,7 +54,7 @@ public class DefaultCounter implements Counter
     @Override
     public long getAsLong()
     {
-        this.synchronizeOperation.run();
+        this.synchronize();
         return this.counter.get();
     }
 
@@ -73,29 +65,17 @@ public class DefaultCounter implements Counter
     }
 
     @Override
-    public Counter synchronizeCountContinouslyWith(Counter counter)
+    public Counter synchronizeCountContinouslyFrom(Counter counter)
     {
         this.synchronizeOperation = () -> this.accept(counter.getAsLong());
         return this;
     }
 
     @Override
-    public Counter synchronizeWith(Counter sourceCounter)
+    public Counter synchronizeFrom(Counter sourceCounter)
     {
         this.counter.set(sourceCounter.getAsLong());
         return this;
-    }
-
-    /**
-     * Returns the delta = other counter - current counter
-     * 
-     * @param otherCounter
-     * @return
-     */
-    @Override
-    public long deltaTo(Counter otherCounter)
-    {
-        return otherCounter.getAsLong() - this.counter.get();
     }
 
     @Override
@@ -109,6 +89,20 @@ public class DefaultCounter implements Counter
     {
         return this.asProgressCounter()
                    .asDurationProgressCounter();
+    }
+
+    @Override
+    public Counter synchronize()
+    {
+        this.synchronizeOperation.run();
+        return this;
+    }
+
+    @Override
+    public Counter ifModulo(int modulo, LongConsumer counterConsumer)
+    {
+        super.ifModulo(modulo, counterConsumer);
+        return this;
     }
 
 }

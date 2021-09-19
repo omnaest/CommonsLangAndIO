@@ -34,7 +34,9 @@
 package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -361,5 +363,12 @@ public class ListUtilsTest
                                                        .add("a")
                                                        .add("b")
                                                        .build());
+    }
+
+    @Test
+    public void testAreElementsDistinct() throws Exception
+    {
+        assertTrue(ListUtils.areElementsDistinct(Arrays.asList("a", "b")));
+        assertFalse(ListUtils.areElementsDistinct(Arrays.asList("a", "a")));
     }
 }

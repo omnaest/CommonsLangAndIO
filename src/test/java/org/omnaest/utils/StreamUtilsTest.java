@@ -52,6 +52,7 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.omnaest.utils.StreamUtils.Drainage;
+import org.omnaest.utils.StreamUtils.UnaryMergeEntry;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.bi.IntUnaryBiElement;
 import org.omnaest.utils.element.lar.LeftAndRight;
@@ -357,7 +358,7 @@ public class StreamUtilsTest
     }
 
     @Test
-    public void testRemoveStream() throws Exception
+    public void testRemoveHeadStream() throws Exception
     {
         List<String> sourceList = Arrays.asList("a", "b", "c")
                                         .stream()
@@ -390,14 +391,14 @@ public class StreamUtilsTest
     @Test
     public void testParallel()
     {
-        Set<String> result = StreamUtils.parallel(IntStream.range(0, 10000)
+        Set<String> result = StreamUtils.parallel(IntStream.range(0, 1000)
                                                            .boxed(),
                                                   i -> "value" + i)
                                         .collect(Collectors.toSet());
 
-        assertEquals(result.size(), 10000);
+        assertEquals(result.size(), 1000);
         assertTrue(result.contains("value0"));
-        assertTrue(result.contains("value9999"));
+        assertTrue(result.contains("value999"));
     }
 
     @Test
@@ -575,5 +576,25 @@ public class StreamUtilsTest
                                                      .until(i -> i == 2)
                                                      .boxed()
                                                      .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testMerger() throws Exception
+    {
+        List<UnaryMergeEntry<String>> result = StreamUtils.merger()
+                                                          .ofSorted()
+                                                          .unary()
+                                                          .withIdentityFunction(String.class, char.class, value -> value.charAt(0))
+                                                          .withSourceStream(Stream.of("1a", "2a", "4a"))
+                                                          .withSourceStream(Stream.of("1b", "2b", "3b"))
+                                                          .merge()
+                                                          .collect(Collectors.toList());
+
+        assertEquals(Arrays.asList("1a1b", "2a2b", "3b", "4a"), result.stream()
+                                                                      .map(entry -> entry.getFirst()
+                                                                                         .orElse("")
+                                                                              + entry.getSecond()
+                                                                                     .orElse(""))
+                                                                      .collect(Collectors.toList()));
     }
 }

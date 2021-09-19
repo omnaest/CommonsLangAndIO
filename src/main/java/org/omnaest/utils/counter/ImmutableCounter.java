@@ -21,5 +21,5 @@ public interface ImmutableCounter extends LongSupplier
      * @param counterConsumer
      * @return
      */
-    public Counter ifModulo(int modulo, LongConsumer counterConsumer);
+    public ImmutableCounter ifModulo(int modulo, LongConsumer counterConsumer);
 }

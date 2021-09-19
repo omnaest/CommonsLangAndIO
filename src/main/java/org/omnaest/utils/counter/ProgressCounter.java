@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.omnaest.utils.counter;
 
+import java.util.function.DoubleConsumer;
+import java.util.function.LongConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -22,7 +24,7 @@ import java.util.function.Supplier;
  * 
  * @author omnaest
  */
-public interface ProgressCounter extends Counter, ImmutableProgressCounter
+public interface ProgressCounter extends Counter, ImmutableProgressCounter, DoubleConsumer
 {
     public ProgressCounter withMaximumProvider(Supplier<Long> maximumProvider);
 
@@ -30,13 +32,47 @@ public interface ProgressCounter extends Counter, ImmutableProgressCounter
 
     public ProgressCounter setProgress(double progress);
 
-    public ProgressCounter synchronizeProgressContinouslyWith(ProgressCounter progressCounter);
+    /**
+     * Similar to {@link #setProgress(double)}
+     */
+    @Override
+    public void accept(double value);
+
+    public ProgressCounter synchronizeProgressContinouslyFrom(ProgressCounter progressCounter);
+
+    public ProgressCounter synchronizeProgressContinouslyFrom(ProgressCounter progressCounter, double weight);
+
+    public ProgressCounter synchronizeProgressContinouslyFromAndRegisterTo(ProgressCounter progressCounter, double weight);
+
+    public ProgressCounter synchronizeProgressContinouslyTo(DoubleConsumer progressConsumer);
+
+    public ProgressCounter synchronizeProgressContinouslyTo(ProgressCounter progressCounter);
+
+    /**
+     * Registers this {@link ProgressCounter} at the give {@link ProgressCounter} using
+     * {@link ProgressCounter#synchronizeProgressContinouslyFrom(ProgressCounter)}
+     * 
+     * @param progressCounter
+     * @return
+     */
+    public ProgressCounter synchronizeProgressContinouslyToByRegistrationTo(ProgressCounter progressCounter);
+
+    /**
+     * Synchronizes all registered {@link ProgressCounter}s
+     * 
+     * @see #synchronizeProgressContinouslyFrom(ProgressCounter)
+     * @see #synchronizeProgressContinouslyFrom(ProgressCounter, double)
+     * @see #synchronizeProgressContinouslyTo(ProgressCounter)
+     * @return
+     */
+    @Override
+    public ProgressCounter synchronize();
 
     @Override
-    public ProgressCounter synchronizeCountContinouslyWith(Counter counter);
+    public ProgressCounter synchronizeCountContinouslyFrom(Counter counter);
 
     @Override
-    public ProgressCounter synchronizeWith(Counter sourceCounter);
+    public ProgressCounter synchronizeFrom(Counter sourceCounter);
 
     public @Override ProgressCounter incrementBy(int delta);
 
@@ -44,4 +80,11 @@ public interface ProgressCounter extends Counter, ImmutableProgressCounter
     public ProgressCounter increment();
 
     public ImmutableProgressCounter asImmutableProgressCounter();
+
+    @Override
+    public ProgressCounter ifModulo(int modulo, ProgressConsumer progressConsumer);
+
+    @Override
+    public ProgressCounter ifModulo(int modulo, LongConsumer counterConsumer);
+
 }

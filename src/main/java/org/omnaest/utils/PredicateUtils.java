@@ -214,4 +214,12 @@ public class PredicateUtils
         return element -> element != null && element.isPresent();
     }
 
+    public static <E extends S, S> Predicate<S> matchesType(Class<E> type)
+    {
+        return element -> Optional.ofNullable(element)
+                                  .map(S::getClass)
+                                  .map(type::isAssignableFrom)
+                                  .orElse(false);
+    }
+
 }

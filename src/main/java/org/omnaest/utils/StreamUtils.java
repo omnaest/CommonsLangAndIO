@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -79,6 +80,7 @@ import org.omnaest.utils.counter.DurationProgressCounter;
 import org.omnaest.utils.counter.ImmutableDurationProgressCounter.DurationProgressConsumer;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.bi.IntUnaryBiElement;
+import org.omnaest.utils.element.cached.CachedElement;
 import org.omnaest.utils.element.cached.CachedFunction;
 import org.omnaest.utils.element.lar.LeftAndRight;
 import org.omnaest.utils.functional.PredicateConsumer;
@@ -269,6 +271,100 @@ public class StreamUtils
                 throw new IllegalStateException(e);
             }
         });
+    }
+
+    private static class UnaryMergeEntryImpl<E> implements UnaryMergeEntry<E>
+    {
+        private final MultiTypedMergeEntry entry;
+        private final Class<E>             elementType;
+
+        private UnaryMergeEntryImpl(MultiTypedMergeEntry entry, Class<E> elementType)
+        {
+            this.entry = entry;
+            this.elementType = elementType;
+        }
+
+        @Override
+        public Optional<E> getFirst()
+        {
+            return this.entry.getFirstAs(this.elementType);
+        }
+
+        @Override
+        public Optional<E> getSecond()
+        {
+            return this.entry.getSecondAs(this.elementType);
+        }
+
+        @Override
+        public Optional<E> getNth(int index)
+        {
+            return this.entry.getNthAs(this.elementType, index);
+        }
+
+        @Override
+        public Optional<E> reduce(BinaryOperator<E> mergeFunction)
+        {
+            return this.stream()
+                       .reduce(mergeFunction);
+        }
+
+        @Override
+        public Iterator<E> iterator()
+        {
+            return this.stream()
+                       .iterator();
+        }
+
+        @Override
+        public int size()
+        {
+            return this.entry.size();
+        }
+
+        @Override
+        public Stream<E> stream()
+        {
+            return IntStream.range(0, this.size())
+                            .mapToObj(index -> this.getNth(index))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get);
+        }
+    }
+
+    private static class MultiTypedMergeEntryImpl implements MultiTypedMergeEntry
+    {
+        private final Object[] elements;
+
+        private MultiTypedMergeEntryImpl(Object[] elements)
+        {
+            this.elements = elements;
+        }
+
+        @Override
+        public <E> Optional<E> getFirstAs(Class<E> type)
+        {
+            return this.getNthAs(type, 0);
+        }
+
+        @Override
+        public <E> Optional<E> getSecondAs(Class<E> type)
+        {
+            return this.getNthAs(type, 1);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <E> Optional<E> getNthAs(Class<E> type, int index)
+        {
+            return Optional.ofNullable((E) this.elements[index]);
+        }
+
+        @Override
+        public int size()
+        {
+            return this.elements.length;
+        }
     }
 
     private static class OrderedStreamSynchronizer<E extends Comparable<E>> implements Function<LeftAndRight<E, E>, Stream<LeftAndRight<E, E>>>
@@ -648,6 +744,307 @@ public class StreamUtils
     public static <L, R> Stream<BiElement<L, R>> merge2(Stream<L> stream1, Stream<R> stream2)
     {
         return merge(stream1, stream2).map(lar -> lar.asBiElement());
+    }
+
+    public static interface StreamMerger
+    {
+        public SortedStreamMergerChooser ofSorted();
+    }
+
+    public static interface SortedStreamMergerChooser
+    {
+        public MultiTypedSortedStreamMergerIdentityDefiner multiTyped();
+
+        public UnaryTypedSortedStreamMergerIdentityDefiner unary();
+    }
+
+    public static interface MultiTypedSortedStreamMergerIdentityDefiner
+    {
+        public <I extends Comparable<I>> MultiTypedSortedStreamMerger<I> withIdentityType(Class<I> type);
+    }
+
+    public static interface MultiTypedSortedStreamMerger<I extends Comparable<I>>
+    {
+        public <E> MultiTypedSortedStreamMerger<I> withSourceStream(Stream<E> stream, Function<E, I> identityFunction);
+
+        public <E> MultiTypedSortedStreamMerger<I> withSourceStreams(List<Stream<E>> streams, Function<E, I> identityFunction);
+
+        public Stream<MultiTypedMergeEntry> merge();
+    }
+
+    public static interface MultiTypedMergeEntry
+    {
+        public <E> Optional<E> getFirstAs(Class<E> type);
+
+        public <E> Optional<E> getSecondAs(Class<E> type);
+
+        public <E> Optional<E> getNthAs(Class<E> type, int index);
+
+        public int size();
+    }
+
+    public static interface UnaryTypedSortedStreamMergerIdentityDefiner
+    {
+        public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType, Class<I> identityType,
+                                                                                                    Function<E, I> identityFunction);
+    }
+
+    public static interface UnaryTypedSortedStreamMerger<E, I extends Comparable<I>>
+    {
+        public UnaryTypedSortedStreamMerger<E, I> withSourceStream(Stream<E> stream);
+
+        public UnaryTypedSortedStreamMerger<E, I> withSourceStreams(Collection<Stream<E>> streams);
+
+        public Stream<UnaryMergeEntry<E>> merge();
+
+        public Stream<E> reduce(BinaryOperator<E> mergeFunction);
+
+    }
+
+    public static interface UnaryMergeEntry<E> extends Iterable<E>
+    {
+        public Optional<E> getFirst();
+
+        public Optional<E> getSecond();
+
+        public Optional<E> getNth(int index);
+
+        public int size();
+
+        public Stream<E> stream();
+
+        public Optional<E> reduce(BinaryOperator<E> mergeFunction);
+    }
+
+    public static StreamMerger merger()
+    {
+        return new StreamMerger()
+        {
+            @Override
+            public SortedStreamMergerChooser ofSorted()
+            {
+                return new SortedStreamMergerChooser()
+                {
+
+                    @Override
+                    public UnaryTypedSortedStreamMergerIdentityDefiner unary()
+                    {
+                        MultiTypedSortedStreamMergerIdentityDefiner multiTypedSortedStreamMerger = this.multiTyped();
+                        return new UnaryTypedSortedStreamMergerIdentityDefiner()
+                        {
+                            @Override
+                            public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType,
+                                                                                                                        Class<I> identityType,
+                                                                                                                        Function<E, I> identityFunction)
+                            {
+                                return new UnaryTypedSortedStreamMerger<E, I>()
+                                {
+                                    private List<Stream<E>> streams = new ArrayList<>();
+
+                                    @Override
+                                    public UnaryTypedSortedStreamMerger<E, I> withSourceStream(Stream<E> stream)
+                                    {
+                                        return this.withSourceStreams(Arrays.asList(stream));
+                                    }
+
+                                    @Override
+                                    public UnaryTypedSortedStreamMerger<E, I> withSourceStreams(Collection<Stream<E>> streams)
+                                    {
+                                        Optional.ofNullable(streams)
+                                                .ifPresent(this.streams::addAll);
+                                        return this;
+                                    }
+
+                                    @Override
+                                    public Stream<UnaryMergeEntry<E>> merge()
+                                    {
+                                        return multiTypedSortedStreamMerger.withIdentityType(identityType)
+                                                                           .withSourceStreams(this.streams, identityFunction)
+                                                                           .merge()
+                                                                           .map(entry -> new UnaryMergeEntryImpl<E>(entry, elementType));
+                                    }
+
+                                    @Override
+                                    public Stream<E> reduce(BinaryOperator<E> mergeFunction)
+                                    {
+                                        // recursive build up of binary tree of merge points
+                                        if (this.streams.size() > 2)
+                                        {
+                                            List<Stream<E>> mergedBinaryStreams = StreamUtils.framedNonNullAsList(2, this.streams.stream())
+                                                                                             .map(binaryStreams -> this.applyOuterReducer(elementType,
+                                                                                                                                          identityType,
+                                                                                                                                          identityFunction,
+                                                                                                                                          mergeFunction,
+                                                                                                                                          binaryStreams))
+                                                                                             .collect(Collectors.toList());
+                                            return this.applyOuterReducer(elementType, identityType, identityFunction, mergeFunction, mergedBinaryStreams);
+                                        }
+                                        else
+                                        {
+                                            return this.merge()
+                                                       .map(entry -> entry.reduce(mergeFunction))
+                                                       .filter(Optional::isPresent)
+                                                       .map(Optional::get);
+                                        }
+                                    }
+
+                                    private Stream<E> applyOuterReducer(Class<E> elementType, Class<I> identityType, Function<E, I> identityFunction,
+                                                                        BinaryOperator<E> mergeFunction, Collection<Stream<E>> currentStreams)
+                                    {
+                                        return StreamUtils.merger()
+                                                          .ofSorted()
+                                                          .unary()
+                                                          .withIdentityFunction(elementType, identityType, identityFunction)
+                                                          .withSourceStreams(currentStreams)
+                                                          .reduce(mergeFunction);
+                                    }
+                                };
+                            }
+                        };
+                    }
+
+                    @Override
+                    public MultiTypedSortedStreamMergerIdentityDefiner multiTyped()
+                    {
+                        return new MultiTypedSortedStreamMergerIdentityDefiner()
+                        {
+                            @Override
+                            public <I extends Comparable<I>> MultiTypedSortedStreamMerger<I> withIdentityType(Class<I> type)
+                            {
+                                return new MultiTypedSortedStreamMerger<I>()
+                                {
+                                    private List<StreamAndIdentityFunction<?, I>> streams = new ArrayList<>();
+
+                                    @Override
+                                    public <E> MultiTypedSortedStreamMerger<I> withSourceStream(Stream<E> stream, Function<E, I> identityFunction)
+                                    {
+                                        return this.withSourceStreams(Arrays.asList(stream), identityFunction);
+                                    }
+
+                                    @Override
+                                    public Stream<MultiTypedMergeEntry> merge()
+                                    {
+                                        List<StreamElementAndIdentitySupplier<Object, I>> streamElementSuppliers = this.createStreamElementSuppliers();
+
+                                        return generate().intStream()
+                                                         .unlimitedWithTerminationPredicate(index ->
+                                                         {
+                                                             boolean hasAnyElementLeft = streamElementSuppliers.stream()
+                                                                                                               .anyMatch(StreamElementAndIdentitySupplier::hasNext);
+                                                             return !hasAnyElementLeft;
+                                                         })
+                                                         .boxed()
+                                                         .map(index ->
+                                                         {
+                                                             Optional<I> identity = streamElementSuppliers.stream()
+                                                                                                          .map(StreamElementAndIdentitySupplier::getIdentity)
+                                                                                                          .filter(Optional::isPresent)
+                                                                                                          .map(Optional::get)
+                                                                                                          .distinct()
+                                                                                                          .sorted()
+                                                                                                          .findFirst();
+
+                                                             Object[] elements = streamElementSuppliers.stream()
+                                                                                                       .map(supplier ->
+                                                                                                       {
+                                                                                                           boolean hasMatchingIdentity = Objects.equals(identity.get(),
+                                                                                                                                                        supplier.getIdentity()
+                                                                                                                                                                .orElse(null));
+                                                                                                           return hasMatchingIdentity ? supplier.removeHead()
+                                                                                                                   : null;
+                                                                                                       })
+                                                                                                       .toArray(size -> new Object[size]);
+                                                             return elements;
+                                                         })
+                                                         .map(MultiTypedMergeEntryImpl::new);
+
+                                    }
+
+                                    @SuppressWarnings("unchecked")
+                                    private List<StreamElementAndIdentitySupplier<Object, I>> createStreamElementSuppliers()
+                                    {
+                                        return this.streams.stream()
+                                                           .map(streamAndIdentityFunction -> new StreamElementAndIdentitySupplier<Object, I>((Iterator<Object>) streamAndIdentityFunction.getStream()
+                                                                                                                                                                                         .iterator(),
+                                                                                                                                             (Function<Object, I>) streamAndIdentityFunction.getIdentityFunction()))
+                                                           .collect(Collectors.toList());
+                                    }
+
+                                    @Override
+                                    public <E> MultiTypedSortedStreamMerger<I> withSourceStreams(List<Stream<E>> streams, Function<E, I> identityFunction)
+                                    {
+                                        Optional.ofNullable(streams)
+                                                .orElse(Collections.emptyList())
+                                                .forEach(stream -> this.streams.add(new StreamAndIdentityFunction<>(stream, identityFunction)));
+                                        return this;
+                                    }
+                                };
+                            }
+                        };
+                    }
+                };
+            }
+        };
+    }
+
+    private static class StreamElementAndIdentitySupplier<E, I> implements Supplier<E>
+    {
+        private CachedElement<E> cachedElement;
+        private Function<E, I>   identityFunction;
+
+        public StreamElementAndIdentitySupplier(Iterator<E> iterator, Function<E, I> identityFunction)
+        {
+            super();
+            this.identityFunction = identityFunction;
+            this.cachedElement = CachedElement.of(() -> iterator.hasNext() ? iterator.next() : null);
+        }
+
+        public Optional<I> getIdentity()
+        {
+            return Optional.ofNullable(this.get())
+                           .map(this.identityFunction);
+        }
+
+        public boolean hasNext()
+        {
+            return this.cachedElement.get() != null;
+        }
+
+        @Override
+        public E get()
+        {
+            return this.cachedElement.get();
+        }
+
+        public E removeHead()
+        {
+            return this.cachedElement.getAndReset();
+        }
+
+    }
+
+    private static class StreamAndIdentityFunction<E, I>
+    {
+        private Stream<E>      stream;
+        private Function<E, I> identityFunction;
+
+        public StreamAndIdentityFunction(Stream<E> stream, Function<E, I> identityFunction)
+        {
+            super();
+            this.stream = stream;
+            this.identityFunction = identityFunction;
+        }
+
+        public Stream<E> getStream()
+        {
+            return this.stream;
+        }
+
+        public Function<E, I> getIdentityFunction()
+        {
+            return this.identityFunction;
+        }
+
     }
 
     /**

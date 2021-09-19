@@ -228,4 +228,22 @@ public class SetUtils
                      .stream()
                      .collect(Collectors.toSet());
     }
+
+    /**
+     * Returns a new {@link Set} instance containing the elements of the given {@link Set}
+     * 
+     * @param set
+     * @return
+     */
+    public static <E> Set<E> toNew(Set<E> set)
+    {
+        if (!(set instanceof LinkedHashSet) && (set instanceof HashSet))
+        {
+            return new HashSet<>(set);
+        }
+        else
+        {
+            return new LinkedHashSet<>(set);
+        }
+    }
 }
