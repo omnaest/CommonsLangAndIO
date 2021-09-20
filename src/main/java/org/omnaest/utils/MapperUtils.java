@@ -152,6 +152,35 @@ public class MapperUtils
     }
 
     /**
+     * Returns an immutable {@link Map.Entry} instance wrapping a {@link BiElement}.
+     * 
+     * @return
+     */
+    public static <K, V> Function<BiElement<K, V>, Map.Entry<K, V>> mapBiElementToEntry()
+    {
+        return biElement -> new Map.Entry<K, V>()
+        {
+            @Override
+            public K getKey()
+            {
+                return biElement.getFirst();
+            }
+
+            @Override
+            public V getValue()
+            {
+                return biElement.getSecond();
+            }
+
+            @Override
+            public V setValue(V value)
+            {
+                throw new UnsupportedOperationException("This entry is immutable");
+            }
+        };
+    }
+
+    /**
      * Returns a {@link Function} which adds a count to the given element
      * 
      * @return
