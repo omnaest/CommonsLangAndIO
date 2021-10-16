@@ -283,4 +283,34 @@ public class StringUtilsTest
         assertEquals("", StringUtils.rightPadding(null));
     }
 
+    @Test
+    public void testWrap() throws Exception
+    {
+        assertEquals("prefixtextsuffix", StringUtils.wrap("text", "prefix", "suffix"));
+    }
+
+    @Test
+    public void testBuilderAddIf() throws Exception
+    {
+        assertEquals("abc", StringUtils.builder()
+                                       .add("ab")
+                                       .addIf(true, "c")
+                                       .addIf(false, "d")
+                                       .build());
+    }
+
+    @Test
+    public void testBuilderProcessAll() throws Exception
+    {
+        assertEquals("abc", StringUtils.builder()
+                                       .processAll(Arrays.asList("a", "b", "c"), (element, builder) -> builder.add(element))
+                                       .build());
+        assertEquals("prefixa,b,csuffix", StringUtils.builder()
+                                                     .processAll(Arrays.asList("a", "b", "c"), support -> support.addJoiningDelimiter(",")
+                                                                                                                 .addPrefix("prefix")
+                                                                                                                 .addSuffix("suffix"),
+                                                                 (element, builder) -> builder.add(element))
+                                                     .build());
+    }
+
 }

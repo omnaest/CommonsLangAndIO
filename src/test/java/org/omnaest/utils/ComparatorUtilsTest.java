@@ -74,14 +74,20 @@ public class ComparatorUtilsTest
         assertEquals(-1, ComparatorUtils.builder()
                                         .of(new Wrapper(1), new Wrapper(2))
                                         .with((w1, w2) -> 0)
-                                        .and(w -> w.getValue())
+                                        .and(Wrapper::getValue)
                                         .compare());
 
         assertEquals(1, ComparatorUtils.builder()
                                        .of(new Wrapper(2), new Wrapper(1))
                                        .with((w1, w2) -> 0)
-                                       .and(w -> w.getValue(), Integer::valueOf)
+                                       .and(Wrapper::getValue, Integer::valueOf)
                                        .compare());
+        assertEquals(-1, ComparatorUtils.builder()
+                                        .of(new Wrapper(2), new Wrapper(1))
+                                        .with((w1, w2) -> 0)
+                                        .and(Wrapper::getValue, Integer::valueOf)
+                                        .reverse()
+                                        .compare());
     }
 
     @Test

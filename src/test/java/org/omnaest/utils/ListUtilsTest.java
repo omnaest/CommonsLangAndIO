@@ -41,6 +41,7 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -286,6 +287,21 @@ public class ListUtilsTest
     }
 
     @Test
+    public void testOptionalLast()
+    {
+        assertEquals("3", ListUtils.optionalLast(Arrays.asList("1", "2", "3"), 0)
+                                   .get());
+        assertEquals("2", ListUtils.optionalLast(Arrays.asList("1", "2", "3"), 1)
+                                   .get());
+        assertEquals("1", ListUtils.optionalLast(Arrays.asList("1", "2", "3"), 2)
+                                   .get());
+        assertEquals(false, ListUtils.optionalLast(Arrays.asList("1", "2", "3"), 3)
+                                     .isPresent());
+        assertEquals(false, ListUtils.optionalLast(Arrays.asList("1", "2", "3"), -1)
+                                     .isPresent());
+    }
+
+    @Test
     public void testGetRandomElement() throws Exception
     {
         assertEquals("a", ListUtils.getRandomElement(Arrays.asList("a"))
@@ -359,10 +375,12 @@ public class ListUtilsTest
     @Test
     public void testBuilder() throws Exception
     {
-        assertEquals(Arrays.asList("a", "b"), ListUtils.builder()
-                                                       .add("a")
-                                                       .add("b")
-                                                       .build());
+        assertEquals(Arrays.asList("a", "b", "c"), ListUtils.builder()
+                                                            .add("a")
+                                                            .add("b")
+                                                            .addIf(true, "c")
+                                                            .addIf(false, "d")
+                                                            .build());
     }
 
     @Test
@@ -370,5 +388,25 @@ public class ListUtilsTest
     {
         assertTrue(ListUtils.areElementsDistinct(Arrays.asList("a", "b")));
         assertFalse(ListUtils.areElementsDistinct(Arrays.asList("a", "a")));
+    }
+
+    @Test
+    public void testSplitLast() throws Exception
+    {
+        assertEquals(Arrays.asList("a", "b"), ListUtils.splitLast(Arrays.asList("a", "b", "c"))
+                                                       .getFirst());
+        assertEquals("c", ListUtils.splitLast(Arrays.asList("a", "b", "c"))
+                                   .getSecond()
+                                   .get());
+        assertEquals(false, ListUtils.splitLast(Collections.emptyList())
+                                     .getSecond()
+                                     .isPresent());
+        assertEquals(Collections.emptyList(), ListUtils.splitLast(Collections.emptyList())
+                                                       .getFirst());
+        assertEquals(false, ListUtils.splitLast(null)
+                                     .getSecond()
+                                     .isPresent());
+        assertEquals(Collections.emptyList(), ListUtils.splitLast(null)
+                                                       .getFirst());
     }
 }

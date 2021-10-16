@@ -18,6 +18,7 @@ package org.omnaest.utils;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Spliterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -26,11 +27,14 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.omnaest.utils.ConsumerUtils.ListAddingConsumer;
 import org.omnaest.utils.exception.handler.ExceptionHandler;
 
 /**
@@ -68,6 +72,28 @@ public class ExecutorUtils
         public ParallelExecution withExceptionHandler(ExceptionHandler exceptionHandler);
 
         public AsynchronousParallelExecution asynchronously();
+
+        public <E> ParallelStreamWrapper<E> wrap(Stream<E> stream);
+
+    }
+
+    public static interface ParallelStreamWrapper<E> extends Supplier<Stream<E>>
+    {
+        /**
+         * Reduces the wrapped {@link Stream} and closes the underlying thread pool.
+         * 
+         * @param accumulator
+         * @return
+         */
+        public Optional<E> reduce(BinaryOperator<E> accumulator);
+
+        /**
+         * Returns a {@link Stream} that works in parallel execution. Note: the returned {@link Stream} instance must be closed!
+         * 
+         * @see Stream#close()
+         */
+        @Override
+        public Stream<E> get();
 
     }
 
@@ -142,43 +168,52 @@ public class ExecutorUtils
     private static class ParallelExecutionImpl implements ParallelExecution, AsynchronousParallelExecution
     {
         private Supplier<ExecutorService> executorServiceFactory = () -> Executors.newCachedThreadPool();
+        private int                       numberOfThreads        = Integer.MAX_VALUE;
         private long                      timeout                = Integer.MAX_VALUE;
         private TimeUnit                  timeoutTimeUnit        = TimeUnit.SECONDS;
         private ExceptionHandler          exceptionHandler       = ExceptionHandler.noOperationExceptionHandler();
         private boolean                   asynchronousExecution  = false;
-    
+
         @Override
         public ParallelExecution withNumberOfThreads(int numberOfThreads)
         {
-            this.executorServiceFactory = () -> Executors.newFixedThreadPool(numberOfThreads);
+            this.numberOfThreads = numberOfThreads;
+            if (numberOfThreads < Integer.MAX_VALUE)
+            {
+                this.executorServiceFactory = () -> Executors.newFixedThreadPool(numberOfThreads);
+            }
+            else
+            {
+                this.executorServiceFactory = () -> Executors.newCachedThreadPool();
+            }
             return this;
         }
-    
+
         @Override
         public ParallelExecution withUnlimitedNumberOfThreads()
         {
             return this.withNumberOfThreads(Integer.MAX_VALUE);
         }
-    
+
         @Override
         public ParallelExecution withSingleThread()
         {
             return this.withNumberOfThreads(1);
         }
-    
+
         @Override
         public ParallelExecution withNumberOfThreadsPerCPUCore(double numberOfThreadsPerCPUCore)
         {
             int numberOfThreads = calculateNumberOfThreadsByPerCPU(numberOfThreadsPerCPUCore);
             return this.withNumberOfThreads(numberOfThreads);
         }
-    
+
         @Override
         public ParallelExecution withNumberOfThreadsLikeAvailableCPUCores()
         {
             return this.withNumberOfThreadsPerCPUCore(1.0);
         }
-    
+
         @Override
         public ParallelExecution withTimeout(long duration, TimeUnit timeUnit)
         {
@@ -186,14 +221,14 @@ public class ExecutorUtils
             this.timeoutTimeUnit = timeUnit;
             return this;
         }
-    
+
         @Override
         public ParallelExecution withExceptionHandler(ExceptionHandler exceptionHandler)
         {
             this.exceptionHandler = exceptionHandler;
             return this;
         }
-    
+
         @Override
         public ParallelExecution execute(Consumer<ParallelExecutionCollector> collectorConsumer)
         {
@@ -218,21 +253,21 @@ public class ExecutorUtils
                             }
                         };
                     }
-    
+
                     @Override
                     public <R> Supplier<R> add(Supplier<R> supplier)
                     {
                         return this.addTask((Callable<R>) () -> supplier.get());
                     }
-    
+
                 };
-    
+
                 collectorConsumer.accept(collector);
             });
-    
+
             return this;
         }
-    
+
         public ParallelExecution executeWithService(Consumer<ExecutorService> executorServiceConsumer)
         {
             ExecutorService executorService = this.executorServiceFactory.get();
@@ -247,16 +282,16 @@ public class ExecutorUtils
             {
                 //
                 executorService.shutdown();
-    
+
                 //
                 this.runAwaitShutdownThread(executorService);
             }
             return this;
         }
-    
+
         private void runAwaitShutdownThread(ExecutorService executorService)
         {
-            Runnable mainExecutorServiceShutdownOperation = this.createExecutorServiceShutdownOperation(executorService);
+            Runnable mainExecutorServiceShutdownOperation = this.createExecutorServiceAwaitAndShutdownNowOperation(executorService);
             if (this.asynchronousExecution)
             {
                 ExecutorService shutdownExecutor = Executors.newSingleThreadExecutor();
@@ -268,8 +303,8 @@ public class ExecutorUtils
                 mainExecutorServiceShutdownOperation.run();
             }
         }
-    
-        private Runnable createExecutorServiceShutdownOperation(ExecutorService executorService)
+
+        private Runnable createExecutorServiceAwaitAndShutdownNowOperation(ExecutorService executorService)
         {
             return () ->
             {
@@ -284,34 +319,31 @@ public class ExecutorUtils
                 executorService.shutdownNow();
             };
         }
-    
+
         @Override
         public <R> ParallelExecutionAndResult<R> executeTasks(Collection<Callable<R>> tasks)
         {
             return this.executeTasks(tasks.stream());
         }
-    
+
         @Override
         public <R> ParallelExecutionAndResult<R> executeTasks(Stream<Callable<R>> tasks)
         {
             AtomicReference<List<Future<R>>> result = new AtomicReference<>();
-            this.executeWithService(executorService ->
-            {
-                result.set(tasks.map(task -> executorService.submit(task))
-                                .collect(Collectors.toList()));
-            });
-    
+            this.executeWithService(executorService -> result.set(tasks.map(executorService::submit)
+                                                                       .collect(Collectors.toList())));
+
             ParallelExecution parallelExecution = this;
-    
+
             return new ParallelExecutionAndResult<R>()
             {
-    
+
                 @Override
                 public ParallelExecution and()
                 {
                     return parallelExecution;
                 }
-    
+
                 @Override
                 public Stream<R> get()
                 {
@@ -330,7 +362,7 @@ public class ExecutorUtils
                                      }
                                  });
                 }
-    
+
                 @Override
                 public ParallelExecutionAndResult<R> handleExceptions()
                 {
@@ -338,7 +370,7 @@ public class ExecutorUtils
                         .count();
                     return this;
                 }
-    
+
                 @Override
                 public ParallelExecutionAndResult<R> consume(Consumer<Stream<R>> resultConsumer)
                 {
@@ -348,10 +380,10 @@ public class ExecutorUtils
                     }
                     return this;
                 }
-    
+
             };
         }
-    
+
         @Override
         public <R> ParallelExecutionAndResult<R> executeOperations(Stream<Runnable> operations)
         {
@@ -363,18 +395,129 @@ public class ExecutorUtils
                                                  return null;
                                              }));
         }
-    
+
         @Override
         public <R> ParallelExecutionAndResult<R> executeOperation(Runnable operation)
         {
             return this.executeOperations(Stream.of(operation));
         }
-    
+
         @Override
         public AsynchronousParallelExecution asynchronously()
         {
             this.asynchronousExecution = true;
             return this;
         }
+
+        @Override
+        public <E> ParallelStreamWrapper<E> wrap(Stream<E> stream)
+        {
+            int numberOfThreads = Math.min(Runtime.getRuntime()
+                                                  .availableProcessors(),
+                                           this.numberOfThreads)
+                    * 4;
+            ExecutorService executorService = this.executorServiceFactory.get();
+            Runnable awaitAndShutdownNowOperation = this.createExecutorServiceAwaitAndShutdownNowOperation(executorService);
+            return new ParallelStreamWrapper<E>()
+            {
+                @Override
+                public Stream<E> get()
+                {
+                    List<Spliterator<E>> spliterators = IteratorUtils.splitInto(numberOfThreads, stream.spliterator());
+                    return StreamUtils.fromSupplier(() -> IntStream.range(0, numberOfThreads)
+                                                                   .mapToObj(index -> spliterators.get(index))
+                                                                   .map(spliterator -> executorService.submit(() ->
+                                                                   {
+                                                                       ListAddingConsumer<E> consumer = ConsumerUtils.newAddingConsumer();
+                                                                       boolean hasElement = spliterator.tryAdvance(consumer);
+                                                                       return hasElement ? ListUtils.first(consumer.get()) : null;
+                                                                   }))
+                                                                   .collect(Collectors.toList())
+                                                                   .stream()
+                                                                   .map(future ->
+                                                                   {
+                                                                       try
+                                                                       {
+                                                                           return future.get();
+                                                                       }
+                                                                       catch (InterruptedException | ExecutionException e)
+                                                                       {
+                                                                           throw new IllegalStateException(e);
+                                                                       }
+                                                                   })
+                                                                   .filter(PredicateUtils.notNull())
+                                                                   .collect(Collectors.toList()),
+                                                    element -> element.isEmpty())
+                                      .flatMap(List::stream)
+                                      .onClose(() ->
+                                      {
+                                          //
+                                          executorService.shutdown();
+
+                                          //
+                                          awaitAndShutdownNowOperation.run();
+                                      });
+                }
+
+                @Override
+                public Optional<E> reduce(BinaryOperator<E> accumulator)
+                {
+                    try (Stream<E> stream = this.get())
+                    {
+                        return stream.reduce(accumulator);
+                    }
+                }
+            };
+        }
+
+    }
+
+    public static ExecutorServiceTerminator shutdown(ExecutorService executorService)
+    {
+        executorService.shutdown();
+        return new ExecutorServiceTerminator()
+        {
+            private long     timeout  = Integer.MAX_VALUE;
+            private TimeUnit timeUnit = TimeUnit.DAYS;
+
+            @Override
+            public ExecutorServiceTerminator withTimeout(long timeout, TimeUnit timeUnit)
+            {
+                this.timeout = timeout;
+                this.timeUnit = timeUnit;
+                return this;
+            }
+
+            @Override
+            public ExecutorServiceTerminator awaitTermination()
+            {
+                try
+                {
+                    executorService.awaitTermination(this.timeout, this.timeUnit);
+                }
+                catch (InterruptedException e)
+                {
+                    throw new RuntimeException(e);
+                }
+                return this;
+            }
+
+            @Override
+            public ExecutorServiceTerminator now()
+            {
+                executorService.shutdownNow();
+                return this;
+            }
+        };
+    }
+
+    public static interface ExecutorServiceTerminator
+    {
+        public ExecutorServiceTerminator withTimeout(long timeout, TimeUnit timeUnit);
+
+        public ExecutorServiceTerminator awaitTermination();
+
+        public ExecutorServiceTerminator now();
+
     }
 }

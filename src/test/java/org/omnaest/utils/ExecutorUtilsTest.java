@@ -80,4 +80,23 @@ public class ExecutorUtilsTest
         assertFalse(result.get());
     }
 
+    @Test
+    public void testWrapStream() throws Exception
+    {
+        int numberOfElements = 1000;
+        assertEquals(IntStream.range(0, numberOfElements)
+                              .boxed()
+                              .sorted()
+                              .collect(Collectors.toList()),
+                     ExecutorUtils.parallel()
+                                  .withNumberOfThreads(4)
+                                  .wrap(IntStream.range(0, numberOfElements)
+                                                 .boxed()
+                                                 .collect(Collectors.toList())
+                                                 .stream())
+                                  .get()
+                                  .sorted()
+                                  .collect(Collectors.toList()));
+    }
+
 }

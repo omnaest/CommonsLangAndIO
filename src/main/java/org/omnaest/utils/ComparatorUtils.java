@@ -329,7 +329,10 @@ public class ComparatorUtils
 
         public <C extends Comparable<C>, I> ExecutableComparatorBuilderLoaded<T> and(Function<T, I> compareFunction, Function<I, C> mapFunction);
 
+        public ExecutableComparatorBuilderLoaded<T> reverse();
+
         public int compare();
+
     }
 
     public static interface ComparatorBuilderLoaded<T>
@@ -417,6 +420,13 @@ public class ComparatorUtils
                                                                                                          Function<I, C> mapFunction)
                             {
                                 this.comparatorBuilderLoaded = this.comparatorBuilderLoaded.and(compareFunction, mapFunction);
+                                return this;
+                            }
+
+                            @Override
+                            public ExecutableComparatorBuilderLoaded<T> reverse()
+                            {
+                                this.comparatorBuilderLoaded = this.comparatorBuilderLoaded.reverse();
                                 return this;
                             }
                         };

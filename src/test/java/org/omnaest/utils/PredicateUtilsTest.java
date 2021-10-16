@@ -40,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 public class PredicateUtilsTest
@@ -68,6 +69,35 @@ public class PredicateUtilsTest
     {
         assertTrue(PredicateUtils.<Double, Number>matchesType(Double.class)
                                  .test(1.2));
+    }
+
+    @Test
+    public void testIsCollectionNotContaining() throws Exception
+    {
+        assertTrue(PredicateUtils.isCollectionNotContaining(Arrays.asList("a", "b"))
+                                 .test("c"));
+        assertFalse(PredicateUtils.isCollectionNotContaining(Arrays.asList("a", "b"))
+                                  .test("a"));
+
+        assertTrue(PredicateUtils.isCollectionNotContaining(Arrays.asList("a", "b"))
+                                 .<String>from(value -> StringUtils.removeEnd(value, "1"))
+                                 .test("c1"));
+        assertFalse(PredicateUtils.isCollectionNotContaining(Arrays.asList("a", "b"))
+                                  .<String>from(value -> StringUtils.removeEnd(value, "1"))
+                                  .test("a1"));
+    }
+
+    @Test
+    public void testIsMapNotContainingKey() throws Exception
+    {
+        assertTrue(PredicateUtils.isMapNotContainingKey(MapUtils.builder()
+                                                                .put("key1", null)
+                                                                .build())
+                                 .test("key2"));
+        assertFalse(PredicateUtils.isMapNotContainingKey(MapUtils.builder()
+                                                                 .put("key1", null)
+                                                                 .build())
+                                  .test("key1"));
     }
 
 }

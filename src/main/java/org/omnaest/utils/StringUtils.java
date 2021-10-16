@@ -39,6 +39,7 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
@@ -47,6 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -60,6 +62,7 @@ import org.omnaest.utils.EncoderUtils.EncoderAndDecoderFactory;
 import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoder;
 import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoderFactory;
 import org.omnaest.utils.MapUtils.MapBuilder;
+import org.omnaest.utils.StringUtils.StringTextBuilder.ProcessorSupport;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.iterator.StringIterator;
 
@@ -261,7 +264,111 @@ public class StringUtils
                                              .map(Arrays::asList)
                                              .orElse(Collections.emptyList()));
             }
+
+            @Override
+            public <E> StringTextBuilder processAll(Collection<E> elements, BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer)
+            {
+                return this.processAll(elements, ConsumerUtils.noOperation(), elementAndBuilderConsumer);
+            }
+
+            @Override
+            public <E> StringTextBuilder processAll(Collection<E> elements, Consumer<ProcessorSupport> processorSupportConsumer,
+                                                    BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer)
+            {
+                return this.processAll(Optional.ofNullable(elements)
+                                               .orElse(Collections.emptyList())
+                                               .stream(),
+                                       processorSupportConsumer, elementAndBuilderConsumer);
+            }
+
+            @Override
+            public <E> StringTextBuilder processAll(Stream<E> elements, Consumer<ProcessorSupport> processorSupportConsumer,
+                                                    BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer)
+            {
+                ProcessorSupportImpl processorSupport = ConsumerUtils.consumeWithAndGet(new ProcessorSupportImpl(), processorSupportConsumer);
+                return this.add(StringUtils.wrap(Optional.ofNullable(elements)
+                                                         .orElse(Stream.empty())
+                                                         .map(element ->
+                                                         {
+                                                             StringTextBuilder textBuilder = builder();
+                                                             elementAndBuilderConsumer.accept(element, textBuilder);
+                                                             return textBuilder.build();
+                                                         })
+                                                         .collect(Collectors.joining(processorSupport.getJoiningDelimiter())),
+                                                 processorSupport.getPrefix(), processorSupport.getSuffix()));
+            }
+
+            @Override
+            public StringTextBuilder addIf(boolean condition, String text)
+            {
+                if (condition)
+                {
+                    return this.add(text);
+                }
+                else
+                {
+                    return this;
+                }
+            }
         };
+    }
+
+    private static final class ProcessorSupportImpl implements ProcessorSupport
+    {
+        private String suffix           = "";
+        private String prefix           = "";
+        private String joiningDelimiter = "";
+
+        @Override
+        public ProcessorSupport addSuffix(String suffix)
+        {
+            this.suffix = suffix;
+            return this;
+        }
+
+        @Override
+        public ProcessorSupport addPrefix(String prefix)
+        {
+            this.prefix = prefix;
+            return this;
+        }
+
+        @Override
+        public ProcessorSupport addJoiningDelimiter(String delimiter)
+        {
+            this.joiningDelimiter = delimiter;
+            return this;
+        }
+
+        public String getSuffix()
+        {
+            return this.suffix;
+        }
+
+        public String getPrefix()
+        {
+            return this.prefix;
+        }
+
+        public String getJoiningDelimiter()
+        {
+            return this.joiningDelimiter;
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.append("ProcessorSupportImpl [suffix=")
+                   .append(this.suffix)
+                   .append(", prefix=")
+                   .append(this.prefix)
+                   .append(", joiningDelimiter=")
+                   .append(this.joiningDelimiter)
+                   .append("]");
+            return builder.toString();
+        }
+
     }
 
     public static interface StringTextBuilder
@@ -301,6 +408,55 @@ public class StringUtils
          * @return
          */
         public StringTextBuilder addLines(String... lines);
+
+        /**
+         * Similar to {@link #processAll(Collection, Consumer, BiConsumer)} with no joining delimiter or prefix or suffix.
+         * 
+         * @param elements
+         * @param elementAndBuilderConsumer
+         * @return
+         */
+        public <E> StringTextBuilder processAll(Collection<E> elements, BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer);
+
+        /**
+         * Allows to process a {@link Collection} of elements.
+         * 
+         * @param elements
+         * @param supportConsumer
+         * @param elementAndBuilderConsumer
+         * @return
+         */
+        public <E> StringTextBuilder processAll(Collection<E> elements, Consumer<ProcessorSupport> supportConsumer,
+                                                BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer);
+
+        /**
+         * Similar to {@link #processAll(Collection, Consumer, BiConsumer)}
+         * 
+         * @param elements
+         * @param supportConsumer
+         * @param elementAndBuilderConsumer
+         * @return
+         */
+        public <E> StringTextBuilder processAll(Stream<E> elements, Consumer<ProcessorSupport> supportConsumer,
+                                                BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer);
+
+        /**
+         * Adds the given {@link String} text only if the condition is true
+         * 
+         * @param condition
+         * @param text
+         * @return
+         */
+        public StringTextBuilder addIf(boolean condition, String text);
+
+        public static interface ProcessorSupport
+        {
+            public ProcessorSupport addJoiningDelimiter(String delimiter);
+
+            public ProcessorSupport addPrefix(String prefix);
+
+            public ProcessorSupport addSuffix(String suffix);
+        }
     }
 
     /**
@@ -714,6 +870,16 @@ public class StringUtils
             }
         }
         return sb.toString();
+    }
+
+    public static String wrap(String text, String prefix, String suffix)
+    {
+        return Optional.ofNullable(prefix)
+                       .orElse("")
+                + Optional.ofNullable(text)
+                          .orElse("")
+                + Optional.ofNullable(suffix)
+                          .orElse("");
     }
 
 }

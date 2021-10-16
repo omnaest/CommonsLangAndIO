@@ -23,31 +23,31 @@ package org.omnaest.utils.element.bi;
  */
 public class DefaultBiElement<E1, E2> implements BiElement<E1, E2>
 {
-    private E1 element1;
-    private E2 element2;
+    private E1 first;
+    private E2 second;
 
-    DefaultBiElement(E1 element1, E2 element2)
+    DefaultBiElement(E1 first, E2 second)
     {
-        this.element1 = element1;
-        this.element2 = element2;
+        this.first = first;
+        this.second = second;
     }
 
     @Override
     public E1 getFirst()
     {
-        return this.element1;
+        return this.first;
     }
 
     @Override
     public E2 getSecond()
     {
-        return this.element2;
+        return this.second;
     }
 
     @Override
     public String toString()
     {
-        return "DefaultBiElement [element1=" + this.element1 + ", element2=" + this.element2 + "]";
+        return "[" + this.first + ", " + this.second + "]";
     }
 
     @Override
@@ -55,8 +55,8 @@ public class DefaultBiElement<E1, E2> implements BiElement<E1, E2>
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((this.element1 == null) ? 0 : this.element1.hashCode());
-        result = prime * result + ((this.element2 == null) ? 0 : this.element2.hashCode());
+        result = prime * result + ((this.first == null) ? 0 : this.first.hashCode());
+        result = prime * result + ((this.second == null) ? 0 : this.second.hashCode());
         return result;
     }
 
@@ -77,25 +77,25 @@ public class DefaultBiElement<E1, E2> implements BiElement<E1, E2>
         }
         @SuppressWarnings("rawtypes")
         DefaultBiElement other = (DefaultBiElement) obj;
-        if (this.element1 == null)
+        if (this.first == null)
         {
-            if (other.element1 != null)
+            if (other.first != null)
             {
                 return false;
             }
         }
-        else if (!this.element1.equals(other.element1))
+        else if (!this.first.equals(other.first))
         {
             return false;
         }
-        if (this.element2 == null)
+        if (this.second == null)
         {
-            if (other.element2 != null)
+            if (other.second != null)
             {
                 return false;
             }
         }
-        else if (!this.element2.equals(other.element2))
+        else if (!this.second.equals(other.second))
         {
             return false;
         }

@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.omnaest.utils;
 
+import java.io.PrintStream;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -95,5 +97,19 @@ public class PeekUtils
     public static interface IncrementCounter<E> extends Consumer<E>
     {
         public IncrementCounter<E> by(int increment);
+    }
+
+    public static <E> Consumer<E> printLnInto(PrintStream printStream)
+    {
+        return element -> Optional.ofNullable(element)
+                                  .map(String::valueOf)
+                                  .ifPresent(printStream::println);
+    }
+
+    public static <E> Consumer<E> printInto(PrintStream printStream)
+    {
+        return element -> Optional.ofNullable(element)
+                                  .map(String::valueOf)
+                                  .ifPresent(printStream::print);
     }
 }

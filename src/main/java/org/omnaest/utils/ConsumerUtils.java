@@ -33,8 +33,12 @@
 */
 package org.omnaest.utils;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.omnaest.utils.counter.Counter;
 import org.omnaest.utils.counter.DurationProgressCounter;
@@ -101,5 +105,52 @@ public class ConsumerUtils
                                                          .withMaximum(maximum);
         return element -> progressCounter.increment()
                                          .ifModulo(modulo, durationProgressConsumer);
+    }
+
+    public static <E> E consumeWithAndGet(E element, Consumer<? super E> elementConsumer)
+    {
+        if (elementConsumer != null)
+        {
+            elementConsumer.accept(element);
+        }
+        return element;
+    }
+
+    /**
+     * Returns a {@link ListAddingConsumer} instance
+     * 
+     * @return
+     */
+    public static <E> ListAddingConsumer<E> newAddingConsumer()
+    {
+        return new ListAddingConsumer<E>()
+        {
+            private List<E> elements = new ArrayList<>();
+
+            @Override
+            public void accept(E element)
+            {
+                this.elements.add(element);
+            }
+
+            @Override
+            public List<E> get()
+            {
+                return Collections.unmodifiableList(this.elements);
+            }
+        };
+
+    }
+
+    /**
+     * A {@link ListAddingConsumer} consumes element by element and appends it to an internal {@link List}.
+     * 
+     * @see #get() returns an immutable instance of the consumed elements
+     * @author omnaest
+     * @param <E>
+     */
+    public static interface ListAddingConsumer<E> extends Consumer<E>, Supplier<List<E>>
+    {
+
     }
 }

@@ -53,11 +53,13 @@ public class SetUtils
     @SafeVarargs
     public static <E> Set<E> merge(Collection<E>... collections)
     {
-        return Arrays.asList(collections)
-                     .stream()
-                     .filter(collection -> collection != null)
-                     .flatMap(collection -> collection.stream())
-                     .collect(Collectors.toSet());
+        return Optional.ofNullable(collections)
+                       .map(Arrays::asList)
+                       .orElse(Collections.emptyList())
+                       .stream()
+                       .filter(collection -> collection != null)
+                       .flatMap(Collection::stream)
+                       .collect(Collectors.toSet());
     }
 
     public static <E> E last(Set<E> set)

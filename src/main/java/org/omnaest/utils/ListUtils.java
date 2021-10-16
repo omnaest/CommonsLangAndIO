@@ -13,24 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  ******************************************************************************/
-/*
 
-	Copyright 2017 Danny Kunz
-
-	Licensed under the Apache License, Version 2.0 (the "License");
-	you may not use this file except in compliance with the License.
-	You may obtain a copy of the License at
-
-		http://www.apache.org/licenses/LICENSE-2.0
-
-	Unless required by applicable law or agreed to in writing, software
-	distributed under the License is distributed on an "AS IS" BASIS,
-	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	See the License for the specific language governing permissions and
-	limitations under the License.
-
-
-*/
 package org.omnaest.utils;
 
 import java.lang.reflect.Array;
@@ -60,6 +43,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.omnaest.utils.BeanUtils.BeanAnalyzer;
 import org.omnaest.utils.BeanUtils.BeanPropertyAccessor;
 import org.omnaest.utils.BeanUtils.NestedFlattenedProperty;
+import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.bi.UnaryBiElement;
 import org.omnaest.utils.element.tri.TriElement;
 import org.omnaest.utils.list.ComparableList;
@@ -86,6 +70,18 @@ public class ListUtils
         return retval;
     }
 
+    public static <E> Optional<E> optionalLast(List<E> list)
+    {
+        if (list != null && !list.isEmpty())
+        {
+            return Optional.of(list.get(list.size() - 1));
+        }
+        else
+        {
+            return Optional.empty();
+        }
+    }
+
     /**
      * Returns the last number of elements of the given {@link List}
      * 
@@ -109,6 +105,18 @@ public class ListUtils
         return result;
     }
 
+    public static <E> Optional<E> optionalLast(List<E> list, int index)
+    {
+        if (index >= 0 && list != null && list.size() > index)
+        {
+            return Optional.of(list.get(list.size() - 1 - index));
+        }
+        else
+        {
+            return Optional.empty();
+        }
+    }
+
     public static <E> E first(List<E> list)
     {
         E retval = null;
@@ -130,8 +138,17 @@ public class ListUtils
     public static <E> List<E> mergedList(Collection<E>... lists)
     {
         List<E> retlist = new ArrayList<>();
-        Arrays.asList(lists)
-              .forEach(list -> retlist.addAll(list));
+        if (lists != null)
+        {
+            Arrays.asList(lists)
+                  .forEach(list ->
+                  {
+                      if (list != null)
+                      {
+                          retlist.addAll(list);
+                      }
+                  });
+        }
         return retlist;
     }
 
@@ -716,7 +733,14 @@ public class ListUtils
 
     public static <E> UnaryBiElement<List<E>> split(int splitSize, List<E> list)
     {
-        return UnaryBiElement.of(list.subList(0, splitSize), list.subList(splitSize, list.size()));
+        return UnaryBiElement.of(Optional.ofNullable(list)
+                                         .filter(iList -> !iList.isEmpty())
+                                         .map(iList -> iList.subList(0, splitSize))
+                                         .orElse(Collections.emptyList()),
+                                 Optional.ofNullable(list)
+                                         .filter(iList -> !iList.isEmpty())
+                                         .map(iList -> iList.subList(splitSize, iList.size()))
+                                         .orElse(Collections.emptyList()));
     }
 
     public static <E> Set<List<E>> allPermutations(Collection<E> collection)
@@ -875,9 +899,27 @@ public class ListUtils
 
             @SuppressWarnings("unchecked")
             @Override
+            public <E2> List<E2> buildAs(Class<E2> type)
+            {
+                return (List<E2>) this.list;
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
             public <E2> ListBuilder<E2> add(E2 element)
             {
                 this.list.add(element);
+                return (ListBuilder<E2>) this;
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public <E2> ListBuilder<E2> addIf(boolean condition, E2 element)
+            {
+                if (condition)
+                {
+                    this.list.add(element);
+                }
                 return (ListBuilder<E2>) this;
             }
         };
@@ -888,6 +930,10 @@ public class ListUtils
         public <E2> ListBuilder<E2> add(E2 element);
 
         public List<E> build();
+
+        public <E2> List<E2> buildAs(Class<E2> type);
+
+        public <E2> ListBuilder<E2> addIf(boolean condition, E2 element);
     }
 
     /**
@@ -903,6 +949,21 @@ public class ListUtils
         return effectiveList.size() == (int) effectiveList.stream()
                                                           .distinct()
                                                           .count();
+    }
+
+    /**
+     * Splits of the last element of the given {@link List}. The resulting {@link BiElement} will contain the rest of the {@link List} and the split of last
+     * element as {@link Optional}.
+     * 
+     * @param list
+     * @return
+     */
+    public static <E> BiElement<List<E>, Optional<E>> splitLast(List<E> list)
+    {
+        return split(Optional.ofNullable(list)
+                             .map(iList -> iList.size() - 1)
+                             .orElse(0),
+                     list).applyToSecondArgument(ListUtils::optionalFirst);
     }
 
 }

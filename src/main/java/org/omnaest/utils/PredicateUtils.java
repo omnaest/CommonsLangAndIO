@@ -15,12 +15,16 @@
  ******************************************************************************/
 package org.omnaest.utils;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -220,6 +224,225 @@ public class PredicateUtils
                                   .map(S::getClass)
                                   .map(type::isAssignableFrom)
                                   .orElse(false);
+    }
+
+    public static <E> MappablePredicate<E> isCollectionContaining(Collection<E> elements)
+    {
+        Collection<E> effectiveElements = Optional.ofNullable(elements)
+                                                  .orElse(Collections.emptySet());
+        return new MappablePredicateImpl<E>(effectiveElements);
+    }
+
+    public static <E> MappablePredicate<E> isCollectionNotContaining(Collection<E> elements)
+    {
+        return isCollectionContaining(elements).negate();
+    }
+
+    public static interface MappablePredicate<E> extends Predicate<E>
+    {
+        public <S> MappablePredicate<S> from(Function<S, E> mapper);
+
+        @Override
+        public MappablePredicate<E> negate();
+
+        /**
+         * If {@link #test(Object)} returns true the given {@link Consumer} is called with the current element.
+         * 
+         * @param elementConsumer
+         * @return
+         */
+        public MappablePredicate<E> ifTrueThen(Consumer<E> elementConsumer);
+
+        /**
+         * If {@link #test(Object)} returns the condition value then the given {@link Consumer} is called with the current element.
+         * 
+         * @param elementConsumer
+         * @return
+         */
+        public MappablePredicate<E> ifConditionThen(boolean condition, Consumer<E> elementConsumer);
+
+        /**
+         * If {@link #test(Object)} returns false the given {@link Consumer} is called with the current element.
+         * 
+         * @param elementConsumer
+         * @return
+         */
+        public MappablePredicate<E> ifFalseThen(Consumer<E> elementConsumer);
+
+    }
+
+    private static class MappablePredicateDecorator<E> implements MappablePredicate<E>
+    {
+        private MappablePredicate<E> mappablePredicate;
+
+        public MappablePredicateDecorator(MappablePredicate<E> mappablePredicate)
+        {
+            super();
+            this.mappablePredicate = mappablePredicate;
+        }
+
+        @Override
+        public boolean test(E element)
+        {
+            return this.mappablePredicate.test(element);
+        }
+
+        @Override
+        public <S> MappablePredicate<S> from(Function<S, E> mapper)
+        {
+            return this.mappablePredicate.from(mapper);
+        }
+
+        @Override
+        public MappablePredicate<E> negate()
+        {
+            return this.mappablePredicate.negate();
+        }
+
+        @Override
+        public MappablePredicate<E> ifTrueThen(Consumer<E> elementConsumer)
+        {
+            return this.mappablePredicate.ifTrueThen(elementConsumer);
+        }
+
+        @Override
+        public MappablePredicate<E> ifConditionThen(boolean condition, Consumer<E> elementConsumer)
+        {
+            return this.mappablePredicate.ifConditionThen(condition, elementConsumer);
+        }
+
+        @Override
+        public MappablePredicate<E> ifFalseThen(Consumer<E> elementConsumer)
+        {
+            return this.mappablePredicate.ifFalseThen(elementConsumer);
+        }
+
+    }
+
+    private static abstract class AbstractMappablePredicate<E> implements MappablePredicate<E>
+    {
+        @Override
+        public <S> MappablePredicate<S> from(Function<S, E> mapper)
+        {
+            return new MappablePredicateAdapter<>(this, mapper);
+        }
+
+        @Override
+        public MappablePredicate<E> negate()
+        {
+            return new NegatedMappablePredicate<>(this);
+        }
+
+        @Override
+        public MappablePredicate<E> ifTrueThen(Consumer<E> elementConsumer)
+        {
+            return this.ifConditionThen(true, elementConsumer);
+        }
+
+        @Override
+        public MappablePredicate<E> ifFalseThen(Consumer<E> elementConsumer)
+        {
+            return this.ifConditionThen(false, elementConsumer);
+        }
+
+        @Override
+        public MappablePredicate<E> ifConditionThen(boolean condition, Consumer<E> elementConsumer)
+        {
+            return new MappablePredicateDecorator<E>(this)
+            {
+                @Override
+                public boolean test(E element)
+                {
+                    boolean result = super.test(element);
+
+                    if (result == condition && elementConsumer != null)
+                    {
+                        elementConsumer.accept(element);
+                    }
+
+                    return result;
+                }
+            };
+        }
+    }
+
+    private static class MappablePredicateImpl<E> extends AbstractMappablePredicate<E>
+    {
+        private final Collection<E> effectiveElements;
+
+        private MappablePredicateImpl(Collection<E> effectiveElements)
+        {
+            this.effectiveElements = effectiveElements;
+        }
+
+        @Override
+        public boolean test(E element)
+        {
+            return this.effectiveElements.contains(element);
+        }
+    }
+
+    private static class MappablePredicateAdapter<S, T> extends AbstractMappablePredicate<S>
+    {
+        private final MappablePredicate<T> mappablePredicate;
+        private final Function<S, T>       mapper;
+
+        public MappablePredicateAdapter(MappablePredicate<T> mappablePredicate, Function<S, T> mapper)
+        {
+            super();
+            this.mappablePredicate = mappablePredicate;
+            this.mapper = mapper;
+        }
+
+        @Override
+        public boolean test(S element)
+        {
+            return this.mappablePredicate.test(this.mapper.apply(element));
+        }
+
+    }
+
+    private static class NegatedMappablePredicate<E> extends AbstractMappablePredicate<E>
+    {
+        private MappablePredicate<E> mappablePredicate;
+
+        public NegatedMappablePredicate(MappablePredicate<E> mappablePredicate)
+        {
+            super();
+            this.mappablePredicate = mappablePredicate;
+        }
+
+        @Override
+        public boolean test(E t)
+        {
+            return !this.mappablePredicate.test(t);
+        }
+    }
+
+    /**
+     * Returns a {@link Predicate} that returns true, if the given {@link Map} does NOT contain the tested element as a key.
+     * 
+     * @see PredicateUtils#isMapContainingKey(Map)
+     * @param map
+     * @return
+     */
+    public static <K> Predicate<K> isMapNotContainingKey(Map<K, ?> map)
+    {
+        return isMapContainingKey(map).negate();
+    }
+
+    /**
+     * Returns a {@link Predicate} that returns true, if the given {@link Map} does contain the tested element as a key.
+     * 
+     * @see PredicateUtils#isMapNotContainingKey(Map)
+     * @param map
+     * @return
+     */
+    public static <K> Predicate<K> isMapContainingKey(Map<K, ?> map)
+    {
+        Map<K, ?> effectiveMap = Optional.ofNullable(map)
+                                         .orElse(Collections.emptyMap());
+        return key -> key != null && effectiveMap.containsKey(key);
     }
 
 }

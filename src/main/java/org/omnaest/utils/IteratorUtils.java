@@ -34,17 +34,25 @@
 package org.omnaest.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Queue;
+import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.omnaest.utils.element.cached.CachedElement;
 import org.omnaest.utils.element.lar.LeftAndRight;
 import org.omnaest.utils.iterator.QueueIterator;
 
@@ -321,5 +329,82 @@ public class IteratorUtils
     public static <E> Iterator<E> removeIterator(Iterable<E> iterable)
     {
         return removeIterator(iterable.iterator());
+    }
+
+    /**
+     * Wraps the given {@link Iterator} into a {@link ConcurrentIterator} using {@link ThreadLocal} caches.
+     * 
+     * @param iterator
+     * @return
+     */
+    public static <E> ConcurrentIterator<E> wrapIntoConcurrent(Iterator<E> iterator)
+    {
+        return new ConcurrentIterator<E>()
+        {
+            private CachedElement<E> element = CachedElement.of(() -> iterator.next())
+                                                            .asThreadLocal();
+
+            @Override
+            public boolean hasNext()
+            {
+                try
+                {
+                    this.element.get();
+                    return true;
+                }
+                catch (NoSuchElementException e)
+                {
+                    return false;
+                }
+            }
+
+            @Override
+            public E next()
+            {
+                if (this.hasNext())
+                {
+                    return this.element.getAndReset();
+                }
+                else
+                {
+                    throw new NoSuchElementException();
+                }
+            }
+        };
+
+    }
+
+    /**
+     * Special {@link Iterator} that allows concurrent iteration over the elements. Consumers must ensure to call {@link #next()} after each call to
+     * {@link #hasNext()}.
+     * 
+     * @author omnaest
+     * @param <E>
+     */
+    public static interface ConcurrentIterator<E> extends Iterator<E>
+    {
+
+    }
+
+    public static <E> List<Spliterator<E>> splitInto(int splitParts, Spliterator<E> spliterator)
+    {
+        List<Spliterator<E>> spliterators = new ArrayList<>(Optional.ofNullable(spliterator)
+                                                                    .map(Arrays::asList)
+                                                                    .orElse(Collections.emptyList()));
+
+        while (spliterators.size() < splitParts)
+        {
+            int neededNumberOfElements = Math.min(spliterators.size(), splitParts - spliterators.size());
+            Supplier<Spliterator<E>> emptySpliteratorSupplier = Collections.<E>emptyList()::spliterator;
+            spliterators.addAll(IntStream.range(0, neededNumberOfElements)
+                                         .mapToObj(index -> spliterators.get(index))
+                                         .map(iSpliterator -> Optional.ofNullable(iSpliterator.trySplit())
+                                                                      .orElseGet(emptySpliteratorSupplier))
+                                         .collect(Collectors.toList()));
+
+        }
+
+        return spliterators;
+
     }
 }
