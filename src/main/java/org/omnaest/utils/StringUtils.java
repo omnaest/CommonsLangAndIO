@@ -882,4 +882,17 @@ public class StringUtils
                           .orElse("");
     }
 
+    /**
+     * Creates a {@link Function} that prefixes all non values with the given prefix
+     * 
+     * @param prefix
+     * @return
+     */
+    public static Function<String, String> prefixWith(String prefix)
+    {
+        return text -> Optional.ofNullable(text)
+                               .map(value -> prefix + value)
+                               .orElse(null);
+    }
+
 }

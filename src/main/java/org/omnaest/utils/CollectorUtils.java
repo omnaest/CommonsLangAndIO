@@ -85,6 +85,11 @@ public class CollectorUtils
         }, mapFactory);
     }
 
+    public static <E1, E2> Collector<BiElement<E1, E2>, ?, Map<E1, List<E2>>> toGroupedMapByBiElement()
+    {
+        return Collectors.groupingBy(BiElement::getFirst, Collectors.mapping(BiElement::getSecond, Collectors.toList()));
+    }
+
     public static <T, K, V> Collector<T, ?, Map<K, V>> toMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier)
     {
         return Collectors.toMap(keyMapper, valueMapper, (v1, v2) ->

@@ -452,6 +452,18 @@ public class FileUtils
         return tempFile;
     }
 
+    public static Optional<File> createRandomTempFileQuietly()
+    {
+        try
+        {
+            return Optional.of(createRandomTempFile());
+        }
+        catch (Exception e)
+        {
+            return Optional.empty();
+        }
+    }
+
     /**
      * Creates a random temporary {@link File} directory
      * 
@@ -1317,6 +1329,28 @@ public class FileUtils
                        .map(List::stream)
                        .map(files -> files.filter(filter))
                        .orElse(Stream.empty());
+    }
+
+    public static Stream<File> listTransitiveDirectoryFiles(File directory, Predicate<File> filter)
+    {
+        return Optional.ofNullable(directory)
+                       .filter(File::isDirectory)
+                       .map(File::listFiles)
+                       .map(Arrays::asList)
+                       .map(List::stream)
+                       .orElse(Stream.empty())
+                       .flatMap(file ->
+                       {
+                           if (file.isDirectory())
+                           {
+                               return Stream.concat(Stream.of(file), listTransitiveDirectoryFiles(file, filter));
+                           }
+                           else
+                           {
+                               return Stream.of(file);
+                           }
+                       })
+                       .filter(filter);
     }
 
     /**

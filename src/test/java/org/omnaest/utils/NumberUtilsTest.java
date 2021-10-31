@@ -75,4 +75,15 @@ public class NumberUtilsTest
         assertEquals("0.005%", result);
     }
 
+    @Test
+    public void testWithFractionDigits()
+    {
+        assertEquals("3.3333", NumberUtils.formatter()
+                                          .withFractionDigits(4)
+                                          .format(3.33333));
+        assertEquals("1.0000", NumberUtils.formatter()
+                                          .withFractionDigits(4)
+                                          .format(1));
+    }
+
 }

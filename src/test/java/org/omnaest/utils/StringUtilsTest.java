@@ -313,4 +313,11 @@ public class StringUtilsTest
                                                      .build());
     }
 
+    @Test
+    public void testPrefixWith() throws Exception
+    {
+        assertEquals("abc", StringUtils.prefixWith("a")
+                                       .apply("bc"));
+    }
+
 }

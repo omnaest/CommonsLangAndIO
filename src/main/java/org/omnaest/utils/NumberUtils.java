@@ -103,6 +103,14 @@ public class NumberUtils
          */
         public NumberFormatter asPercentage();
 
+        /**
+         * Sets {@link #withMinimumFractionDigits(int)} and {@link #withMaximumFractionDigits(int)} to the given value.
+         * 
+         * @param fractionDigits
+         * @return
+         */
+        public NumberFormatter withFractionDigits(int fractionDigits);
+
     }
 
     /**
@@ -214,6 +222,13 @@ public class NumberUtils
             {
                 return this.createNumberFormatInstance()
                            .format(value);
+            }
+
+            @Override
+            public NumberFormatter withFractionDigits(int fractionDigits)
+            {
+                return this.withMinimumFractionDigits(fractionDigits)
+                           .withMaximumFractionDigits(fractionDigits);
             }
         };
     }

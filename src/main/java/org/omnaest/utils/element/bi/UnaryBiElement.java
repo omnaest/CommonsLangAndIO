@@ -29,13 +29,33 @@ public interface UnaryBiElement<E> extends BiElement<E, E>
     /**
      * Returns a non modifiable {@link List} for the given elements
      * 
+     * @see #asStream()
      * @return
      */
     public List<E> asList();
 
+    /**
+     * Returns a {@link Stream} wrapping the {@link #getFirst()} and {@link #getSecond()} element. The elements of this {@link Stream} might be null.
+     * 
+     * @see #asList()
+     * @see #asNonNullStream()
+     * @return
+     */
     public default Stream<E> asStream()
     {
         return Stream.of(this.getFirst(), this.getSecond());
+    }
+
+    /**
+     * Similar to {@link #asStream()} but does not contain any null values.
+     * 
+     * @see #asStream()
+     * @return
+     */
+    public default Stream<E> asNonNullStream()
+    {
+        return this.asStream()
+                   .filter(value -> value != null);
     }
 
     /**

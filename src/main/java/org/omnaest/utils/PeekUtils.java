@@ -16,6 +16,8 @@
 package org.omnaest.utils;
 
 import java.io.PrintStream;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -111,5 +113,18 @@ public class PeekUtils
         return element -> Optional.ofNullable(element)
                                   .map(String::valueOf)
                                   .ifPresent(printStream::print);
+    }
+
+    /**
+     * Returns a {@link Consumer} that applies all elements to all of the given {@link Consumer}s one by one.
+     * 
+     * @param consumers
+     * @return
+     */
+    public static <E> Consumer<E> all(Collection<? extends Consumer<E>> consumers)
+    {
+        return element -> Optional.ofNullable(consumers)
+                                  .orElse(Collections.emptyList())
+                                  .forEach(consumer -> consumer.accept(element));
     }
 }
