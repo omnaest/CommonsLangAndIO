@@ -100,4 +100,17 @@ public class PredicateUtilsTest
                                   .test("key1"));
     }
 
+    @Test
+    public void testAll() throws Exception
+    {
+        assertTrue(PredicateUtils.all(element -> true, element -> true)
+                                 .test("a"));
+        assertTrue(PredicateUtils.all(element -> true, element -> true)
+                                 .test(null));
+        assertTrue(PredicateUtils.all()
+                                 .test(null));
+        assertFalse(PredicateUtils.all(element -> false, element -> true)
+                                  .test("a"));
+    }
+
 }

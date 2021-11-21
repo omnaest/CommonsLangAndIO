@@ -832,7 +832,7 @@ public class ListUtils
      * The end is exclusive.
      * <br>
      * <br>
-     * If null is given as {@link List} and empty {@link List} is returned.
+     * If null is given as {@link List} an empty {@link List} is returned. If the range size is less than zero, still an empty {@link List} is returned.
      * 
      * @param list
      * @param startInclusive
@@ -964,6 +964,18 @@ public class ListUtils
                              .map(iList -> iList.size() - 1)
                              .orElse(0),
                      list).applyToSecondArgument(ListUtils::optionalFirst);
+    }
+
+    public static <E> Optional<E> getOptional(List<E> list, int index)
+    {
+        if (list != null && index >= 0 && index < list.size())
+        {
+            return Optional.ofNullable(list.get(index));
+        }
+        else
+        {
+            return Optional.empty();
+        }
     }
 
 }

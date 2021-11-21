@@ -1331,6 +1331,13 @@ public class FileUtils
                        .orElse(Stream.empty());
     }
 
+    /**
+     * Returns the files in the given folder and all of its sub folders
+     * 
+     * @param directory
+     * @param filter
+     * @return
+     */
     public static Stream<File> listTransitiveDirectoryFiles(File directory, Predicate<File> filter)
     {
         return Optional.ofNullable(directory)

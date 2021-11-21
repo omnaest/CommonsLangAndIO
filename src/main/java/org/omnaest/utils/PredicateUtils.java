@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.utils;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -443,6 +444,20 @@ public class PredicateUtils
         Map<K, ?> effectiveMap = Optional.ofNullable(map)
                                          .orElse(Collections.emptyMap());
         return key -> key != null && effectiveMap.containsKey(key);
+    }
+
+    @SafeVarargs
+    public static <E> Predicate<E> all(Predicate<E>... predicates)
+    {
+        return all(Arrays.asList(predicates));
+    }
+
+    public static <E> Predicate<E> all(Collection<? extends Predicate<E>> predicates)
+    {
+        return element -> Optional.ofNullable(predicates)
+                                  .orElse(Collections.emptyList())
+                                  .stream()
+                                  .allMatch(predicate -> predicate.test(element));
     }
 
 }

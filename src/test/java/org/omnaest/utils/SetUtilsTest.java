@@ -86,4 +86,11 @@ public class SetUtilsTest
                      delta.getShared());
     }
 
+    @Test
+    public void testNewFilteredSet() throws Exception
+    {
+        assertEquals(SetUtils.toSet("1", "3"), SetUtils.newFilteredSet(Arrays.asList("1", "filtered", "3"), value -> !value.equals("filtered")));
+        assertEquals(SetUtils.toSet("1", "3"), SetUtils.newFilteredSet(Arrays.asList("1", "3"), null));
+    }
+
 }

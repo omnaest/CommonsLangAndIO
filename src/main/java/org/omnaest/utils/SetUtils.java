@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -246,6 +247,28 @@ public class SetUtils
         else
         {
             return new LinkedHashSet<>(set);
+        }
+    }
+
+    public static <E> Set<E> newFilteredSet(Collection<E> elements, Predicate<E> filter)
+    {
+        if (filter != null)
+        {
+            Set<E> result = new HashSet<>();
+            Optional.ofNullable(elements)
+                    .orElse(Collections.emptyList())
+                    .forEach(element ->
+                    {
+                        if (filter.test(element))
+                        {
+                            result.add(element);
+                        }
+                    });
+            return result;
+        }
+        else
+        {
+            return new HashSet<>(elements);
         }
     }
 }

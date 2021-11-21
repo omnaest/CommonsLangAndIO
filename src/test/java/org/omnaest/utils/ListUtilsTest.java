@@ -409,4 +409,21 @@ public class ListUtilsTest
         assertEquals(Collections.emptyList(), ListUtils.splitLast(null)
                                                        .getFirst());
     }
+
+    @Test
+    public void testGetOptional() throws Exception
+    {
+        assertEquals("1", ListUtils.getOptional(Arrays.asList("1", "2", "3"), 0)
+                                   .get());
+        assertEquals("2", ListUtils.getOptional(Arrays.asList("1", "2", "3"), 1)
+                                   .get());
+        assertEquals("3", ListUtils.getOptional(Arrays.asList("1", "2", "3"), 2)
+                                   .get());
+        assertFalse(ListUtils.getOptional(Arrays.asList("1", "2", "3"), -1)
+                             .isPresent());
+        assertFalse(ListUtils.getOptional(Arrays.asList("1", "2", "3"), 3)
+                             .isPresent());
+        assertFalse(ListUtils.getOptional(null, 0)
+                             .isPresent());
+    }
 }
