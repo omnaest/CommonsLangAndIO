@@ -1331,14 +1331,7 @@ public class FileUtils
                        .orElse(Stream.empty());
     }
 
-    /**
-     * Returns the files in the given folder and all of its sub folders
-     * 
-     * @param directory
-     * @param filter
-     * @return
-     */
-    public static Stream<File> listTransitiveDirectoryFiles(File directory, Predicate<File> filter)
+    public static Stream<File> listTransitiveDirectoryFiles(File directory)
     {
         return Optional.ofNullable(directory)
                        .filter(File::isDirectory)
@@ -1350,14 +1343,25 @@ public class FileUtils
                        {
                            if (file.isDirectory())
                            {
-                               return Stream.concat(Stream.of(file), listTransitiveDirectoryFiles(file, filter));
+                               return Stream.concat(Stream.of(file), listTransitiveDirectoryFiles(file));
                            }
                            else
                            {
                                return Stream.of(file);
                            }
-                       })
-                       .filter(filter);
+                       });
+    }
+
+    /**
+     * Returns the files in the given folder and all of its sub folders
+     * 
+     * @param directory
+     * @param filter
+     * @return
+     */
+    public static Stream<File> listTransitiveDirectoryFiles(File directory, Predicate<File> filter)
+    {
+        return listTransitiveDirectoryFiles(directory).filter(filter);
     }
 
     /**
@@ -1537,5 +1541,111 @@ public class FileUtils
         {
             return readerToStreamMapper.apply(this.toReader(this.charset));
         }
+    }
+
+    /**
+     * Creates the given directory.
+     * 
+     * @throws RuntimeIOException
+     * @param directory
+     */
+    public static void createDirectory(File directory)
+    {
+        try
+        {
+            org.apache.commons.io.FileUtils.forceMkdir(directory);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeIOException(e);
+        }
+    }
+
+    public static interface DirectoryNavigator
+    {
+
+        public Stream<DirectoryNavigator> listDirectories();
+
+        public boolean isNameMatchingRegEx(String regEx);
+
+        public Optional<FileNavigator> findFileByName(String name);
+
+        public FileNavigator newFile(String name);
+
+    }
+
+    public static interface FileNavigator extends Supplier<File>, Consumer<String>
+    {
+
+        /**
+         * Overwrites the file content with the given text
+         */
+        @Override
+        public void accept(String text);
+
+        /**
+         * Returns the underlying {@link File} for this {@link FileNavigator} instance.
+         */
+        @Override
+        public File get();
+
+    }
+
+    public static DirectoryNavigator navigate(File directory)
+    {
+        return new DirectoryNavigator()
+        {
+            @Override
+            public Stream<DirectoryNavigator> listDirectories()
+            {
+                return FileUtils.listDirectoryFiles(directory)
+                                .map(FileUtils::navigate);
+            }
+
+            @Override
+            public boolean isNameMatchingRegEx(String regEx)
+            {
+                return MatcherUtils.matcher()
+                                   .ofRegEx("[0-9]+ \\-.*")
+                                   .matchAgainst(directory.getName())
+                                   .isPresent();
+            }
+
+            @Override
+            public Optional<FileNavigator> findFileByName(String name)
+            {
+                return listDirectoryFiles(directory).filter(file -> org.apache.commons.lang3.StringUtils.equals(file.getName(), name))
+                                                    .findFirst()
+                                                    .map(this.createFileToFileNavigatorMapper());
+
+            }
+
+            private Function<File, FileNavigator> createFileToFileNavigatorMapper()
+            {
+                return file -> new FileNavigator()
+                {
+                    @Override
+                    public File get()
+                    {
+                        return file;
+                    }
+
+                    @Override
+                    public void accept(String text)
+                    {
+                        FileUtils.toConsumer(file)
+                                 .accept(text);
+                    }
+                };
+            }
+
+            @Override
+            public FileNavigator newFile(String name)
+            {
+                File file = new File(directory, name);
+                return this.createFileToFileNavigatorMapper()
+                           .apply(file);
+            }
+        };
     }
 }

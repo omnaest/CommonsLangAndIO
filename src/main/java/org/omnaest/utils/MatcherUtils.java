@@ -44,8 +44,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -517,7 +521,7 @@ public class MatcherUtils
                         if (input != null)
                         {
                             Matcher matcher = pattern.matcher(input);
-                            Supplier<Boolean> matcherAction = () -> matcher.matches();
+                            BooleanSupplier matcherAction = () -> matcher.matches();
                             retval = this.determineMatches(input, matcher, matcherAction)
                                          .orElseGet(() -> Stream.empty())
                                          .findFirst();
@@ -583,7 +587,7 @@ public class MatcherUtils
                                 if (input != null)
                                 {
                                     Matcher matcher = pattern.matcher(input);
-                                    Supplier<Boolean> matcherAction = () -> matcher.find();
+                                    BooleanSupplier matcherAction = () -> matcher.find();
                                     return determineMatches(input, matcher, matcherAction).orElse(Stream.empty());
                                 }
                                 else
@@ -637,7 +641,7 @@ public class MatcherUtils
                         if (input != null)
                         {
                             Matcher matcher = pattern.matcher(input);
-                            Supplier<Boolean> matcherAction = () -> matcher.find();
+                            BooleanSupplier matcherAction = () -> matcher.find();
                             retval = this.determineMatches(input, matcher, matcherAction);
                         }
                         else
@@ -647,11 +651,12 @@ public class MatcherUtils
                         return retval;
                     }
 
-                    private Optional<Stream<Match>> determineMatches(String input, Matcher matcher, Supplier<Boolean> matcherAction)
+                    private Optional<Stream<Match>> determineMatches(String input, Matcher matcher, BooleanSupplier matcherAction)
                     {
                         Iterator<Match> iterator = new Iterator<Match>()
                         {
-                            private CachedElement<Match> matchCache = CachedElement.of(() -> this.determineNextMatch());
+                            private CachedElement<Match> matchCache = CachedElement.of(() -> this.determineNextMatch()
+                                                                                                 .orElse(null));
 
                             @Override
                             public boolean hasNext()
@@ -659,164 +664,9 @@ public class MatcherUtils
                                 return this.matchCache.get() != null;
                             }
 
-                            private Match determineNextMatch()
+                            private Optional<Match> determineNextMatch()
                             {
-                                Match retval = null;
-
-                                if (matcherAction.get())
-                                {
-                                    int start = matcher.start();
-                                    int end = matcher.end();
-                                    int regionStart = matcher.regionStart();
-                                    int regionEnd = matcher.regionEnd();
-
-                                    Map<Integer, String> groups = new LinkedHashMap<>();
-                                    Map<Integer, BiElement<Integer, Integer>> groupToRegion = new LinkedHashMap<>();
-                                    for (int ii = 0; ii <= matcher.groupCount(); ii++)
-                                    {
-                                        groups.put(ii, matcher.group(ii));
-                                        groupToRegion.put(ii, BiElement.of(matcher.start(ii), matcher.end(ii)));
-
-                                    }
-
-                                    retval = new Match()
-                                    {
-                                        @Override
-                                        public int getStart()
-                                        {
-                                            return start;
-                                        }
-
-                                        @Override
-                                        public int getEnd()
-                                        {
-                                            return end - 1;
-                                        }
-
-                                        @Override
-                                        public String getMatchRegion()
-                                        {
-                                            return input.substring(start, end);
-                                        }
-
-                                        @Override
-                                        public Map<Integer, String> getGroups()
-                                        {
-                                            return groups;
-                                        }
-
-                                        @Override
-                                        public String getGroup(int index)
-                                        {
-                                            return this.getGroups()
-                                                       .get(index);
-                                        }
-
-                                        @Override
-                                        public Stream<String> getSubGroupsAsStream()
-                                        {
-                                            return groups.values()
-                                                         .stream()
-                                                         .skip(1);
-                                        }
-
-                                        @Override
-                                        public Optional<String> getSubGroup(int index)
-                                        {
-                                            return Optional.ofNullable(this.getGroup(index));
-                                        }
-
-                                        @Override
-                                        public String replaceGroupsWith(String... replacements)
-                                        {
-                                            Map<Integer, String> map = new HashMap<>(this.getGroups());
-                                            map.remove(0);
-                                            if (replacements != null)
-                                            {
-                                                for (int ii = 0; ii < replacements.length; ii++)
-                                                {
-                                                    String replacement = replacements[ii];
-                                                    if (replacement != null)
-                                                    {
-                                                        map.put(ii + 1, replacement);
-                                                    }
-                                                }
-                                            }
-                                            return this.replaceGroupsWith(map);
-                                        }
-
-                                        @Override
-                                        public String replaceGroupsWith(Map<Integer, String> replacements)
-                                        {
-                                            StringBuilder sb = new StringBuilder(this.getMatchRegion());
-
-                                            replacements.entrySet()
-                                                        .stream()
-                                                        .sorted(ComparatorUtils.builder()
-                                                                               .of(Map.Entry.class)
-                                                                               .with(entry -> (Integer) entry.getKey())
-                                                                               .reverse()
-                                                                               .build())
-                                                        .forEach(entry ->
-                                                        {
-                                                            Integer group = entry.getKey();
-                                                            String replacement = entry.getValue();
-
-                                                            BiElement<Integer, Integer> startAndEnd = groupToRegion.get(group);
-                                                            if (startAndEnd != null)
-                                                            {
-                                                                sb.replace(startAndEnd.getFirst(), startAndEnd.getSecond(), replacement);
-                                                            }
-                                                        });
-
-                                            return sb.toString();
-                                        }
-
-                                        @Override
-                                        public String replaceWith(String replacement)
-                                        {
-                                            return this.asReplacer(() -> replacement)
-                                                       .apply(input);
-                                        }
-
-                                        @Override
-                                        public String replaceSubRegionWith(String replacement)
-                                        {
-                                            return this.asSubRegionReplacer(() -> replacement)
-                                                       .apply(input);
-                                        }
-
-                                        @Override
-                                        public String replaceSubRegionWith(Function<String, String> replacerFunction)
-                                        {
-                                            return this.asSubRegionReplacer(() -> replacerFunction.apply(this.getMatchRegion()))
-                                                       .apply(input);
-                                        }
-
-                                        @Override
-                                        public RegionReplacer asReplacer(Supplier<String> replacements)
-                                        {
-                                            return input -> StringUtils.builder()
-                                                                       .add(input.substring(0, start))
-                                                                       .add(replacements.get())
-                                                                       .add(input.substring(end))
-                                                                       .build();
-                                        }
-
-                                        @Override
-                                        public RegionReplacer asSubRegionReplacer(Supplier<String> replacements)
-                                        {
-                                            return input -> StringUtils.builder()
-                                                                       .add(input.substring(regionStart, start))
-                                                                       .add(replacements.get())
-                                                                       .add(input.substring(regionEnd))
-                                                                       .build();
-                                        }
-
-                                    };
-                                }
-
-                                return retval;
+                                return MatcherUtils.wrapIntoMatch(input, matcher, matcherAction);
                             }
 
                             @Override
@@ -836,17 +686,188 @@ public class MatcherUtils
         };
     }
 
+    private static Optional<Match> wrapIntoMatch(String input, Matcher matcher, BooleanSupplier matcherAction)
+    {
+        Optional<Match> retval = Optional.empty();
+
+        if (matcherAction.getAsBoolean())
+        {
+            int start = matcher.start();
+            int end = matcher.end();
+            int regionStart = matcher.regionStart();
+            int regionEnd = matcher.regionEnd();
+
+            Map<Integer, String> groups = new LinkedHashMap<>();
+            Map<Integer, BiElement<Integer, Integer>> groupToRegion = new LinkedHashMap<>();
+            for (int ii = 0; ii <= matcher.groupCount(); ii++)
+            {
+                groups.put(ii, matcher.group(ii));
+                groupToRegion.put(ii, BiElement.of(matcher.start(ii), matcher.end(ii)));
+            }
+
+            retval = Optional.of(new Match()
+            {
+                @Override
+                public int getStart()
+                {
+                    return start;
+                }
+
+                @Override
+                public int getEnd()
+                {
+                    return end - 1;
+                }
+
+                @Override
+                public String getMatchRegion()
+                {
+                    return input.substring(start, end);
+                }
+
+                @Override
+                public Map<Integer, String> getGroups()
+                {
+                    return groups;
+                }
+
+                @Override
+                public String getGroup(int index)
+                {
+                    return this.getGroups()
+                               .get(index);
+                }
+
+                @Override
+                public Stream<String> getSubGroupsAsStream()
+                {
+                    return groups.values()
+                                 .stream()
+                                 .skip(1);
+                }
+
+                @Override
+                public Optional<String> getSubGroup(int index)
+                {
+                    return Optional.ofNullable(this.getGroup(index));
+                }
+
+                @Override
+                public String replaceGroupsWith(String... replacements)
+                {
+                    Map<Integer, String> map = new HashMap<>(this.getGroups());
+                    map.remove(0);
+                    if (replacements != null)
+                    {
+                        for (int ii = 0; ii < replacements.length; ii++)
+                        {
+                            String replacement = replacements[ii];
+                            if (replacement != null)
+                            {
+                                map.put(ii + 1, replacement);
+                            }
+                        }
+                    }
+                    return this.replaceGroupsWith(map);
+                }
+
+                @Override
+                public String replaceGroupsWith(Map<Integer, String> replacements)
+                {
+                    StringBuilder sb = new StringBuilder(this.getMatchRegion());
+
+                    replacements.entrySet()
+                                .stream()
+                                .sorted(ComparatorUtils.builder()
+                                                       .of(Map.Entry.class)
+                                                       .with(entry -> (Integer) entry.getKey())
+                                                       .reverse()
+                                                       .build())
+                                .forEach(entry ->
+                                {
+                                    Integer group = entry.getKey();
+                                    String replacement = entry.getValue();
+
+                                    BiElement<Integer, Integer> startAndEnd = groupToRegion.get(group);
+                                    if (startAndEnd != null)
+                                    {
+                                        sb.replace(startAndEnd.getFirst(), startAndEnd.getSecond(), replacement);
+                                    }
+                                });
+
+                    return sb.toString();
+                }
+
+                @Override
+                public String replaceWith(String replacement)
+                {
+                    return this.asReplacer(() -> replacement)
+                               .apply(input);
+                }
+
+                @Override
+                public String replaceSubRegionWith(String replacement)
+                {
+                    return this.asSubRegionReplacer(() -> replacement)
+                               .apply(input);
+                }
+
+                @Override
+                public String replaceSubRegionWith(Function<String, String> replacerFunction)
+                {
+                    return this.asSubRegionReplacer(() -> replacerFunction.apply(this.getMatchRegion()))
+                               .apply(input);
+                }
+
+                @Override
+                public RegionReplacer asReplacer(Supplier<String> replacements)
+                {
+                    return input -> StringUtils.builder()
+                                               .add(input.substring(0, start))
+                                               .add(replacements.get())
+                                               .add(input.substring(end))
+                                               .build();
+                }
+
+                @Override
+                public RegionReplacer asSubRegionReplacer(Supplier<String> replacements)
+                {
+                    return input -> StringUtils.builder()
+                                               .add(input.substring(regionStart, start))
+                                               .add(replacements.get())
+                                               .add(input.substring(regionEnd))
+                                               .build();
+                }
+
+            });
+        }
+
+        return retval;
+    }
+
     public static Replacer replacer()
     {
         return new Replacer()
         {
-            private Map<String, String> exactMatchTokenToValue = new LinkedHashMap<>();
-            private Map<String, String> regexToReplacement     = new LinkedHashMap<>();
+            private Map<String, UnaryOperator<String>>   exactMatchTokenToValue = new LinkedHashMap<>();
+            private Map<String, Function<Match, String>> regexToReplacement     = new LinkedHashMap<>();
 
             @Override
             public Replacer addExactMatchReplacement(String matchToken, String value)
             {
-                this.exactMatchTokenToValue.put(matchToken, value);
+                return this.addExactMatchReplacement(matchToken, () -> value);
+            }
+
+            @Override
+            public Replacer addExactMatchReplacement(String matchToken, Supplier<String> valueSupplier)
+            {
+                return this.addExactMatchReplacement(matchToken, value -> valueSupplier.get());
+            }
+
+            @Override
+            public Replacer addExactMatchReplacement(String matchToken, UnaryOperator<String> valueSupplier)
+            {
+                this.exactMatchTokenToValue.put(matchToken, valueSupplier);
                 return this;
             }
 
@@ -861,7 +882,19 @@ public class MatcherUtils
             @Override
             public Replacer addRegExMatchReplacement(String regEx, String replacement)
             {
-                this.regexToReplacement.put(regEx, replacement);
+                return this.addRegExMatchReplacement(regEx, () -> replacement);
+            }
+
+            @Override
+            public Replacer addRegExMatchReplacement(String regEx, Supplier<String> replacementSupplier)
+            {
+                return this.addRegExMatchReplacement(regEx, value -> replacementSupplier.get());
+            }
+
+            @Override
+            public Replacer addRegExMatchReplacement(String regEx, Function<Match, String> replacementSupplier)
+            {
+                this.regexToReplacement.put(regEx, replacementSupplier);
                 return this;
             }
 
@@ -870,14 +903,34 @@ public class MatcherUtils
             {
                 String result = text;
 
-                for (Map.Entry<String, String> exactMatchTokenAndValue : this.exactMatchTokenToValue.entrySet())
+                for (Map.Entry<String, UnaryOperator<String>> exactMatchTokenAndValue : this.exactMatchTokenToValue.entrySet())
                 {
-                    result = org.apache.commons.lang3.StringUtils.replace(result, exactMatchTokenAndValue.getKey(), exactMatchTokenAndValue.getValue());
+                    String token = exactMatchTokenAndValue.getKey();
+                    int numberOfMatches = org.apache.commons.lang3.StringUtils.countMatches(result, token);
+                    if (numberOfMatches >= 1)
+                    {
+                        result = org.apache.commons.lang3.StringUtils.replace(result, token, exactMatchTokenAndValue.getValue()
+                                                                                                                    .apply(token));
+                    }
                 }
 
-                for (Map.Entry<String, String> regExAndReplacement : this.regexToReplacement.entrySet())
+                for (Map.Entry<String, Function<Match, String>> regExAndReplacement : this.regexToReplacement.entrySet())
                 {
-                    result = org.apache.commons.lang3.RegExUtils.replaceAll(result, regExAndReplacement.getKey(), regExAndReplacement.getValue());
+
+                    Matcher matcher = Pattern.compile(regExAndReplacement.getKey())
+                                             .matcher(result);
+                    StringBuffer sb = new StringBuffer();
+
+                    String input = result;
+                    StreamUtils.takeOptionalUntilEmpty(() -> wrapIntoMatch(input, matcher, () -> matcher.find()))
+                               .forEach(match ->
+                               {
+                                   String replacement = regExAndReplacement.getValue()
+                                                                           .apply(match);
+                                   matcher.appendReplacement(sb, replacement);
+                               });
+                    matcher.appendTail(sb);
+                    result = sb.toString();
                 }
 
                 return result;
@@ -893,11 +946,125 @@ public class MatcherUtils
     {
         public Replacer addExactMatchReplacement(String matchToken, String value);
 
+        public Replacer addExactMatchReplacement(String matchToken, Supplier<String> valueSupplier);
+
+        public Replacer addExactMatchReplacement(String matchToken, UnaryOperator<String> valueSupplier);
+
         public Replacer addExactMatchReplacements(Map<String, String> matchTokenToValue);
 
         public Replacer addRegExMatchReplacement(String regEx, String replacement);
 
+        public Replacer addRegExMatchReplacement(String regEx, Supplier<String> replacementSupplier);
+
+        public Replacer addRegExMatchReplacement(String regEx, Function<Match, String> replacementSupplier);
+
         public String findAndReplaceAllIn(String text);
 
+    }
+
+    /**
+     * @see TokenInterpreter
+     * @return
+     */
+    public static TokenInterpreter interpreter()
+    {
+        Replacer replacer = MatcherUtils.replacer();
+        return new TokenInterpreter()
+        {
+            private AtomicBoolean           operationHasRun = new AtomicBoolean(false);
+            private Optional<ElseOperation> elseOperation   = Optional.empty();
+
+            @Override
+            public TokenInterpreter ifContainsExact(String matchToken, TokenOperation tokenOperation)
+            {
+                replacer.addExactMatchReplacement(matchToken, match ->
+                {
+                    tokenOperation.accept(match);
+                    this.markOperationHasRun();
+                    return "";
+                });
+                return this;
+            }
+
+            private void markOperationHasRun()
+            {
+                this.operationHasRun.set(true);
+            }
+
+            @Override
+            public TokenInterpreter ifContainsRegEx(String regEx, RegExOperation tokenOperation)
+            {
+                replacer.addRegExMatchReplacement(regEx, match ->
+                {
+                    tokenOperation.accept(match);
+                    this.markOperationHasRun();
+                    return "";
+                });
+                return this;
+            }
+
+            @Override
+            public void accept(String text)
+            {
+                this.apply(text);
+            }
+
+            @Override
+            public String apply(String text)
+            {
+                String result = replacer.findAndReplaceAllIn(text);
+                this.elseOperation.filter(o -> !this.operationHasRun.get())
+                                  .ifPresent(ElseOperation::run);
+                return result;
+            }
+
+            @Override
+            public TokenInterpreter ifStartsWith(String matchToken, TokenOperation tokenOperation)
+            {
+                return this.ifContainsRegEx("^" + Pattern.quote(matchToken), match -> tokenOperation.accept(match.getMatchRegion()));
+            }
+
+            @Override
+            public TokenInterpreter orElse(ElseOperation elseOperation)
+            {
+                this.elseOperation = Optional.ofNullable(elseOperation);
+                return this;
+            }
+        };
+    }
+
+    /**
+     * A {@link TokenInterpreter} utilizes {@link Pattern} matching routines to interpret tokens within a given {@link String}.<br>
+     * <br>
+     * The {@link #accept(String)} will just interpret a given {@link String}, while {@link #apply(String)} will interpret the given {@link String} and return
+     * the input {@link String} but all the matched token being removed.
+     * 
+     * @author omnaest
+     */
+    public static interface TokenInterpreter extends Consumer<String>, Function<String, String>
+    {
+
+        public TokenInterpreter ifContainsRegEx(String regEx, RegExOperation tokenOperation);
+
+        public TokenInterpreter ifContainsExact(String matchToken, TokenOperation tokenOperation);
+
+        public TokenInterpreter ifStartsWith(String matchToken, TokenOperation tokenOperation);
+
+        public TokenInterpreter orElse(ElseOperation elseOperation);
+
+        public static interface TokenOperation extends Consumer<String>
+        {
+
+        }
+
+        public static interface RegExOperation extends Consumer<Match>
+        {
+
+        }
+
+        public static interface ElseOperation extends Runnable
+        {
+
+        }
     }
 }

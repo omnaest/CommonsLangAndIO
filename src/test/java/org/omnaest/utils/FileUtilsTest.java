@@ -37,6 +37,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -135,6 +136,20 @@ public class FileUtilsTest
         assertEquals("test.txt", files.iterator()
                                       .next()
                                       .getName());
+    }
+
+    @Test
+    public void testListTransitiveDirectoryFilesFile() throws Exception
+    {
+        File directory = FileUtils.createRandomTempDirectory();
+        FileUtils.createDirectory(new File(directory, "subfolder"));
+        FileUtils.toConsumer(new File(directory, "test.txt"))
+                 .accept("test");
+        List<File> files = FileUtils.listTransitiveDirectoryFiles(directory)
+                                    .collect(Collectors.toList());
+        assertEquals(Arrays.asList("subfolder", "test.txt"), files.stream()
+                                                                  .map(File::getName)
+                                                                  .collect(Collectors.toList()));
     }
 
     @Test

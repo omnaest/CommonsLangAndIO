@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -161,26 +162,41 @@ public class PredicateUtils
 
     public static <E, R> PredicateMapping<E, R> map(Function<E, R> mapper)
     {
-        return new PredicateMapping<E, R>()
+        return new PredicateMappingImpl<E, R>(mapper);
+    }
+
+    private static class PredicateMappingImpl<E, R> implements PredicateMapping<E, R>
+    {
+        private final Function<E, R> mapper;
+
+        private PredicateMappingImpl(Function<E, R> mapper)
         {
-            @Override
-            public Predicate<E> and(Predicate<? super R> predicate)
-            {
-                return element -> predicate.test(mapper.apply(element));
-            }
+            this.mapper = mapper;
+        }
 
-            @Override
-            public Predicate<E> andNotNull()
-            {
-                return this.and(notNull());
-            }
+        @Override
+        public Predicate<E> and(Predicate<? super R> predicate)
+        {
+            return element -> predicate.test(this.mapper.apply(element));
+        }
 
-            @Override
-            public Predicate<E> andIsContainedIn(Set<R> elements)
-            {
-                return this.and(isContainedIn(elements));
-            }
-        };
+        @Override
+        public Predicate<E> andNotNull()
+        {
+            return this.and(notNull());
+        }
+
+        @Override
+        public Predicate<E> andIsContainedIn(Set<R> elements)
+        {
+            return this.and(isContainedIn(elements));
+        }
+
+        @Override
+        public <NR> PredicateMapping<E, NR> map(Function<R, NR> mapper2)
+        {
+            return new PredicateMappingImpl<>(this.mapper.andThen(mapper2));
+        }
     }
 
     public static interface PredicateMapping<E, R>
@@ -190,6 +206,8 @@ public class PredicateUtils
         public Predicate<E> andNotNull();
 
         public Predicate<E> andIsContainedIn(Set<R> elements);
+
+        public <NR> PredicateMapping<E, NR> map(Function<R, NR> mapper);
     }
 
     /**
@@ -460,4 +478,43 @@ public class PredicateUtils
                                   .allMatch(predicate -> predicate.test(element));
     }
 
+    public static interface FirstEncounterTypeMappablePredicate<E, ME> extends Predicate<E>
+    {
+        public <NE> FirstEncounterTypeMappablePredicate<E, NE> withMapping(Function<ME, NE> mapper);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E> Predicate<E> encounteredFirst()
+    {
+        return (Predicate<E>) encounteredFirst(Object.class);
+    }
+
+    public static <E> FirstEncounterTypeMappablePredicate<E, E> encounteredFirst(Class<E> type)
+    {
+        return new FirstEncounterTypeMappablePredicateImpl<E, E>(MapperUtils.identity());
+    }
+
+    private static class FirstEncounterTypeMappablePredicateImpl<E, ME> implements FirstEncounterTypeMappablePredicate<E, ME>
+    {
+        private Set<ME>               visitedElements = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        private final Predicate<ME>   filter          = element -> this.visitedElements.add(element);
+        private final Function<E, ME> mapper;
+
+        private FirstEncounterTypeMappablePredicateImpl(Function<E, ME> mapper)
+        {
+            this.mapper = mapper;
+        }
+
+        @Override
+        public boolean test(E element)
+        {
+            return this.filter.test(this.mapper.apply(element));
+        }
+
+        @Override
+        public <NE> FirstEncounterTypeMappablePredicate<E, NE> withMapping(Function<ME, NE> mapper)
+        {
+            return new FirstEncounterTypeMappablePredicateImpl<E, NE>(this.mapper.andThen(mapper));
+        }
+    }
 }

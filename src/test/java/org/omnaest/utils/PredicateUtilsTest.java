@@ -37,6 +37,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -111,6 +112,22 @@ public class PredicateUtilsTest
                                  .test(null));
         assertFalse(PredicateUtils.all(element -> false, element -> true)
                                   .test("a"));
+    }
+
+    @Test
+    public void testEncounteredFirst() throws Exception
+    {
+        assertEquals(Arrays.asList("a", "b"), Arrays.asList("a", "b", "a")
+                                                    .stream()
+                                                    .filter(PredicateUtils.encounteredFirst())
+                                                    .collect(Collectors.toList()));
+        assertEquals(Arrays.asList("a1", "b", "c"), Arrays.asList(new File("a1"), new File("b"), new File("a2"), new File("c"))
+                                                          .stream()
+                                                          .filter(PredicateUtils.encounteredFirst(File.class)
+                                                                                .withMapping(File::getName)
+                                                                                .withMapping(name -> StringUtils.substring(name, 0, 1)))
+                                                          .map(File::getName)
+                                                          .collect(Collectors.toList()));
     }
 
 }

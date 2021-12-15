@@ -597,4 +597,15 @@ public class StreamUtilsTest
                                                                                      .orElse(""))
                                                                       .collect(Collectors.toList()));
     }
+
+    @Test
+    public void testTakeOptionalUntilEmpty() throws Exception
+    {
+        Iterator<String> iterator = Arrays.asList("a", "b")
+                                          .iterator();
+        assertEquals(Arrays.asList("a", "b"), StreamUtils.takeOptionalUntilEmpty(() -> Optional.of(iterator)
+                                                                                               .filter(Iterator::hasNext)
+                                                                                               .map(Iterator::next))
+                                                         .collect(Collectors.toList()));
+    }
 }

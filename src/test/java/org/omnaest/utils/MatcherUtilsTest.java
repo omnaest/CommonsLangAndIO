@@ -34,8 +34,10 @@
 package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -178,6 +180,40 @@ public class MatcherUtilsTest
                                  .build()
                                  .findInAnd("abcsxxghiesxxzzzzdeftttt")
                                  .getMatchedTokens());
+    }
+
+    @Test
+    public void testInterpreter() throws Exception
+    {
+        {
+            AtomicInteger invocationCounter = new AtomicInteger();
+            assertEquals("This is here and blank, or not?", MatcherUtils.interpreter()
+                                                                        .ifContainsExact("abc:", value ->
+                                                                        {
+                                                                            assertEquals("abc:", value);
+                                                                            invocationCounter.incrementAndGet();
+                                                                        })
+                                                                        .ifContainsRegEx("d.f", match ->
+                                                                        {
+                                                                            assertEquals("def", match.getMatchRegion());
+                                                                            invocationCounter.incrementAndGet();
+                                                                        })
+                                                                        .ifStartsWith("BEFORE:", value ->
+                                                                        {
+                                                                            assertEquals("BEFORE:", value);
+                                                                            invocationCounter.incrementAndGet();
+                                                                        })
+                                                                        .orElse(() -> fail())
+                                                                        .apply("BEFORE:This is abc:here and defblank, or not?"));
+            assertEquals(3, invocationCounter.get());
+        }
+        {
+            AtomicInteger invocationCounter = new AtomicInteger();
+            MatcherUtils.interpreter()
+                        .orElse(invocationCounter::incrementAndGet)
+                        .accept("");
+            assertEquals(1, invocationCounter.get());
+        }
     }
 
 }

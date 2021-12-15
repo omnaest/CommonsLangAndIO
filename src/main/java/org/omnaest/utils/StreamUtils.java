@@ -2029,4 +2029,21 @@ public class StreamUtils
         return Stream.concat(stream.peek(element -> counter.incrementAndGet()), secondStream);
     }
 
+    /**
+     * Creates a {@link Stream} that returns elements as long as the given {@link Supplier} returns {@link Optional}s that are not {@link Optional#empty()}.
+     * 
+     * @param supplier
+     * @return
+     */
+    public static <E> Stream<E> takeOptionalUntilEmpty(Supplier<Optional<E>> supplier)
+    {
+        AtomicBoolean terminate = new AtomicBoolean(false);
+        return generate().intStream()
+                         .unlimitedWithTerminationPredicate(element -> terminate.get())
+                         .mapToObj(index -> supplier.get())
+                         .peek(optional -> terminate.set(!optional.isPresent()))
+                         .filter(Optional::isPresent)
+                         .map(Optional::get);
+    }
+
 }

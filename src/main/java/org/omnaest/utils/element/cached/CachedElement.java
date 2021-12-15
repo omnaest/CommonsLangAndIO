@@ -109,6 +109,20 @@ public interface CachedElement<E> extends Provider<E>
     }
 
     /**
+     * Sets the current value like {@link #set(Object)} and returns the value immediately.
+     * 
+     * @see #set(Object)
+     * @see #get()
+     * @param value
+     * @return
+     */
+    public default E setAndGet(E value)
+    {
+        return this.set(value)
+                   .get();
+    }
+
+    /**
      * Returns the underlying {@link Supplier} of the {@link CachedElement}
      * 
      * @return
