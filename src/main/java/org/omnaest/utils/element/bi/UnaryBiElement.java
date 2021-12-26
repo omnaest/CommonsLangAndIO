@@ -15,7 +15,9 @@
  ******************************************************************************/
 package org.omnaest.utils.element.bi;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -56,6 +58,19 @@ public interface UnaryBiElement<E> extends BiElement<E, E>
     {
         return this.asStream()
                    .filter(value -> value != null);
+    }
+
+    /**
+     * Returns a {@link Map} containing the two elements of the {@link UnaryBiElement} as firstKey={@link #getFirst()} and secondKey={@link #getSecond()}.
+     * 
+     * @return
+     */
+    public default Map<String, E> asMap(String firstKey, String secondKey)
+    {
+        Map<String, E> map = new HashMap<>();
+        map.put(firstKey, this.getFirst());
+        map.put(secondKey, this.getSecond());
+        return map;
     }
 
     /**

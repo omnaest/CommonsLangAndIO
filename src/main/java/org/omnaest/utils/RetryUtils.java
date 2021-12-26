@@ -228,6 +228,18 @@ public class RetryUtils
         });
     }
 
+    public static void retrySilently(int times, int durationInBetween, TimeUnit timeUnit, RetryOperation operation)
+    {
+        try
+        {
+            retry(times, durationInBetween, timeUnit, operation);
+        }
+        catch (Exception e)
+        {
+            // do nothing
+        }
+    }
+
     /**
      * Retries the {@link RetryOperation} an unlimited number of times
      * 

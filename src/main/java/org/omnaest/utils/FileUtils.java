@@ -318,6 +318,14 @@ public class FileUtils
         public String get();
 
         /**
+         * Returns the {@link #get()} content if a file is present or throws the given {@link RuntimeException}
+         * 
+         * @param exceptionSupplier
+         * @return
+         */
+        public String orElseThrow(Supplier<RuntimeException> exceptionSupplier);
+
+        /**
          * Returns the {@link #get()} content split by line end characters like \n or \r or any combination.
          * 
          * @return
@@ -408,19 +416,26 @@ public class FileUtils
             @Override
             public String get()
             {
-                String retval = null;
                 try
                 {
                     if (file.exists() && file.isFile())
                     {
-                        retval = org.apache.commons.io.FileUtils.readFileToString(file, this.charset);
+                        return this.readFileIntoString(file);
+                    }
+                    else
+                    {
+                        return null;
                     }
                 }
                 catch (IOException e)
                 {
                     throw new FileAccessException(e);
                 }
-                return retval;
+            }
+
+            private String readFileIntoString(File file) throws IOException
+            {
+                return org.apache.commons.io.FileUtils.readFileToString(file, this.charset);
             }
 
             @Override
@@ -433,6 +448,29 @@ public class FileUtils
             public <T> Supplier<T> with(Function<String, T> deserializer)
             {
                 return () -> deserializer.apply(this.get());
+            }
+
+            @Override
+            public String orElseThrow(Supplier<RuntimeException> exceptionSupplier)
+            {
+                try
+                {
+                    if (file.exists() && file.isFile())
+                    {
+                        return this.readFileIntoString(file);
+                    }
+                    else
+                    {
+                        Optional.ofNullable(exceptionSupplier)
+                                .map(Supplier::get)
+                                .ifPresent(ConsumerUtils.throwException(MapperUtils.identity()));
+                        return null;
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new FileAccessException(e);
+                }
             }
 
         };

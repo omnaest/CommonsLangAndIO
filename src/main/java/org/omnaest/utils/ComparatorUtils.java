@@ -287,6 +287,8 @@ public class ComparatorUtils
         public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper);
 
         public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper, Class<S> primaryType);
+
+        public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper, Class<S> primaryType, Class<T> targetType);
     }
 
     public static interface MapperComparatorBuilder<S, T>
@@ -481,6 +483,12 @@ public class ComparatorUtils
 
             @Override
             public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper, Class<S> primaryType)
+            {
+                return this.of(mapper);
+            }
+
+            @Override
+            public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper, Class<S> primaryType, Class<T> targetType)
             {
                 return this.of(mapper);
             }

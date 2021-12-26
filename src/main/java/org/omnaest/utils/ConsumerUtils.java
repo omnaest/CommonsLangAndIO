@@ -36,8 +36,10 @@ package org.omnaest.utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.omnaest.utils.counter.Counter;
@@ -107,6 +109,15 @@ public class ConsumerUtils
                                          .ifModulo(modulo, durationProgressConsumer);
     }
 
+    public static <E> E consumeWithAndGet(E element, Optional<Consumer<E>> elementConsumer)
+    {
+        if (elementConsumer != null)
+        {
+            elementConsumer.ifPresent(consumer -> consumer.accept(element));
+        }
+        return element;
+    }
+
     public static <E> E consumeWithAndGet(E element, Consumer<? super E> elementConsumer)
     {
         if (elementConsumer != null)
@@ -152,5 +163,20 @@ public class ConsumerUtils
     public static interface ListAddingConsumer<E> extends Consumer<E>, Supplier<List<E>>
     {
 
+    }
+
+    /**
+     * Throws a {@link RuntimeException} based on the given exception mapper result.
+     * 
+     * @param exceptionMapper
+     * @return
+     */
+    public static <E> Consumer<E> throwException(Function<E, RuntimeException> exceptionMapper)
+    {
+        return element ->
+        {
+            RuntimeException exception = exceptionMapper.apply(element);
+            throw exception;
+        };
     }
 }
