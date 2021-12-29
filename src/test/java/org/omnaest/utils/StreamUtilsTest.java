@@ -52,6 +52,7 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.omnaest.utils.StreamUtils.Drainage;
+import org.omnaest.utils.StreamUtils.SplittedStream;
 import org.omnaest.utils.StreamUtils.UnaryMergeEntry;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.bi.IntUnaryBiElement;
@@ -607,5 +608,28 @@ public class StreamUtilsTest
                                                                                                .filter(Iterator::hasNext)
                                                                                                .map(Iterator::next))
                                                          .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testSplitByFilter() throws Exception
+    {
+        {
+            SplittedStream<String> splittedStream = StreamUtils.splitByFilter(Arrays.asList("a", "b", "c")
+                                                                                    .stream(),
+                                                                              value -> org.apache.commons.lang3.StringUtils.equals(value, "b"));
+            assertEquals(Arrays.asList("a", "c"), splittedStream.excluded()
+                                                                .collect(Collectors.toList()));
+            assertEquals(Arrays.asList("b"), splittedStream.included()
+                                                           .collect(Collectors.toList()));
+        }
+        {
+            SplittedStream<String> splittedStream = StreamUtils.splitByFilter(Arrays.asList("a", "b", "c")
+                                                                                    .stream(),
+                                                                              value -> org.apache.commons.lang3.StringUtils.equals(value, "b"));
+            assertEquals(Arrays.asList("b"), splittedStream.included()
+                                                           .collect(Collectors.toList()));
+            assertEquals(Arrays.asList("a", "c"), splittedStream.excluded()
+                                                                .collect(Collectors.toList()));
+        }
     }
 }

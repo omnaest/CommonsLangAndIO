@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -78,16 +79,30 @@ public class ConsumerUtils
     }
 
     /**
-     * {@link Consumer} which does nothing
+     * {@link Consumer}/{@link BiConsumer} which does nothing
      * 
      * @return
      */
-    public static <E> Consumer<E> noOperation()
+    public static <E, E1, E2> NoOperationConsumer<E, E1, E2> noOperation()
     {
-        return e ->
+        return new NoOperationConsumer<E, E1, E2>()
         {
-            // do nothing
+            @Override
+            public void accept(E t)
+            {
+                // no operation
+            }
+
+            @Override
+            public void accept(E1 t, E2 u)
+            {
+                // no operation
+            }
         };
+    }
+
+    public static interface NoOperationConsumer<E, E1, E2> extends Consumer<E>, BiConsumer<E1, E2>
+    {
     }
 
     /**

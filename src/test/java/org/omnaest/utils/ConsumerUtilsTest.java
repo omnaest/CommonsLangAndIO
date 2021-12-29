@@ -23,4 +23,14 @@ public class ConsumerUtilsTest
         assertEquals(Arrays.asList("a", "b"), consumer.get());
     }
 
+    @Test
+    public void testNoOperation() throws Exception
+    {
+        Arrays.asList()
+              .forEach(ConsumerUtils.noOperation());
+        MapUtils.builder()
+                .build()
+                .forEach(ConsumerUtils.noOperation());
+    }
+
 }

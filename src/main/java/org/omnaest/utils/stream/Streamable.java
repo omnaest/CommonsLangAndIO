@@ -70,6 +70,7 @@ public interface Streamable<E> extends Iterable<E>
     /**
      * Returns the last element
      * 
+     * @see #first()
      * @return
      */
     public default Optional<E> last()
@@ -82,11 +83,26 @@ public interface Streamable<E> extends Iterable<E>
     /**
      * Returns the first element
      * 
+     * @see #nth(int)
      * @return
      */
     public default Optional<E> first()
     {
         return this.stream()
+                   .findFirst();
+    }
+
+    /**
+     * Returns the nth element. index = 0,1,2, ...
+     * 
+     * @see #first()
+     * @param index
+     * @return
+     */
+    public default Optional<E> nth(int index)
+    {
+        return this.stream()
+                   .skip(index)
                    .findFirst();
     }
 }

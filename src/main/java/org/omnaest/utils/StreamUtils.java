@@ -1899,6 +1899,47 @@ public class StreamUtils
     }
 
     /**
+     * Splits a given {@link Stream} into two {@link Stream}s based on the result of the given inclusion filter predicate.
+     * 
+     * @param stream
+     * @param inclusionFilter
+     * @return
+     */
+    public static <E> SplittedStream<E> splitByFilter(Stream<E> stream, Predicate<E> inclusionFilter)
+    {
+        Iterator<E> iterator = Optional.ofNullable(stream)
+                                       .orElse(Stream.empty())
+                                       .iterator();
+        return new SplittedStream<E>()
+        {
+            private List<E> includedStack = new ArrayList<>();
+            private List<E> excludedStack = new ArrayList<>();
+
+            @Override
+            public Stream<E> included()
+            {
+                return Stream.concat(fromIterator(iterator).filter(PredicateUtils.consumeExcluded(inclusionFilter, element -> this.excludedStack.add(element))),
+                                     this.includedStack.stream());
+            }
+
+            @Override
+            public Stream<E> excluded()
+            {
+                return Stream.concat(fromIterator(iterator).filter(PredicateUtils.consumeExcluded(inclusionFilter.negate(),
+                                                                                                  element -> this.includedStack.add(element))),
+                                     this.excludedStack.stream());
+            }
+        };
+    }
+
+    public static interface SplittedStream<E>
+    {
+        public Stream<E> included();
+
+        public Stream<E> excluded();
+    }
+
+    /**
      * Filters out elements of the given {@link Stream} matched by the given {@link Predicate} and applies them to the given {@link Consumer}.
      * 
      * @param stream

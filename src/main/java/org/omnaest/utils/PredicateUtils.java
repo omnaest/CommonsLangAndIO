@@ -517,4 +517,53 @@ public class PredicateUtils
             return new FirstEncounterTypeMappablePredicateImpl<E, NE>(this.mapper.andThen(mapper));
         }
     }
+
+    /**
+     * Allows to consume the excluded (false) elements based on the given filter {@link Predicate}.
+     * 
+     * @param filter
+     * @param consumer
+     * @return
+     */
+    public static <E> Predicate<E> consumeExcluded(Predicate<E> filter, Consumer<E> consumer)
+    {
+        return consume(filter, null, consumer);
+    }
+
+    /**
+     * Allows to consume the included (true) elements based on the given filter {@link Predicate}.
+     * 
+     * @param filter
+     * @param consumer
+     * @return
+     */
+    public static <E> Predicate<E> consumeIncluded(Predicate<E> filter, Consumer<E> consumer)
+    {
+        return consume(filter, consumer, null);
+    }
+
+    /**
+     * Allows to consume the elements depending on the result of the given filter {@link Predicate}.
+     * 
+     * @param filter
+     * @param includedElementConsumer
+     * @param excludedElementConsumer
+     * @return
+     */
+    public static <E> Predicate<E> consume(Predicate<E> filter, Consumer<E> includedElementConsumer, Consumer<E> excludedElementConsumer)
+    {
+        return element ->
+        {
+            boolean result = filter.test(element);
+            if (result && includedElementConsumer != null)
+            {
+                includedElementConsumer.accept(element);
+            }
+            else if (!result && excludedElementConsumer != null)
+            {
+                excludedElementConsumer.accept(element);
+            }
+            return result;
+        };
+    }
 }
