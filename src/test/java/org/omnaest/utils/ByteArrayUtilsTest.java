@@ -11,7 +11,7 @@ import java.util.stream.LongStream;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
-import org.omnaest.utils.ByteArrayUtils.MultiByteArrayContainer.ByteArrayContainerEntry;
+import org.omnaest.utils.ByteArrayUtils.ByteArrayContainerEntry;
 
 public class ByteArrayUtilsTest
 {

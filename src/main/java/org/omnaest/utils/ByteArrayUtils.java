@@ -19,7 +19,6 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
-import org.omnaest.utils.ByteArrayUtils.MultiByteArrayContainer.ByteArrayContainerEntry;
 import org.omnaest.utils.exception.RuntimeIOException;
 import org.omnaest.utils.stream.Streamable;
 
@@ -248,15 +247,15 @@ public class ByteArrayUtils
 
     public static interface MultiByteArrayContainer<K> extends Streamable<ByteArrayContainerEntry<K>>
     {
+    }
 
-        public static interface ByteArrayContainerEntry<K> extends Supplier<ByteArrayContainer>
-        {
-            public K getKey();
+    public static interface ByteArrayContainerEntry<K> extends Supplier<ByteArrayContainer>
+    {
+        public K getKey();
 
-            @Override
-            public ByteArrayContainer get();
+        @Override
+        public ByteArrayContainer get();
 
-        }
     }
 
 }
