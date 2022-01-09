@@ -39,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +48,7 @@ import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
 import org.junit.Test;
+import org.omnaest.utils.IteratorUtils.RoundRobinListIterator;
 
 /**
  * @see IteratorUtils
@@ -58,7 +60,7 @@ public class IteratorUtilsTest
     @Test
     public void testDrain() throws Exception
     {
-        Iterator<String> roundRobinIterator = IteratorUtils.roundRobinIterator(Arrays.asList("1", "2", "3"));
+        Iterator<String> roundRobinIterator = IteratorUtils.roundRobinListIterator(Arrays.asList("1", "2", "3"));
         List<String> drained = IteratorUtils.drain(roundRobinIterator, 10);
         assertEquals(Arrays.asList("1", "2", "3", "1", "2", "3", "1", "2", "3", "1"), drained);
     }
@@ -74,9 +76,9 @@ public class IteratorUtilsTest
     @Test
     public void testRoundRobinIterator() throws Exception
     {
-        assertFalse(IteratorUtils.roundRobinIterator(Collections.emptyList())
+        assertFalse(IteratorUtils.roundRobinIterator((Collection<Object>) Collections.emptySet())
                                  .hasNext());
-        assertTrue(IteratorUtils.roundRobinIterator(Arrays.asList("1"))
+        assertTrue(IteratorUtils.roundRobinIterator((Collection<String>) Arrays.asList("1"))
                                 .hasNext());
     }
 
@@ -84,13 +86,40 @@ public class IteratorUtilsTest
     public void testRoundRobinIteratorWithConcurrentModification() throws Exception
     {
         List<String> list = new ArrayList<>(Arrays.asList("2", "3"));
-        Iterator<String> iterator = IteratorUtils.roundRobinIterator(list);
+        Iterator<String> iterator = IteratorUtils.roundRobinIterator((Collection<String>) list);
         assertTrue(iterator.hasNext());
         assertEquals("2", iterator.next());
 
         list.add(0, "1");
         assertTrue(iterator.hasNext());
         assertEquals("1", iterator.next());
+    }
+
+    @Test
+    public void testRoundRobinListIterator() throws Exception
+    {
+        assertFalse(IteratorUtils.roundRobinListIterator(Collections.emptyList())
+                                 .hasNext());
+        assertTrue(IteratorUtils.roundRobinListIterator(Arrays.asList("1"))
+                                .hasNext());
+        assertEquals("1", IteratorUtils.roundRobinListIterator(Arrays.asList("1"))
+                                       .next());
+
+        {
+            RoundRobinListIterator<String> roundRobinIterator = IteratorUtils.roundRobinListIterator(Arrays.asList("1", "2", "3"));
+            assertFalse(roundRobinIterator.isLastInCycle());
+            assertEquals("1", roundRobinIterator.next());
+            assertFalse(roundRobinIterator.isLastInCycle());
+            assertEquals("2", roundRobinIterator.lookahead());
+            assertEquals("2", roundRobinIterator.next());
+            assertFalse(roundRobinIterator.isLastInCycle());
+            assertEquals("3", roundRobinIterator.lookahead());
+            assertEquals("3", roundRobinIterator.next());
+            assertTrue(roundRobinIterator.isLastInCycle());
+            assertEquals("1", roundRobinIterator.lookahead());
+            assertEquals("1", roundRobinIterator.next());
+            assertFalse(roundRobinIterator.isLastInCycle());
+        }
     }
 
     @Test

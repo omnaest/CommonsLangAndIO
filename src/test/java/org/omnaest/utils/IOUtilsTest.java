@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,5 +89,31 @@ public class IOUtilsTest
         assertNotNull(lines);
         assertEquals(3, lines.size());
         assertEquals(Arrays.asList("abc", "def", "ghi"), lines);
+    }
+
+    @Test
+    public void testCopy() throws Exception
+    {
+        assertEquals("this is a text", IOUtils.copy()
+                                              .from(new StringReader("this is a text"))
+                                              .toString());
+        assertEquals("this is a text" + StringUtils.repeat("-", 1024), IOUtils.copy()
+                                                                              .from(new StringReader("this is a text" + StringUtils.repeat("-", 1024)))
+                                                                              .withBufferSize(128)
+                                                                              .toString());
+        assertEquals("this", IOUtils.copy()
+                                    .from(new StringReader("this is a text"))
+                                    .withCharacterLimit(4)
+                                    .toString());
+        assertEquals(4, IOUtils.copy()
+                               .from(new StringReader("this is a text"))
+                               .withCharacterLimit(4)
+                               .to(new StringWriter())
+                               .getCount());
+
+        assertArrayEquals(new byte[] { 1, 2, 3, 4, 5 }, IOUtils.copy()
+                                                               .from(new ByteArrayInputStream(new byte[] { 1, 2, 3, 4, 5 }))
+                                                               .toByteArray()
+                                                               .get());
     }
 }

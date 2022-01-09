@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -150,6 +151,16 @@ public class PredicateUtils
         return t -> true;
     }
 
+    /**
+     * Returns true always
+     * 
+     * @return
+     */
+    public static <T, U> BiPredicate<T, U> allMatchingBiPredicate()
+    {
+        return (t, u) -> true;
+    }
+
     public static <E> Predicate<? super List<E>> listNotEmpty()
     {
         return list -> list != null && !list.isEmpty();
@@ -197,11 +208,19 @@ public class PredicateUtils
         {
             return new PredicateMappingImpl<>(this.mapper.andThen(mapper2));
         }
+
+        @Override
+        public Predicate<E> and(BiPredicate<? super E, ? super R> predicate)
+        {
+            return element -> predicate.test(element, this.mapper.apply(element));
+        }
     }
 
     public static interface PredicateMapping<E, R>
     {
         public Predicate<E> and(Predicate<? super R> predicate);
+
+        public Predicate<E> and(BiPredicate<? super E, ? super R> predicate);
 
         public Predicate<E> andNotNull();
 

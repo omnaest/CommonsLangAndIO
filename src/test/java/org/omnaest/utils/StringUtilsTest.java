@@ -320,4 +320,11 @@ public class StringUtilsTest
                                        .apply("bc"));
     }
 
+    @Test
+    public void testEndsWithAnyIgnoreCase() throws Exception
+    {
+        assertTrue(StringUtils.endsWithAnyIgnoreCase("AbC", "xZt", "aBc"));
+        assertFalse(StringUtils.endsWithAnyIgnoreCase("AbC", "xZt", "deT"));
+    }
+
 }

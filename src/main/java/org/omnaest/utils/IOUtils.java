@@ -20,12 +20,19 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -245,4 +252,388 @@ public class IOUtils
             throw new RuntimeIOException(e);
         }
     }
+
+    public static Resource toResource(InputStream inputStream)
+    {
+        return new Resource()
+        {
+            @Override
+            public String asString()
+            {
+                return this.asString(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            public String asString(Charset charset)
+            {
+                try
+                {
+                    return org.apache.commons.io.IOUtils.toString(inputStream, charset);
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeIOException(e);
+                }
+            }
+
+            @Override
+            public Reader asReader()
+            {
+                return this.asReader(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            public Reader asReader(Charset charset)
+            {
+                return new InputStreamReader(this.asInputStream(), charset);
+            }
+
+            @Override
+            public InputStream asInputStream()
+            {
+                return inputStream;
+            }
+
+            @Override
+            public byte[] asByteArray()
+            {
+                try
+                {
+                    return org.apache.commons.io.IOUtils.toByteArray(this.asInputStream());
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeIOException(e);
+                }
+            }
+
+        };
+    }
+
+    public static interface Resource
+    {
+        public String asString();
+
+        public String asString(Charset charset);
+
+        public Reader asReader();
+
+        public Reader asReader(Charset charset);
+
+        public InputStream asInputStream();
+
+        public byte[] asByteArray();
+    }
+
+    public static IOCopy copy()
+    {
+        return new IOCopy()
+        {
+            @Override
+            public ReaderCopy from(Reader reader)
+            {
+                return new ReaderCopy()
+                {
+                    private long numberOfCharactersLimit = Long.MAX_VALUE;
+                    private int  bufferSize              = DEFAULT_BUFFER_SIZE;
+
+                    @Override
+                    public ReaderCopy withBufferSize(int bufferSize)
+                    {
+                        this.bufferSize = bufferSize;
+                        return this;
+                    }
+
+                    @Override
+                    public WriteResult to(Writer writer)
+                    {
+                        try
+                        {
+                            int bufferSize = (int) Math.min(this.numberOfCharactersLimit, this.bufferSize);
+
+                            long counter = 0;
+                            int readLength;
+                            CharBuffer buffer = CharBuffer.allocate(bufferSize);
+                            while ((counter < this.numberOfCharactersLimit) && (readLength = reader.read(buffer)) >= 0)
+                            {
+                                writer.write(buffer.array(), 0, readLength);
+                                counter += readLength;
+                                buffer.clear();
+                            }
+
+                            long count = counter;
+
+                            return new WriteResult()
+                            {
+                                @Override
+                                public WriteResult handleException(Consumer<Exception> exceptionHandler)
+                                {
+                                    // do nothing
+                                    return this;
+                                }
+
+                                @Override
+                                public long getCount()
+                                {
+                                    return count;
+                                }
+
+                                @Override
+                                public boolean hasError()
+                                {
+                                    return false;
+                                }
+                            };
+                        }
+                        catch (IOException e)
+                        {
+                            return new WriteResult()
+                            {
+                                @Override
+                                public WriteResult handleException(Consumer<Exception> exceptionHandler)
+                                {
+                                    exceptionHandler.accept(e);
+                                    return this;
+                                }
+
+                                @Override
+                                public long getCount()
+                                {
+                                    return -1;
+                                }
+
+                                @Override
+                                public boolean hasError()
+                                {
+                                    return true;
+                                }
+                            };
+                        }
+                    }
+
+                    @Override
+                    public String toString()
+                    {
+                        return this.toStringResult()
+                                   .get();
+                    }
+
+                    @Override
+                    public WriteResultElement<String> toStringResult()
+                    {
+                        return new WriteResultElement<String>()
+                        {
+                            private Consumer<Exception> exceptionHandler = ConsumerUtils.noOperation();
+
+                            @Override
+                            public String get()
+                            {
+                                StringWriter writer = new StringWriter();
+                                boolean success = to(writer).handleException(this.exceptionHandler)
+                                                            .isSuccess();
+                                return success ? writer.toString() : null;
+                            }
+
+                            @Override
+                            public Optional<String> and()
+                            {
+                                return Optional.ofNullable(this.get());
+                            }
+
+                            @Override
+                            public WriteResultElement<String> handleException(Consumer<Exception> exceptionHandler)
+                            {
+                                this.exceptionHandler = exceptionHandler;
+                                return this;
+                            }
+                        };
+                    }
+
+                    @Override
+                    public ReaderCopy withCharacterLimit(long numberOfCharacters)
+                    {
+                        this.numberOfCharactersLimit = numberOfCharacters;
+                        return this;
+                    }
+
+                };
+            }
+
+            @Override
+            public InputStreamCopy from(InputStream inputStream)
+            {
+                return new InputStreamCopy()
+                {
+                    @Override
+                    public WriteResult to(OutputStream outputStream)
+                    {
+                        try
+                        {
+                            long count = org.apache.commons.io.IOUtils.copyLarge(inputStream, outputStream);
+                            return new WriteResult()
+                            {
+                                @Override
+                                public long getCount()
+                                {
+                                    return count;
+                                }
+
+                                @Override
+                                public WriteResult handleException(Consumer<Exception> exceptionHandler)
+                                {
+                                    // do nothing
+                                    return this;
+                                }
+
+                                @Override
+                                public boolean hasError()
+                                {
+                                    return false;
+                                }
+                            };
+                        }
+                        catch (IOException e)
+                        {
+                            return new WriteResult()
+                            {
+                                @Override
+                                public long getCount()
+                                {
+                                    return -1;
+                                }
+
+                                @Override
+                                public WriteResult handleException(Consumer<Exception> exceptionHandler)
+                                {
+                                    exceptionHandler.accept(e);
+                                    return this;
+                                }
+
+                                @Override
+                                public boolean hasError()
+                                {
+                                    return true;
+                                }
+                            };
+                        }
+                    }
+
+                    @Override
+                    public WriteResultElement<byte[]> toByteArray()
+                    {
+                        return new WriteResultElement<byte[]>()
+                        {
+                            private Consumer<Exception> exceptionHandler = ConsumerUtils.noOperation();
+
+                            @Override
+                            public byte[] get()
+                            {
+                                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                                boolean success = to(byteArrayOutputStream).handleException(this.exceptionHandler)
+                                                                           .isSuccess();
+                                return success ? byteArrayOutputStream.toByteArray() : null;
+                            }
+
+                            @Override
+                            public Optional<byte[]> and()
+                            {
+                                return Optional.ofNullable(this.get());
+                            }
+
+                            @Override
+                            public WriteResultElement<byte[]> handleException(Consumer<Exception> exceptionHandler)
+                            {
+                                this.exceptionHandler = exceptionHandler;
+                                return this;
+                            }
+                        };
+                    }
+                };
+            }
+
+        };
+
+    }
+
+    public static interface IOCopy
+    {
+        public ReaderCopy from(Reader reader);
+
+        public InputStreamCopy from(InputStream inputStream);
+
+    }
+
+    public static interface ReaderCopy
+    {
+        public final int DEFAULT_BUFFER_SIZE = 128 * 1024;
+
+        /**
+         * Defines the maximum number of {@link Character}s being transferred
+         * 
+         * @param numberOfCharacters
+         * @return
+         */
+        public ReaderCopy withCharacterLimit(long numberOfCharacters);
+
+        /**
+         * Defines the internal character buffer size. Default is a size of {@value #DEFAULT_BUFFER_SIZE}
+         * 
+         * @param bufferSize
+         * @return
+         */
+        public ReaderCopy withBufferSize(int bufferSize);
+
+        /**
+         * @see #toString()
+         * @param writer
+         */
+        public WriteResult to(Writer writer);
+
+        /**
+         * Writes the current source into a {@link String}
+         * 
+         * @return
+         */
+        @Override
+        public String toString();
+
+        public WriteResultElement<String> toStringResult();
+    }
+
+    public static interface InputStreamCopy
+    {
+        /**
+         * @param outputStream
+         */
+        public WriteResult to(OutputStream outputStream);
+
+        public WriteResultElement<byte[]> toByteArray();
+    }
+
+    public static interface WriteResult
+    {
+        public long getCount();
+
+        public boolean hasError();
+
+        public default boolean isSuccess()
+        {
+            return !this.hasError();
+        }
+
+        public WriteResult handleException(Consumer<Exception> exceptionHandler);
+    }
+
+    public static interface WriteResultElement<E> extends Supplier<E>
+    {
+        /**
+         * Returns an {@link Optional} with the result
+         * 
+         * @return
+         */
+        public Optional<E> and();
+
+        public WriteResultElement<E> handleException(Consumer<Exception> exceptionHandler);
+    }
+
 }

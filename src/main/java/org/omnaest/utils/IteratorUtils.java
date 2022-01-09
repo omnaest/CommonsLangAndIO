@@ -44,6 +44,8 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Spliterator;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -73,6 +75,20 @@ public class IteratorUtils
          * @return
          */
         public RoundRobinIterator<E> forward(int numberOfElements);
+    }
+
+    public static interface RoundRobinListIterator<E> extends RoundRobinIterator<E>
+    {
+
+        /**
+         * Gets the next element but does not move the cursor of the {@link Iterator}
+         * 
+         * @return
+         */
+        public E lookahead();
+
+        public boolean isLastInCycle();
+
     }
 
     public static <E> RoundRobinIterator<E> roundRobinIterator(Collection<E> collection)
@@ -128,6 +144,60 @@ public class IteratorUtils
                     this.next();
                 }
                 return this;
+            }
+        };
+    }
+
+    public static <E> RoundRobinListIterator<E> roundRobinListIterator(List<E> list)
+    {
+        return new RoundRobinListIterator<E>()
+        {
+            private AtomicInteger nextIndexPosition = new AtomicInteger();
+            private AtomicBoolean first             = new AtomicBoolean(true);
+
+            @Override
+            public boolean hasNext()
+            {
+                return !list.isEmpty();
+            }
+
+            @Override
+            public E next()
+            {
+                return list.get(this.getNextIndexPositionAndIncrement(list.size()));
+            }
+
+            private int getNextIndexPositionAndIncrement(int size)
+            {
+                this.first.compareAndSet(true, false);
+                return this.nextIndexPosition.getAndUpdate(currentValue -> (currentValue + 1) % size);
+            }
+
+            private int getNextIndexPosition()
+            {
+                return this.nextIndexPosition.get();
+            }
+
+            @Override
+            public RoundRobinIterator<E> forward(int numberOfElements)
+            {
+                for (int ii = 0; ii < numberOfElements && this.hasNext(); ii++)
+                {
+                    this.next();
+                }
+                return this;
+            }
+
+            @Override
+            public E lookahead()
+            {
+                return list.get(this.getNextIndexPosition());
+            }
+
+            @Override
+            public boolean isLastInCycle()
+            {
+                return !this.first.get() && this.getNextIndexPosition() == 0;
             }
         };
     }

@@ -271,6 +271,15 @@ public class FileUtils
         public void accept(E data);
 
         /**
+         * @see #accept(Object)
+         * @param dataSupplier
+         */
+        public default void accept(Supplier<E> dataSupplier)
+        {
+            this.accept(dataSupplier.get());
+        }
+
+        /**
          * Returns a {@link Consumer} which will consume the input of the given {@link Function} which produces the {@link String} result given to the current
          * {@link FileStringContentConsumer}
          * 
@@ -1686,4 +1695,5 @@ public class FileUtils
             }
         };
     }
+
 }

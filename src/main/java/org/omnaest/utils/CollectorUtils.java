@@ -16,6 +16,7 @@
 package org.omnaest.utils;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,7 +43,18 @@ public class CollectorUtils
 {
     public static <K, V, VR> Collector<Map.Entry<K, V>, ?, Map<K, VR>> toValueMappedMap(Function<Map.Entry<K, V>, VR> valueMapper)
     {
-        return Collectors.toMap(entry -> entry.getKey(), valueMapper);
+        return Collectors.toMap(Entry::getKey, valueMapper);
+    }
+
+    public static <K, V, KR> Collector<Map.Entry<K, V>, ?, Map<KR, V>> toKeyMappedMap(Function<Map.Entry<K, V>, KR> keyMapper)
+    {
+        return Collectors.toMap(keyMapper, entry -> entry.getValue());
+    }
+
+    public static <K, V, KR, VR> Collector<Map.Entry<K, V>, ?, Map<KR, VR>> toMap(Function<Map.Entry<K, V>, KR> keyMapper,
+                                                                                  Function<Map.Entry<K, V>, VR> valueMapper)
+    {
+        return toMap(keyMapper, valueMapper, () -> new HashMap<>());
     }
 
     public static <K, V> Collector<Map.Entry<K, V>, ?, Map<K, V>> appendToMap(Map<K, V> map)
@@ -100,6 +112,11 @@ public class CollectorUtils
             }
             return v1;
         }, mapSupplier);
+    }
+
+    public static <T, K, V> Collector<T, ?, Map<K, V>> toLinkedHashMap(Function<T, K> keyMapper, Function<T, V> valueMapper)
+    {
+        return toMap(keyMapper, valueMapper, () -> new LinkedHashMap<>());
     }
 
     public static <E> Collector<E, ?, Set<E>> toSet(Set<E> set)

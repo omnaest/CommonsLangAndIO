@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
+import org.omnaest.utils.element.bi.BiElement;
 
 public class PredicateUtilsTest
 {
@@ -128,6 +129,14 @@ public class PredicateUtilsTest
                                                                                 .withMapping(name -> StringUtils.substring(name, 0, 1)))
                                                           .map(File::getName)
                                                           .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testMap() throws Exception
+    {
+        assertTrue(PredicateUtils.<BiElement<String, String>, String>map(BiElement::getFirst)
+                                 .and((bi, firstValue) -> StringUtils.equals(firstValue, "1"))
+                                 .test(BiElement.of("1", "2")));
     }
 
 }

@@ -895,4 +895,13 @@ public class StringUtils
                                .orElse(null);
     }
 
+    public static boolean endsWithAnyIgnoreCase(String sequence, String... searchStrings)
+    {
+        return org.apache.commons.lang3.StringUtils.endsWithAny(org.apache.commons.lang3.StringUtils.lowerCase(sequence), Optional.ofNullable(searchStrings)
+                                                                                                                                  .map(Stream::of)
+                                                                                                                                  .orElse(Stream.empty())
+                                                                                                                                  .map(org.apache.commons.lang3.StringUtils::lowerCase)
+                                                                                                                                  .toArray(size -> new String[size]));
+    }
+
 }

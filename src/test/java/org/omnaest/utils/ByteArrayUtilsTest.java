@@ -4,11 +4,14 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
+import org.omnaest.utils.ByteArrayUtils.MultiByteArrayContainer.ByteArrayContainerEntry;
 
 public class ByteArrayUtilsTest
 {
@@ -153,6 +156,34 @@ public class ByteArrayUtilsTest
                           assertEquals(value, ByteArrayUtils.decodeLongFromByteArray(encodedValue));
                       });
         }
+    }
+
+    @Test
+    public void testToMultiByteArrayContainer() throws Exception
+    {
+        List<ByteArrayContainerEntry<String>> entries = ByteArrayUtils.toMultiByteArrayContainer(MapUtils.builder()
+                                                                                                         .put("1", new byte[] { 0, 1 })
+                                                                                                         .put("2", new byte[] { 2, 3 })
+                                                                                                         .build())
+                                                                      .stream()
+                                                                      .collect(Collectors.toList());
+        assertEquals(2, entries.size());
+        assertEquals(SetUtils.toSet("1", "2"), entries.stream()
+                                                      .map(ByteArrayContainerEntry<String>::getKey)
+                                                      .collect(Collectors.toSet()));
+        assertArrayEquals(new byte[] { 0, 1 }, entries.get(0)
+                                                      .get()
+                                                      .get());
+        assertArrayEquals(new byte[] { 2, 3 }, entries.get(1)
+                                                      .get()
+                                                      .toByteArray());
+    }
+
+    @Test
+    public void testToByteArrayContainer() throws Exception
+    {
+        assertEquals("abc", ByteArrayUtils.toByteArrayContainer("abc")
+                                          .toString());
     }
 
 }
