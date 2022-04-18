@@ -1608,7 +1608,7 @@ public class FileUtils
         }
     }
 
-    public static interface DirectoryNavigator
+    public static interface DirectoryNavigator extends Supplier<File>
     {
 
         public Stream<DirectoryNavigator> listDirectories();
@@ -1618,6 +1618,22 @@ public class FileUtils
         public Optional<FileNavigator> findFileByName(String name);
 
         public FileNavigator newFile(String name);
+
+        /**
+         * Returns the directory
+         * 
+         * @return
+         */
+        @Override
+        public File get();
+
+        /**
+         * Finds a {@link File} by name while transitively traversing through the subdirectories.
+         * 
+         * @param name
+         * @return
+         */
+        public Stream<FileNavigator> findTransitivelyFileByName(String name);
 
     }
 
@@ -1636,6 +1652,13 @@ public class FileUtils
         @Override
         public File get();
 
+        /**
+         * Reads the file content (utf-8) into a {@link String}
+         * 
+         * @return
+         */
+        public String getAsString();
+
     }
 
     public static DirectoryNavigator navigate(File directory)
@@ -1646,6 +1669,7 @@ public class FileUtils
             public Stream<DirectoryNavigator> listDirectories()
             {
                 return FileUtils.listDirectoryFiles(directory)
+                                .filter(File::isDirectory)
                                 .map(FileUtils::navigate);
             }
 
@@ -1683,6 +1707,13 @@ public class FileUtils
                         FileUtils.toConsumer(file)
                                  .accept(text);
                     }
+
+                    @Override
+                    public String getAsString()
+                    {
+                        return FileUtils.toSupplier(file)
+                                        .get();
+                    }
                 };
             }
 
@@ -1692,6 +1723,28 @@ public class FileUtils
                 File file = new File(directory, name);
                 return this.createFileToFileNavigatorMapper()
                            .apply(file);
+            }
+
+            @Override
+            public File get()
+            {
+                return directory;
+            }
+
+            @Override
+            public Stream<FileNavigator> findTransitivelyFileByName(String name)
+            {
+                return this.listDirectories()
+                           .flatMap(this.createTransitiveFileFinder(name));
+            }
+
+            private Function<DirectoryNavigator, Stream<FileNavigator>> createTransitiveFileFinder(String name)
+            {
+                return directory -> Stream.concat(directory.findFileByName(name)
+                                                           .map(Stream::of)
+                                                           .orElse(Stream.empty()),
+                                                  directory.listDirectories()
+                                                           .flatMap(this.createTransitiveFileFinder(name)));
             }
         };
     }

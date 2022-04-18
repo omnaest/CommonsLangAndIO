@@ -180,6 +180,24 @@ public class MatcherUtilsTest
                                  .build()
                                  .findInAnd("abcsxxghiesxxzzzzdeftttt")
                                  .getMatchedTokens());
+        assertEquals(Arrays.asList("sabc", "sghi")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     MatcherUtils.matcherBuilder()
+                                 .ofAnyExact("abc", "def", "ghi")
+                                 .withRegExPrefix("s")
+                                 .build()
+                                 .findInAnd("sabcsxxsghiesxxzzzzdeftttt")
+                                 .getMatchedTokens());
+        assertEquals(Arrays.asList("sabc", "def", "sghi")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     MatcherUtils.matcherBuilder()
+                                 .ofAnyExact("abc", "def", "ghi")
+                                 .withRegExOptionalPrefix("s")
+                                 .build()
+                                 .findInAnd("sabcsxxsghiesxxzzzzdeftttt")
+                                 .getMatchedTokens());
     }
 
     @Test
@@ -214,6 +232,20 @@ public class MatcherUtilsTest
                         .accept("");
             assertEquals(1, invocationCounter.get());
         }
+    }
+
+    @Test
+    public void testFindAndFilter() throws Exception
+    {
+        Match match = MatcherUtils.matcher()
+                                  .of(Pattern.compile("(abc|bcde|other)"))
+                                  .findInAnd("abcbcde")
+                                  .filter(iMatch -> iMatch.getMatchRegion()
+                                                          .length() > 3)
+                                  .getFirst()
+                                  .get();
+
+        assertEquals("bcde", match.getMatchRegion());
     }
 
 }

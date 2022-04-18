@@ -172,6 +172,12 @@ public class SetUtils
                               .collect(Collectors.toSet());
         }
 
+        public Set<E> getNonShared()
+        {
+            return StreamUtils.concat(this.added.stream(), this.removed.stream())
+                              .collect(Collectors.toSet());
+        }
+
     }
 
     /**
@@ -227,9 +233,17 @@ public class SetUtils
     @SafeVarargs
     public static <E> Set<E> toSet(E... elements)
     {
-        return Arrays.asList(elements)
-                     .stream()
-                     .collect(Collectors.toSet());
+        return Optional.ofNullable(elements)
+                       .map(Arrays::asList)
+                       .map(HashSet::new)
+                       .orElse(new HashSet<>());
+    }
+
+    public static <E> Set<E> toSet(Collection<E> elements)
+    {
+        return Optional.ofNullable(elements)
+                       .map(HashSet::new)
+                       .orElse(new HashSet<>());
     }
 
     /**
@@ -269,6 +283,29 @@ public class SetUtils
         else
         {
             return new HashSet<>(elements);
+        }
+    }
+
+    /**
+     * Drains all elements from the original {@link Set} and returns them as a new {@link Set} instance
+     * 
+     * @param set
+     * @return a new instance, never null
+     */
+    public static <E> Set<E> drainAll(Set<E> set)
+    {
+        Set<E> result = Optional.ofNullable(set)
+                                .map(LinkedHashSet::new)
+                                .orElseGet(LinkedHashSet::new);
+        SetUtils.clear(set);
+        return result;
+    }
+
+    public static void clear(Set<?> set)
+    {
+        if (set != null)
+        {
+            set.clear();
         }
     }
 }

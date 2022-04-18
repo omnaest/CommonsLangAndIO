@@ -15,14 +15,17 @@
  ******************************************************************************/
 package org.omnaest.utils;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -57,7 +60,7 @@ public class CollectorUtils
         return toMap(keyMapper, valueMapper, () -> new HashMap<>());
     }
 
-    public static <K, V> Collector<Map.Entry<K, V>, ?, Map<K, V>> appendToMap(Map<K, V> map)
+    public static <K, V, M extends Map<K, V>> Collector<Map.Entry<K, V>, ?, M> appendToMap(M map)
     {
         return Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue(), (e1, e2) -> e1, () -> map);
     }
@@ -73,6 +76,16 @@ public class CollectorUtils
     public static <K, V> Collector<Entry<K, V>, ?, Map<K, V>> toMap()
     {
         return appendToMap(new HashMap<>());
+    }
+
+    public static <K, V> Collector<Entry<K, V>, ?, NavigableMap<K, V>> toNavigableMap()
+    {
+        return appendToMap(new TreeMap<>());
+    }
+
+    public static <K, V> Collector<Entry<K, V>, ?, Map<K, V>> toLinkedHashMap()
+    {
+        return appendToMap(new LinkedHashMap<>());
     }
 
     public static <E1, E2> Collector<BiElement<E1, E2>, ?, Map<E1, E2>> toMapByBiElement()
@@ -99,7 +112,12 @@ public class CollectorUtils
 
     public static <E1, E2> Collector<BiElement<E1, E2>, ?, Map<E1, List<E2>>> toGroupedMapByBiElement()
     {
-        return Collectors.groupingBy(BiElement::getFirst, Collectors.mapping(BiElement::getSecond, Collectors.toList()));
+        return toGroupedMapByBiElement(Collectors.toList());
+    }
+
+    public static <E1, E2, C extends Collection<E2>> Collector<BiElement<E1, E2>, ?, Map<E1, C>> toGroupedMapByBiElement(Collector<E2, ?, C> subCollector)
+    {
+        return Collectors.groupingBy(BiElement::getFirst, Collectors.mapping(BiElement::getSecond, subCollector));
     }
 
     public static <T, K, V> Collector<T, ?, Map<K, V>> toMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier)

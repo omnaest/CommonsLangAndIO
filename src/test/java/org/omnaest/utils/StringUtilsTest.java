@@ -327,4 +327,12 @@ public class StringUtilsTest
         assertFalse(StringUtils.endsWithAnyIgnoreCase("AbC", "xZt", "deT"));
     }
 
+    @Test
+    public void testLeftUntilLast() throws Exception
+    {
+        assertEquals("abc", StringUtils.leftUntilLast("abcabc", "a"));
+        assertEquals("", StringUtils.leftUntilLast("abc", "a"));
+        assertEquals("", StringUtils.leftUntilLast(null, "a"));
+    }
+
 }

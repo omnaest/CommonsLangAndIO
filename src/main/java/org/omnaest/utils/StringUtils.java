@@ -310,6 +310,12 @@ public class StringUtils
                     return this;
                 }
             }
+
+            @Override
+            public boolean isEmpty()
+            {
+                return this.builder.length() == 0;
+            }
         };
     }
 
@@ -457,6 +463,8 @@ public class StringUtils
 
             public ProcessorSupport addSuffix(String suffix);
         }
+
+        public boolean isEmpty();
     }
 
     /**
@@ -802,6 +810,24 @@ public class StringUtils
         return Optional.ofNullable(org.apache.commons.lang3.StringUtils.splitByWholeSeparatorPreserveAllTokens(text, matchToken))
                        .filter(tokens -> tokens.length >= 1)
                        .map(tokens -> tokens[0])
+                       .orElse("");
+    }
+
+    /**
+     * Returns the text part until the last given match token. The match token is excluded from the result.
+     * 
+     * @param text
+     * @param matchToken
+     * @return
+     */
+    public static String leftUntilLast(String text, String matchToken)
+    {
+        return Optional.ofNullable(org.apache.commons.lang3.StringUtils.splitByWholeSeparatorPreserveAllTokens(text, matchToken))
+                       .filter(tokens -> tokens.length >= 1)
+                       .map(tokens -> Arrays.asList(tokens))
+                       .map(tokens -> tokens.stream()
+                                            .limit(tokens.size() - 1)
+                                            .collect(Collectors.joining(matchToken)))
                        .orElse("");
     }
 

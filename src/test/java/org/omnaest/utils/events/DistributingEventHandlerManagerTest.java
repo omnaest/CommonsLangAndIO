@@ -42,10 +42,10 @@ import java.util.List;
 import org.junit.Test;
 
 /**
- * @see DistributionEventHandler
+ * @see DistributingEventHandlerManager
  * @author Omnaest
  */
-public class DistributionEventHandlerTest
+public class DistributingEventHandlerManagerTest
 {
 
     @Test
@@ -53,7 +53,7 @@ public class DistributionEventHandlerTest
     {
         List<String> result = new ArrayList<>();
 
-        DistributionEventHandler<String> distributionEventHandler = new DistributionEventHandler<>();
+        DistributingEventHandlerManager<String> distributionEventHandler = new DistributingEventHandlerManager<>();
         distributionEventHandler.register(result::add)
                                 .register(result::add);
 

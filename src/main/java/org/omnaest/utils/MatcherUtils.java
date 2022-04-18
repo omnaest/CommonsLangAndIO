@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
@@ -141,15 +142,19 @@ public class MatcherUtils
 
     }
 
-    public static interface MatchResult extends Iterable<Match>
+    public static interface MatchResultBase extends Iterable<Match>
     {
         public Stream<Match> stream();
 
-        public String replace(Function<String, String> replacerFunction);
+        public boolean hasMatches();
 
         public Optional<Match> getFirst();
+    }
 
-        public boolean hasMatches();
+    public static interface MatchResult extends MatchResultBase
+    {
+
+        public String replace(Function<String, String> replacerFunction);
 
         public MatchResult withNoCaching();
 
@@ -159,6 +164,16 @@ public class MatcherUtils
          * @return
          */
         public Set<String> getMatchedTokens();
+
+        public Optional<String> getFirstMatchedToken();
+
+        public FilteredMatchResult filter(Predicate<Match> inclusionFilter);
+
+    }
+
+    public static interface FilteredMatchResult extends MatchResultBase
+    {
+
     }
 
     /**
@@ -237,10 +252,35 @@ public class MatcherUtils
         /**
          * Gets a single sub group at the given group index. Subgroups are starting with 1,2,3,...
          * 
+         * @see #getFirstSubGroup()
+         * @see #getSecondSubGroup()
+         * @see #getThirdSubGroup()
          * @param index
          * @return
          */
         public Optional<String> getSubGroup(int index);
+
+        /**
+         * @see #getSubGroup(int)
+         * @see #getSecondSubGroup()
+         * @return
+         */
+        public Optional<String> getFirstSubGroup();
+
+        /**
+         * @see #getSubGroup(int)
+         * @see #getFirstSubGroup()
+         * @see #getThirdSubGroup()
+         * @return
+         */
+        public Optional<String> getSecondSubGroup();
+
+        /**
+         * @see #getSubGroup(int)
+         * @see #getSecondSubGroup()
+         * @return
+         */
+        public Optional<String> getThirdSubGroup();
 
         /**
          * Replaces the groups with the given replacements in the given order. If any replacement is null, the group at that position is unchanged.
@@ -358,6 +398,10 @@ public class MatcherUtils
         public MatchFinder build();
 
         MatchFinderBuilder withRegExOptionalSuffix(String regExSuffix);
+
+        MatchFinderBuilder withRegExOptionalPrefix(String regExSuffix);
+
+        MatchFinderBuilder withRegExPrefix(String regExSuffix);
     }
 
     /**
@@ -373,6 +417,8 @@ public class MatcherUtils
             private List<String> regExParts            = new ArrayList<>();
             private List<String> regExSuffixes         = new ArrayList<>();
             private List<String> regExOptionalSuffixes = new ArrayList<>();
+            private List<String> regExPrefixes         = new ArrayList<>();
+            private List<String> regExOptionalPrefixes = new ArrayList<>();
 
             @Override
             public MatchFinderBuilder ofRegEx(String regEx)
@@ -421,6 +467,22 @@ public class MatcherUtils
             }
 
             @Override
+            public MatchFinderBuilder withRegExPrefix(String regExSuffix)
+            {
+                Optional.ofNullable(regExSuffix)
+                        .ifPresent(this.regExPrefixes::add);
+                return this;
+            }
+
+            @Override
+            public MatchFinderBuilder withRegExOptionalPrefix(String regExSuffix)
+            {
+                Optional.ofNullable(regExSuffix)
+                        .ifPresent(this.regExOptionalPrefixes::add);
+                return this;
+            }
+
+            @Override
             public MatchFinderBuilder withExactSuffix(String exactSuffix)
             {
                 return this.withRegExSuffix(Pattern.quote(exactSuffix));
@@ -454,8 +516,17 @@ public class MatcherUtils
                                                                                     .map(this::encloseInNonCapturingGroup)
                                                                                     .collect(Collectors.joining("|")))
                                 + "?";
+                String prefixRegEx = this.regExPrefixes.isEmpty() ? ""
+                        : this.encloseInNonCapturingGroup(this.regExPrefixes.stream()
+                                                                            .map(this::encloseInNonCapturingGroup)
+                                                                            .collect(Collectors.joining("|")));
+                String optionalPrefixRegEx = this.regExOptionalPrefixes.isEmpty() ? ""
+                        : this.encloseInNonCapturingGroup(this.regExOptionalPrefixes.stream()
+                                                                                    .map(this::encloseInNonCapturingGroup)
+                                                                                    .collect(Collectors.joining("|")))
+                                + "?";
                 String regEx = this.regExParts.stream()
-                                              .map(part -> part + suffixRegEx + optionalSuffixRegEx)
+                                              .map(part -> prefixRegEx + optionalPrefixRegEx + part + suffixRegEx + optionalSuffixRegEx)
                                               .map(this::encloseInNonCapturingGroup)
                                               .collect(Collectors.joining("|"));
                 return matcher().ofRegEx(regEx);
@@ -522,9 +593,9 @@ public class MatcherUtils
                         {
                             Matcher matcher = pattern.matcher(input);
                             BooleanSupplier matcherAction = () -> matcher.matches();
-                            retval = this.determineMatches(input, matcher, matcherAction)
-                                         .orElseGet(() -> Stream.empty())
-                                         .findFirst();
+                            retval = MatchFinderHelper.determineMatches(input, matcher, matcherAction)
+                                                      .orElseGet(() -> Stream.empty())
+                                                      .findFirst();
                         }
                         else
                         {
@@ -537,100 +608,7 @@ public class MatcherUtils
                     public MatchResult findInAnd(String input)
                     {
                         AssertionUtils.assertIsNotNull("Pattern must not be null", pattern);
-                        return new MatchResult()
-                        {
-                            private Supplier<Stream<Match>> matches = this.createMatchesSupplier();
-
-                            @Override
-                            public MatchResult withNoCaching()
-                            {
-                                this.matches = this.createMatchStreamSupplier();
-                                return this;
-                            }
-
-                            @Override
-                            public Iterator<Match> iterator()
-                            {
-                                return this.stream()
-                                           .iterator();
-                            }
-
-                            @Override
-                            public Stream<Match> stream()
-                            {
-                                return this.matches.get();
-                            }
-
-                            @Override
-                            public Set<String> getMatchedTokens()
-                            {
-                                return this.stream()
-                                           .map(match -> match.getMatchRegion())
-                                           .collect(Collectors.toSet());
-                            }
-
-                            private Supplier<Stream<Match>> createMatchesSupplier()
-                            {
-                                Supplier<List<Match>> matchesProvider = CachedElement.of(this.createMatchStreamSupplier()
-                                                                                             .and(stream -> stream.collect(Collectors.toList())));
-                                return () -> matchesProvider.get()
-                                                            .stream();
-                            }
-
-                            private Provider<Stream<Match>> createMatchStreamSupplier()
-                            {
-                                return () -> this.generateMatches();
-                            }
-
-                            private Stream<Match> generateMatches()
-                            {
-                                if (input != null)
-                                {
-                                    Matcher matcher = pattern.matcher(input);
-                                    BooleanSupplier matcherAction = () -> matcher.find();
-                                    return determineMatches(input, matcher, matcherAction).orElse(Stream.empty());
-                                }
-                                else
-                                {
-                                    return Stream.empty();
-                                }
-                            }
-
-                            @Override
-                            public Optional<Match> getFirst()
-                            {
-                                return this.stream()
-                                           .findFirst();
-                            }
-
-                            @Override
-                            public boolean hasMatches()
-                            {
-                                return this.getFirst()
-                                           .isPresent();
-                            }
-
-                            @Override
-                            public String replace(Function<String, String> replacerFunction)
-                            {
-                                String result = input;
-
-                                if (input != null)
-                                {
-                                    Matcher matcher = pattern.matcher(input);
-                                    StringBuffer sb = new StringBuffer();
-                                    while (matcher.find())
-                                    {
-                                        String replacement = replacerFunction.apply(input.substring(matcher.start(), matcher.end()));
-                                        matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
-                                    }
-                                    matcher.appendTail(sb);
-                                    result = sb.toString();
-                                }
-
-                                return result;
-                            }
-                        };
+                        return new MatchResultImpl(pattern, input);
                     }
 
                     @Override
@@ -642,7 +620,7 @@ public class MatcherUtils
                         {
                             Matcher matcher = pattern.matcher(input);
                             BooleanSupplier matcherAction = () -> matcher.find();
-                            retval = this.determineMatches(input, matcher, matcherAction);
+                            retval = MatchFinderHelper.determineMatches(input, matcher, matcherAction);
                         }
                         else
                         {
@@ -651,35 +629,6 @@ public class MatcherUtils
                         return retval;
                     }
 
-                    private Optional<Stream<Match>> determineMatches(String input, Matcher matcher, BooleanSupplier matcherAction)
-                    {
-                        Iterator<Match> iterator = new Iterator<Match>()
-                        {
-                            private CachedElement<Match> matchCache = CachedElement.of(() -> this.determineNextMatch()
-                                                                                                 .orElse(null));
-
-                            @Override
-                            public boolean hasNext()
-                            {
-                                return this.matchCache.get() != null;
-                            }
-
-                            private Optional<Match> determineNextMatch()
-                            {
-                                return MatcherUtils.wrapIntoMatch(input, matcher, matcherAction);
-                            }
-
-                            @Override
-                            public Match next()
-                            {
-                                return this.matchCache.getAndReset();
-                            }
-
-                        };
-
-                        Stream<Match> matches = StreamUtils.fromIterator(iterator);
-                        return Optional.of(matches);
-                    }
                 };
             }
 
@@ -837,6 +786,24 @@ public class MatcherUtils
                                                .add(replacements.get())
                                                .add(input.substring(regionEnd))
                                                .build();
+                }
+
+                @Override
+                public Optional<String> getFirstSubGroup()
+                {
+                    return this.getSubGroup(1);
+                }
+
+                @Override
+                public Optional<String> getSecondSubGroup()
+                {
+                    return this.getSubGroup(2);
+                }
+
+                @Override
+                public Optional<String> getThirdSubGroup()
+                {
+                    return this.getSubGroup(3);
                 }
 
             });
@@ -1065,6 +1032,167 @@ public class MatcherUtils
         public static interface ElseOperation extends Runnable
         {
 
+        }
+    }
+
+    private static class MatchResultImpl implements MatchResult, FilteredMatchResult
+    {
+        private final Pattern pattern;
+        private final String  input;
+
+        private Supplier<Stream<Match>> matches;
+
+        private MatchResultImpl(Pattern pattern, String input)
+        {
+            this(pattern, input, null);
+        }
+
+        private MatchResultImpl(Pattern pattern, String input, Predicate<Match> inclusionFilter)
+        {
+            this.pattern = pattern;
+            this.input = input;
+            this.matches = SupplierUtils.toChainableSupplier(this.createMatchesSupplier())
+                                        .andThen(stream -> stream.filter(Optional.ofNullable(inclusionFilter)
+                                                                                 .orElse(PredicateUtils.allMatching())));
+        }
+
+        @Override
+        public MatchResult withNoCaching()
+        {
+            this.matches = this.createMatchStreamSupplier();
+            return this;
+        }
+
+        @Override
+        public Iterator<Match> iterator()
+        {
+            return this.stream()
+                       .iterator();
+        }
+
+        @Override
+        public Stream<Match> stream()
+        {
+            return this.matches.get();
+        }
+
+        @Override
+        public Set<String> getMatchedTokens()
+        {
+            return this.stream()
+                       .map(match -> match.getMatchRegion())
+                       .collect(Collectors.toSet());
+        }
+
+        @Override
+        public Optional<String> getFirstMatchedToken()
+        {
+            return this.getMatchedTokens()
+                       .stream()
+                       .findFirst();
+        }
+
+        private Supplier<Stream<Match>> createMatchesSupplier()
+        {
+            Supplier<List<Match>> matchesProvider = CachedElement.of(this.createMatchStreamSupplier()
+                                                                         .and(stream -> stream.collect(Collectors.toList())));
+            return () -> matchesProvider.get()
+                                        .stream();
+        }
+
+        private Provider<Stream<Match>> createMatchStreamSupplier()
+        {
+            return () -> this.generateMatches();
+        }
+
+        private Stream<Match> generateMatches()
+        {
+            if (this.input != null)
+            {
+                Matcher matcher = this.pattern.matcher(this.input);
+                BooleanSupplier matcherAction = () -> matcher.find();
+                return MatchFinderHelper.determineMatches(this.input, matcher, matcherAction)
+                                        .orElse(Stream.empty());
+            }
+            else
+            {
+                return Stream.empty();
+            }
+        }
+
+        @Override
+        public Optional<Match> getFirst()
+        {
+            return this.stream()
+                       .findFirst();
+        }
+
+        @Override
+        public boolean hasMatches()
+        {
+            return this.getFirst()
+                       .isPresent();
+        }
+
+        @Override
+        public String replace(Function<String, String> replacerFunction)
+        {
+            String result = this.input;
+
+            if (this.input != null)
+            {
+                Matcher matcher = this.pattern.matcher(this.input);
+                StringBuffer sb = new StringBuffer();
+                while (matcher.find())
+                {
+                    String replacement = replacerFunction.apply(this.input.substring(matcher.start(), matcher.end()));
+                    matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+                }
+                matcher.appendTail(sb);
+                result = sb.toString();
+            }
+
+            return result;
+        }
+
+        @Override
+        public FilteredMatchResult filter(Predicate<Match> inclusionFilter)
+        {
+            return new MatchResultImpl(this.pattern, this.input, inclusionFilter);
+        }
+    }
+
+    private static class MatchFinderHelper
+    {
+
+        public static Optional<Stream<Match>> determineMatches(String input, Matcher matcher, BooleanSupplier matcherAction)
+        {
+            Iterator<Match> iterator = new Iterator<Match>()
+            {
+                private CachedElement<Match> matchCache = CachedElement.of(() -> this.determineNextMatch()
+                                                                                     .orElse(null));
+
+                @Override
+                public boolean hasNext()
+                {
+                    return this.matchCache.get() != null;
+                }
+
+                private Optional<Match> determineNextMatch()
+                {
+                    return MatcherUtils.wrapIntoMatch(input, matcher, matcherAction);
+                }
+
+                @Override
+                public Match next()
+                {
+                    return this.matchCache.getAndReset();
+                }
+
+            };
+
+            Stream<Match> matches = StreamUtils.fromIterator(iterator);
+            return Optional.of(matches);
         }
     }
 }

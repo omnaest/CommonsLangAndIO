@@ -19,6 +19,8 @@ import java.lang.ref.SoftReference;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.omnaest.utils.element.cached.CachedElement;
@@ -93,6 +95,36 @@ public class SupplierUtils
         {
             throw exceptionSupplier.get();
         };
+    }
+
+    /**
+     * @see ChainableSupplier#andThen(Function)
+     * @param supplier
+     * @return
+     */
+    public static <E> ChainableSupplier<E> toChainableSupplier(Supplier<E> supplier)
+    {
+        return new ChainableSupplier<E>()
+        {
+            @Override
+            public E get()
+            {
+                return Optional.ofNullable(supplier)
+                               .map(Supplier::get)
+                               .orElse(null);
+            }
+
+            @Override
+            public <E2> Supplier<E2> andThen(Function<E, E2> mapper)
+            {
+                return () -> mapper.apply(this.get());
+            }
+        };
+    }
+
+    public static interface ChainableSupplier<E> extends Supplier<E>
+    {
+        public <E2> Supplier<E2> andThen(Function<E, E2> mapper);
     }
 
 }

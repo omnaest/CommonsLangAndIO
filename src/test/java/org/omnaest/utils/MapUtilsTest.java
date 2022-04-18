@@ -345,4 +345,12 @@ public class MapUtilsTest
                                                                    .stream()
                                                                    .collect(Collectors.toSet()));
     }
+
+    @Test
+    public void testToMapByCollection() throws Exception
+    {
+        Map<String, Object> map = MapUtils.toMap(Arrays.asList("1", "2"));
+        assertEquals(2, map.size());
+        assertEquals(SetUtils.toSet("1", "2"), map.keySet());
+    }
 }

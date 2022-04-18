@@ -40,4 +40,14 @@ public class SupplierUtilsTest
         assertEquals("a", supplier.get());
     }
 
+    @Test
+    public void testToChainableSupplier() throws Exception
+    {
+        assertEquals("a", SupplierUtils.toChainableSupplier(() -> "a")
+                                       .get());
+        assertEquals("ab", SupplierUtils.toChainableSupplier(() -> "a")
+                                        .andThen(a -> a + "b")
+                                        .get());
+    }
+
 }

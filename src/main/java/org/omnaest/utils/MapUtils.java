@@ -33,12 +33,14 @@
 */
 package org.omnaest.utils;
 
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -471,6 +473,20 @@ public class MapUtils
         return crudMap.toMap();
     }
 
+    public static <K, V> Map<K, V> toMap(Collection<K> keys)
+    {
+        return toMap(keys, null);
+    }
+
+    public static <K, V> Map<K, V> toMap(Collection<K> keys, V nullValue)
+    {
+        Map<K, V> map = new LinkedHashMap<>();
+        Optional.ofNullable(keys)
+                .orElse(Collections.emptyList())
+                .forEach(key -> map.put(key, nullValue));
+        return map;
+    }
+
     /**
      * Returns a {@link MediatedMap}
      * 
@@ -897,4 +913,60 @@ public class MapUtils
                                                  .collect(CollectorUtils.toMap()));
     }
 
+    public static <K, V> Map<K, V> toNewConcurrentHashMap(Map<K, V> map)
+    {
+        return new ConcurrentHashMap<>(Optional.ofNullable(map)
+                                               .orElse(Collections.emptyMap()));
+    }
+
+    public static <K> Set<K> toSet(Map<K, Boolean> map)
+    {
+        return toSet(map, true);
+    }
+
+    public static <K, V> Set<K> toSet(Map<K, V> map, V defaultValue)
+    {
+        Map<K, V> effectiveMap = Optional.ofNullable(map)
+                                         .orElse(Collections.emptyMap());
+        return new AbstractSet<K>()
+        {
+            @Override
+            public Iterator<K> iterator()
+            {
+                return effectiveMap.keySet()
+                                   .iterator();
+            }
+
+            @Override
+            public int size()
+            {
+                return effectiveMap.size();
+            }
+
+            @Override
+            public boolean contains(Object o)
+            {
+                return effectiveMap.containsKey(o);
+            }
+
+            @Override
+            public boolean add(K key)
+            {
+                return effectiveMap.put(key, defaultValue) == null;
+            }
+
+            @Override
+            public boolean remove(Object o)
+            {
+                return effectiveMap.remove(o) != null;
+            }
+
+            @Override
+            public void clear()
+            {
+                effectiveMap.clear();
+            }
+
+        };
+    }
 }

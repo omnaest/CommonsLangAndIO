@@ -38,12 +38,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Distributing {@link EventHandlerRegistry}
+ * Distributing {@link EventHandlerManager}
  *
  * @author Omnaest
  * @param <E>
  */
-public class DistributionEventHandler<E> implements EventHandler<E>, EventHandlerRegistry<E>
+public class DistributingEventHandlerManager<E> implements EventHandlerManager<E>
 {
     private List<EventHandler<E>> handlers = new ArrayList<>();
 
@@ -56,7 +56,7 @@ public class DistributionEventHandler<E> implements EventHandler<E>, EventHandle
     }
 
     @Override
-    public DistributionEventHandler<E> register(EventHandler<E> eventHandler)
+    public DistributingEventHandlerManager<E> register(EventHandler<E> eventHandler)
     {
         this.handlers.add(eventHandler);
         return this;

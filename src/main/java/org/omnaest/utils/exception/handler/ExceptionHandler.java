@@ -33,6 +33,9 @@
 */
 package org.omnaest.utils.exception.handler;
 
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import org.omnaest.utils.events.EventHandler;
 import org.omnaest.utils.exception.handler.internal.DefaultRethrowingExceptionHandler;
 import org.omnaest.utils.exception.handler.internal.NoOperationExceptionHandler;
@@ -59,6 +62,16 @@ public interface ExceptionHandler extends EventHandler<Exception>
     public static ExceptionHandler rethrowingExceptionHandler()
     {
         return new DefaultRethrowingExceptionHandler();
+    }
+
+    public static ExceptionHandler fromConsumer(Consumer<Exception> consumer)
+    {
+        return consumer::accept;
+    }
+
+    public static ExceptionHandler fromBiConsumer(BiConsumer<String, Exception> consumer)
+    {
+        return e -> consumer.accept(e != null ? e.getMessage() : null, e);
     }
 
 }

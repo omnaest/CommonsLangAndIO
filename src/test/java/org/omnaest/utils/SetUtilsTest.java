@@ -36,6 +36,7 @@ package org.omnaest.utils;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -91,6 +92,14 @@ public class SetUtilsTest
     {
         assertEquals(SetUtils.toSet("1", "3"), SetUtils.newFilteredSet(Arrays.asList("1", "filtered", "3"), value -> !value.equals("filtered")));
         assertEquals(SetUtils.toSet("1", "3"), SetUtils.newFilteredSet(Arrays.asList("1", "3"), null));
+    }
+
+    @Test
+    public void testDrainAll() throws Exception
+    {
+        Set<String> set = SetUtils.toSet("a", "b");
+        assertEquals(SetUtils.toSet("a", "b"), SetUtils.drainAll(set));
+        assertEquals(Collections.emptySet(), set);
     }
 
 }

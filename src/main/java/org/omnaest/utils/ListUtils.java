@@ -978,4 +978,15 @@ public class ListUtils
         }
     }
 
+    @SafeVarargs
+    public static <E> List<E> toArrayList(E... initialElements)
+    {
+        List<E> list = new ArrayList<>();
+        if (initialElements != null)
+        {
+            list.addAll(Arrays.asList(initialElements));
+        }
+        return list;
+    }
+
 }

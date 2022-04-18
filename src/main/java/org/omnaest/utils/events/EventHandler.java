@@ -36,7 +36,7 @@ package org.omnaest.utils.events;
 import java.util.function.Consumer;
 
 /**
- * @see DistributionEventHandler
+ * @see DistributingEventHandlerManager
  * @author Omnaest
  * @param <E>
  */

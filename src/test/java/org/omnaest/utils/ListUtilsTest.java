@@ -426,4 +426,10 @@ public class ListUtilsTest
         assertFalse(ListUtils.getOptional(null, 0)
                              .isPresent());
     }
+
+    @Test
+    public void testToArrayList() throws Exception
+    {
+        assertEquals(Arrays.asList("a"), ListUtils.toArrayList("a"));
+    }
 }

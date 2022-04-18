@@ -1390,6 +1390,8 @@ public class StreamUtils
 
         public IntStream from(int start);
 
+        public IntStream fromOne();
+
         public IntStream withRandomNumbers(int maxValue);
 
         public IntStream withRandomNumbers(int minValue, int maxValue);
@@ -1573,6 +1575,12 @@ public class StreamUtils
         {
             this.start = start;
             return this.intStreamGenerator.apply(this.numberSupplier);
+        }
+
+        @Override
+        public IntStream fromOne()
+        {
+            return this.from(1);
         }
     }
 

@@ -34,7 +34,7 @@
 package org.omnaest.utils.events;
 
 /**
- * @see DistributionEventHandler
+ * @see DistributingEventHandlerManager
  * @see EventHandler
  * @author Omnaest
  * @param <E>
