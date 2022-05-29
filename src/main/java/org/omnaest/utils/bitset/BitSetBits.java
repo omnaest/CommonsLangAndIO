@@ -18,7 +18,6 @@ package org.omnaest.utils.bitset;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -127,19 +126,17 @@ public class BitSetBits implements Bits
     @Override
     public Bits set(byte[] values)
     {
-        return this.set(ArrayUtils.toPrimitive(Optional.ofNullable(values)
-                                                       .map(ArrayUtils::toObject)
-                                                       .map(Arrays::asList)
-                                                       .orElse(Collections.emptyList())
-                                                       .stream()
-                                                       .flatMap(value ->
-                                                       {
-                                                           List<Boolean> collect = IntStream.range(0, Byte.SIZE)
-                                                                                            .mapToObj(i -> 0 != ((value >> i) & 1))
-                                                                                            .collect(Collectors.toList());
-                                                           return collect.stream();
-                                                       })
-                                                       .toArray(size -> new Boolean[size])));
+        Boolean[] bits = Optional.ofNullable(values)
+                                 .map(ArrayUtils::toObject)
+                                 .map(Arrays::asList)
+                                 .orElse(Collections.emptyList())
+                                 .stream()
+                                 .flatMap(value -> IntStream.range(0, Byte.SIZE)
+                                                            .mapToObj(i -> 0 != ((value >> i) & 1))
+                                                            .collect(Collectors.toList())
+                                                            .stream())
+                                 .toArray(Boolean[]::new);
+        return this.set(ArrayUtils.toPrimitive(bits));
     }
 
     @Override
@@ -158,7 +155,7 @@ public class BitSetBits implements Bits
     public Stream<Boolean> toBooleanStream()
     {
         return IntStream.range(0, this.length)
-                        .mapToObj(index -> this.get(index));
+                        .mapToObj(this::get);
     }
 
     @Override
