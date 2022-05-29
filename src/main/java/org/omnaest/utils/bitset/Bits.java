@@ -1,79 +1,65 @@
-/*******************************************************************************
- * Copyright 2021 Danny Kunz
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations under
- * the License.
- ******************************************************************************/
 package org.omnaest.utils.bitset;
 
-import java.util.BitSet;
+import java.util.stream.Stream;
 
-/**
- * Wrapper around {@link BitSet} which provides further functionality
- * 
- * @author omnaest
- */
-public class Bits
+import org.apache.commons.lang3.ArrayUtils;
+import org.omnaest.utils.bitset.binary.BinaryDigits;
+
+public interface Bits extends ImmutableBits
 {
-    private int    length = 0;
-    private BitSet bitSet = new BitSet();
 
-    public Bits flip(int bitIndex)
+    public Bits flip(int bitIndex);
+
+    public Bits clear(int bitIndex);
+
+    public Bits set(long value);
+
+    public Bits set(boolean[] values);
+
+    public Bits set(byte[] values);
+
+    public Bits set(int bitIndex, boolean value);
+
+    public Bits set(int bitIndex);
+
+    public Stream<Bits> frames(int frameSize);
+
+    public Bits subset(int startInclusive, int endExclusive);
+
+    public Stream<Boolean> toBooleanStream();
+
+    public BinaryDigits toBinaryDigits();
+
+    public byte[] toBytes();
+
+    public static Bits newInstance()
     {
-        this.adjustLengthIfNecessary(bitIndex);
-        this.bitSet.flip(bitIndex);
-        return this;
+        return new BitSetBits();
     }
 
-    public Bits clear(int bitIndex)
+    public static Bits of(long value)
     {
-        this.adjustLengthIfNecessary(bitIndex);
-        this.bitSet.clear(bitIndex);
-        return this;
+        return newInstance().set(value);
     }
 
-    public boolean get(int bitIndex)
+    public static Bits of(boolean[] values)
     {
-        this.assertIndexBounds(bitIndex);
-
-        return this.bitSet.get(bitIndex);
+        return newInstance().set(values);
     }
 
-    private void assertIndexBounds(int bitIndex)
+    public static Bits of(Boolean[] values)
     {
-        if (bitIndex < 0)
-        {
-            throw new IndexOutOfBoundsException("Bitset index cannot be lower than zero: " + bitIndex);
-        }
-
-        if (bitIndex >= this.length)
-        {
-            throw new IndexOutOfBoundsException("Bitset length is " + this.length + " but access was on index position " + bitIndex);
-        }
+        return of(ArrayUtils.toPrimitive(values));
     }
 
-    public Bits set(int bitIndex)
+    public static Bits of(byte[] values)
     {
-        this.adjustLengthIfNecessary(bitIndex);
-        this.bitSet.set(bitIndex);
-        return this;
+        return newInstance().set(values);
     }
 
-    private void adjustLengthIfNecessary(int bitIndex)
+    public static Bits of(Byte[] values)
     {
-        if (bitIndex >= this.length)
-        {
-            this.length = bitIndex + 1;
-        }
+        return of(ArrayUtils.toPrimitive(values));
     }
 
 }

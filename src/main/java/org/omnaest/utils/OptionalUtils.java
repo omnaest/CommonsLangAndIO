@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import org.omnaest.utils.element.bi.BiElement;
+import org.omnaest.utils.optional.BiOptional;
 
 /**
  * Helper for {@link Optional}s
@@ -61,5 +62,29 @@ public class OptionalUtils
                                        .isPresent())
                        .map(bi -> bi.applyToFirstArgument(Optional::get))
                        .map(bi -> bi.applyToSecondArgument(Optional::get));
+    }
+
+    /**
+     * Returns a {@link BiOptional} for the two given {@link Optional}s
+     * 
+     * @param firstOptional
+     * @param secondOptional
+     * @return
+     */
+    public static <O1, O2> BiOptional<O1, O2> both2(Optional<O1> firstOptional, Optional<O2> secondOptional)
+    {
+        return BiOptional.of(firstOptional, secondOptional);
+    }
+
+    /**
+     * Returns a {@link BiOptional} for the two given values (which can be null)
+     * 
+     * @param firstValue
+     * @param secondValue
+     * @return
+     */
+    public static <E1, E2> BiOptional<E1, E2> bothOfNullable2(E1 firstValue, E2 secondValue)
+    {
+        return BiOptional.ofNullable(firstValue, secondValue);
     }
 }

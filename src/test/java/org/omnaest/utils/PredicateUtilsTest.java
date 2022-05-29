@@ -139,4 +139,13 @@ public class PredicateUtilsTest
                                  .test(BiElement.of("1", "2")));
     }
 
+    @Test
+    public void testSince() throws Exception
+    {
+        assertEquals(Arrays.asList(2, 3, 4), Arrays.asList(0, 1, 2, 3, 4)
+                                                   .stream()
+                                                   .filter(PredicateUtils.since(value -> value == 2))
+                                                   .collect(Collectors.toList()));
+    }
+
 }

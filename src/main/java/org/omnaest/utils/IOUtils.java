@@ -231,25 +231,32 @@ public class IOUtils
      */
     public static Stream<String> toLineStream(InputStream inputStream, Charset charset)
     {
-        try
+        if (inputStream != null)
         {
-            LineIterator iterator = org.apache.commons.io.IOUtils.lineIterator(inputStream, charset);
-            return StreamUtils.fromIterator(iterator)
-                              .onClose(() ->
-                              {
-                                  try
+            try
+            {
+                LineIterator iterator = org.apache.commons.io.IOUtils.lineIterator(inputStream, charset);
+                return StreamUtils.fromIterator(iterator)
+                                  .onClose(() ->
                                   {
-                                      iterator.close();
-                                  }
-                                  catch (IOException e)
-                                  {
-                                      throw new RuntimeIOException(e);
-                                  }
-                              });
+                                      try
+                                      {
+                                          iterator.close();
+                                      }
+                                      catch (IOException e)
+                                      {
+                                          throw new RuntimeIOException(e);
+                                      }
+                                  });
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeIOException(e);
+            }
         }
-        catch (IOException e)
+        else
         {
-            throw new RuntimeIOException(e);
+            return Stream.empty();
         }
     }
 

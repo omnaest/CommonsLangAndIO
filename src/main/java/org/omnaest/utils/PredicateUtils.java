@@ -585,4 +585,28 @@ public class PredicateUtils
             return result;
         };
     }
+
+    /**
+     * Returns always true, if the given {@link Predicate} returned true once
+     * 
+     * @param filter
+     * @return
+     */
+    public static <E> Predicate<E> since(Predicate<E> filter)
+    {
+        AtomicBoolean hitOnce = new AtomicBoolean();
+        return value ->
+        {
+            if (hitOnce.get())
+            {
+                return true;
+            }
+            else
+            {
+                boolean result = filter != null && filter.test(value);
+                hitOnce.set(result);
+                return result;
+            }
+        };
+    }
 }
