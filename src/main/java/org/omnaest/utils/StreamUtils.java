@@ -2104,12 +2104,31 @@ public class StreamUtils
 
         public <A, B> BiSourcedStreamPipeline<A, B> sources(Stream<A> streamA, Stream<B> streamB);
 
+        public <S> UnbatchedSeededStreamPipeline<S> seed(Stream<S> seeds);
+
+        public <S> SeededStreamPipeline<S> seed(Collection<S> seeds);
+
+    }
+
+    public static interface UnbatchedSeededStreamPipeline<S>
+    {
+        public SeededStreamPipeline<S> batch(int batchSize);
+    }
+
+    public static interface SeededStreamPipeline<S>
+    {
+        public <A> SourcedStreamPipeline<A> source(Function<Stream<S>, Stream<A>> streamProvider);
+
+        public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA, Function<Stream<S>, Stream<B>> streamProviderB);
+
     }
 
     public static interface SourcedStreamPipeline<A> extends Streamable<A>
     {
 
         public <B> BiSourcedStreamPipeline<A, B> andSource(Stream<B> streamB);
+
+        public BiSourcedStreamPipeline<A, A> fork();
     }
 
     public static interface BiSourcedStreamPipeline<A, B>
@@ -2118,6 +2137,9 @@ public class StreamUtils
 
         public <AB> SourcedStreamPipeline<AB> combineAsOptionals(BiFunction<Optional<A>, Optional<B>, Optional<AB>> combiner);
 
+        public <AR, BR> BiSourcedStreamPipeline<AR, BR> map(Function<A, AR> mapperA, Function<B, BR> mapperB);
+
+        public <AR, BR> BiSourcedStreamPipeline<AR, BR> flatMap(Function<A, Stream<AR>> mapperA, Function<B, Stream<BR>> mapperB);
     }
 
     public static StreamPipeline pipeline()
@@ -2132,7 +2154,6 @@ public class StreamUtils
         {
             return new SourcedStreamPipeline<A>()
             {
-
                 @Override
                 public Stream<A> stream()
                 {
@@ -2144,41 +2165,118 @@ public class StreamUtils
                 {
                     return pipeline().sources(stream, streamB);
                 }
+
+                @Override
+                public BiSourcedStreamPipeline<A, A> fork()
+                {
+                    return new BiSourcedStreamPipelineImpl<>(stream.map(a -> new LeftAndRight<>(a, a)));
+                }
             };
         }
 
         @Override
         public <A, B> BiSourcedStreamPipeline<A, B> sources(Stream<A> streamA, Stream<B> streamB)
         {
-            return new BiSourcedStreamPipeline<A, B>()
+            return new BiSourcedStreamPipelineImpl<A, B>(StreamUtils.merge(streamA, streamB));
+        }
+
+        @Override
+        public <S> SeededStreamPipeline<S> seed(Collection<S> seeds)
+        {
+            return new SeededStreamPipeline<S>()
             {
-
                 @Override
-                public <AB> SourcedStreamPipeline<AB> combineAsOptionals(BiFunction<Optional<A>, Optional<B>, Optional<AB>> combiner)
+                public <A> SourcedStreamPipeline<A> source(Function<Stream<S>, Stream<A>> stream)
                 {
-                    Optional<BiFunction<Optional<A>, Optional<B>, Optional<AB>>> optionalCombiner = Optional.ofNullable(combiner);
-                    return pipeline().source(StreamUtils.merge(streamA, streamB)
-                                                        .map(lar -> optionalCombiner.flatMap(iCombiner -> iCombiner.apply(Optional.ofNullable(lar.getLeft()),
-                                                                                                                          Optional.ofNullable(lar.getRight()))))
-                                                        .filter(Optional::isPresent)
-                                                        .map(Optional::get));
+                    return pipeline().source(stream.apply(seeds.stream()));
                 }
 
                 @Override
-                public <AB> SourcedStreamPipeline<AB> combine(BiFunction<A, B, AB> combiner)
+                public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA,
+                                                                    Function<Stream<S>, Stream<B>> streamProviderB)
                 {
-                    if (combiner == null)
-                    {
-                        return pipeline().source(Stream.empty());
-                    }
-                    else
-                    {
-                        return pipeline().source(StreamUtils.merge(streamA, streamB)
-                                                            .map(lar -> combiner.apply(lar.getLeft(), lar.getRight())));
-                    }
+                    return pipeline().sources(streamProviderA.apply(seeds.stream()), streamProviderB.apply(seeds.stream()));
                 }
-
             };
         }
+
+        @Override
+        public <S> UnbatchedSeededStreamPipeline<S> seed(Stream<S> seeds)
+        {
+            return new UnbatchedSeededStreamPipeline<S>()
+            {
+                @Override
+                public SeededStreamPipeline<S> batch(int batchSize)
+                {
+                    Stream<List<S>> seedBatches = StreamUtils.framedAsList(batchSize, seeds);
+                    return new SeededStreamPipeline<S>()
+                    {
+                        @Override
+                        public <A> SourcedStreamPipeline<A> source(Function<Stream<S>, Stream<A>> streamProvider)
+                        {
+                            return pipeline().source(seedBatches.flatMap(batch -> streamProvider.apply(batch.stream())));
+                        }
+
+                        @Override
+                        public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA,
+                                                                            Function<Stream<S>, Stream<B>> streamProviderB)
+                        {
+                            return pipeline().source(seedBatches)
+                                             .fork()
+                                             .flatMap(batch -> streamProviderA.apply(batch.stream()), batch -> streamProviderB.apply(batch.stream()));
+                        }
+                    };
+                }
+            };
+        }
+
+        private static class BiSourcedStreamPipelineImpl<A, B> implements BiSourcedStreamPipeline<A, B>
+        {
+            private final Stream<LeftAndRight<A, B>> mergedStreamAB;
+
+            private BiSourcedStreamPipelineImpl(Stream<LeftAndRight<A, B>> mergedStreamAB)
+            {
+                this.mergedStreamAB = mergedStreamAB;
+            }
+
+            @Override
+            public <AB> SourcedStreamPipeline<AB> combineAsOptionals(BiFunction<Optional<A>, Optional<B>, Optional<AB>> combiner)
+            {
+                Optional<BiFunction<Optional<A>, Optional<B>, Optional<AB>>> optionalCombiner = Optional.ofNullable(combiner);
+                return pipeline().source(this.mergedStreamAB.map(lar -> optionalCombiner.flatMap(iCombiner -> iCombiner.apply(Optional.ofNullable(lar.getLeft()),
+                                                                                                                              Optional.ofNullable(lar.getRight()))))
+                                                            .filter(Optional::isPresent)
+                                                            .map(Optional::get));
+            }
+
+            @Override
+            public <AB> SourcedStreamPipeline<AB> combine(BiFunction<A, B, AB> combiner)
+            {
+                if (combiner == null)
+                {
+                    return pipeline().source(Stream.empty());
+                }
+                else
+                {
+                    return pipeline().source(this.mergedStreamAB.map(lar -> combiner.apply(lar.getLeft(), lar.getRight())));
+                }
+            }
+
+            @Override
+            public <AR, BR> BiSourcedStreamPipeline<AR, BR> map(Function<A, AR> mapperA, Function<B, BR> mapperB)
+            {
+                return new BiSourcedStreamPipelineImpl<>(this.mergedStreamAB.map(lar -> new LeftAndRight<>(mapperA.apply(lar.getLeft()),
+                                                                                                           mapperB.apply(lar.getRight()))));
+            }
+
+            @Override
+            public <AR, BR> BiSourcedStreamPipeline<AR, BR> flatMap(Function<A, Stream<AR>> mapperA, Function<B, Stream<BR>> mapperB)
+            {
+                return new BiSourcedStreamPipelineImpl<AR, BR>(this.mergedStreamAB.flatMap(lar -> StreamUtils.<AR, BR>merge(mapperA.apply(lar.getLeft()),
+                                                                                                                            mapperB.apply(lar.getRight()))));
+            }
+
+        }
+
     }
 }

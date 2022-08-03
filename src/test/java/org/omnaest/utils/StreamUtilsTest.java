@@ -647,5 +647,18 @@ public class StreamUtilsTest
                                                      .combine((a, b) -> a + b)
                                                      .stream()
                                                      .collect(Collectors.toList()));
+        assertEquals(Arrays.asList("aa", "bb"), StreamUtils.pipeline()
+                                                           .source(Stream.of("a", "b"))
+                                                           .fork()
+                                                           .combine((a, b) -> a + b)
+                                                           .stream()
+                                                           .collect(Collectors.toList()));
+        assertEquals(Arrays.asList("a1a2", "b1b2"), StreamUtils.pipeline()
+                                                               .seed(Stream.of("a", "b"))
+                                                               .batch(2)
+                                                               .sources(seeds -> seeds.map(a -> a + "1"), seeds -> seeds.map(b -> b + "2"))
+                                                               .combine((a, b) -> a + b)
+                                                               .stream()
+                                                               .collect(Collectors.toList()));
     }
 }
