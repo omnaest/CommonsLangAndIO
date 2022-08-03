@@ -96,6 +96,29 @@ public class PredicateUtils
         return new FirstElementFilterCapture<>();
     }
 
+    /**
+     * Captures the first element and removes it by the returned {@link Predicate}.
+     * 
+     * @param firstElementConsumer
+     * @return
+     */
+    public static <E> Predicate<E> captureFirstElement(Consumer<E> firstElementConsumer)
+    {
+        AtomicBoolean isFirstElement = new AtomicBoolean(true);
+        return element ->
+        {
+            if (isFirstElement.compareAndSet(true, false))
+            {
+                firstElementConsumer.accept(element);
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        };
+    }
+
     public static <E> Predicate<E> firstElement()
     {
         AtomicBoolean first = new AtomicBoolean(true);

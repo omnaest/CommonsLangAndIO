@@ -34,7 +34,6 @@
 package org.omnaest.utils;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -76,7 +75,7 @@ public class ThreadUtils
     {
         if (duration != null)
         {
-            sleepSilently((int) duration.get(ChronoUnit.MILLIS), TimeUnit.MILLISECONDS);
+            sleepSilently((int) duration.toMillis(), TimeUnit.MILLISECONDS);
         }
     }
 

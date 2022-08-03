@@ -632,4 +632,20 @@ public class StreamUtilsTest
                                                                 .collect(Collectors.toList()));
         }
     }
+
+    @Test
+    public void testPipeline() throws Exception
+    {
+        assertEquals(Arrays.asList("ab"), StreamUtils.pipeline()
+                                                     .source(Stream.of("a"))
+                                                     .andSource(Stream.of("b"))
+                                                     .combineAsOptionals((a, b) -> a.flatMap(ia -> b.map(ib -> ia + ib)))
+                                                     .stream()
+                                                     .collect(Collectors.toList()));
+        assertEquals(Arrays.asList("ab"), StreamUtils.pipeline()
+                                                     .sources(Stream.of("a"), Stream.of("b"))
+                                                     .combine((a, b) -> a + b)
+                                                     .stream()
+                                                     .collect(Collectors.toList()));
+    }
 }

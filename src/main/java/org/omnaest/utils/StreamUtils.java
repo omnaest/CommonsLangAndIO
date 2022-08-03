@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -87,6 +88,7 @@ import org.omnaest.utils.functional.PredicateConsumer;
 import org.omnaest.utils.stream.DefaultSupplierStream;
 import org.omnaest.utils.stream.FilterAllOnFirstFilterFailStreamDecorator;
 import org.omnaest.utils.stream.FilterMapper;
+import org.omnaest.utils.stream.Streamable;
 import org.omnaest.utils.stream.SupplierStream;
 import org.omnaest.utils.supplier.OptionalSupplier;
 
@@ -2095,4 +2097,88 @@ public class StreamUtils
                          .map(Optional::get);
     }
 
+    public static interface StreamPipeline
+    {
+
+        public <A> SourcedStreamPipeline<A> source(Stream<A> stream);
+
+        public <A, B> BiSourcedStreamPipeline<A, B> sources(Stream<A> streamA, Stream<B> streamB);
+
+    }
+
+    public static interface SourcedStreamPipeline<A> extends Streamable<A>
+    {
+
+        public <B> BiSourcedStreamPipeline<A, B> andSource(Stream<B> streamB);
+    }
+
+    public static interface BiSourcedStreamPipeline<A, B>
+    {
+        public <AB> SourcedStreamPipeline<AB> combine(BiFunction<A, B, AB> combiner);
+
+        public <AB> SourcedStreamPipeline<AB> combineAsOptionals(BiFunction<Optional<A>, Optional<B>, Optional<AB>> combiner);
+
+    }
+
+    public static StreamPipeline pipeline()
+    {
+        return new StreamPipelineImpl();
+    }
+
+    private static class StreamPipelineImpl implements StreamPipeline
+    {
+        @Override
+        public <A> SourcedStreamPipeline<A> source(Stream<A> stream)
+        {
+            return new SourcedStreamPipeline<A>()
+            {
+
+                @Override
+                public Stream<A> stream()
+                {
+                    return stream;
+                }
+
+                @Override
+                public <B> BiSourcedStreamPipeline<A, B> andSource(Stream<B> streamB)
+                {
+                    return pipeline().sources(stream, streamB);
+                }
+            };
+        }
+
+        @Override
+        public <A, B> BiSourcedStreamPipeline<A, B> sources(Stream<A> streamA, Stream<B> streamB)
+        {
+            return new BiSourcedStreamPipeline<A, B>()
+            {
+
+                @Override
+                public <AB> SourcedStreamPipeline<AB> combineAsOptionals(BiFunction<Optional<A>, Optional<B>, Optional<AB>> combiner)
+                {
+                    Optional<BiFunction<Optional<A>, Optional<B>, Optional<AB>>> optionalCombiner = Optional.ofNullable(combiner);
+                    return pipeline().source(StreamUtils.merge(streamA, streamB)
+                                                        .map(lar -> optionalCombiner.flatMap(iCombiner -> iCombiner.apply(Optional.ofNullable(lar.getLeft()),
+                                                                                                                          Optional.ofNullable(lar.getRight()))))
+                                                        .filter(Optional::isPresent)
+                                                        .map(Optional::get));
+                }
+
+                @Override
+                public <AB> SourcedStreamPipeline<AB> combine(BiFunction<A, B, AB> combiner)
+                {
+                    if (combiner == null)
+                    {
+                        return pipeline().source(Stream.empty());
+                    }
+                    else
+                    {
+                        return pipeline().source(StreamUtils.merge(streamA, streamB)
+                                                            .map(lar -> combiner.apply(lar.getLeft(), lar.getRight())));
+                    }
+                }
+
+            };
+        }
+    }
 }

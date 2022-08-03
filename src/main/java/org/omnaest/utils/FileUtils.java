@@ -57,6 +57,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -71,10 +72,15 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.output.FileWriterWithEncoding;
-import org.omnaest.utils.FileUtils.BatchFileReader.BatchFileReaderLoaded;
+import org.apache.commons.lang3.ArrayUtils;
+import org.omnaest.utils.FileUtils.FileReaderLoader.BatchFileReader;
+import org.omnaest.utils.FileUtils.FileReaderLoader.SingleFileReader;
 import org.omnaest.utils.exception.RuntimeIOException;
 import org.omnaest.utils.exception.handler.ExceptionHandler;
 import org.omnaest.utils.functional.Accessor;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * Utils regarding {@link File} operations
@@ -558,17 +564,17 @@ public class FileUtils
         }
     }
 
-    public static interface BatchFileReader
+    public static interface FileReaderLoader
     {
-        public BatchFileReaderLoaded from(File... files);
+        public BatchFileReader from(File... files);
 
-        public BatchFileReaderLoaded fromDirectory(File directory);
+        public BatchFileReader fromDirectory(File directory);
 
-        public BatchFileReaderLoaded from(File file);
+        public SingleFileReader from(File file);
 
-        public static interface BatchFileReaderLoaded extends BatchFileReader
+        public static interface FileReaderBase
         {
-            public BatchFileReaderLoaded usingEncoding(Charset encoding);
+            public BatchFileReader usingEncoding(Charset encoding);
 
             public Stream<String> getAsStringStream();
 
@@ -585,8 +591,213 @@ public class FileUtils
              * @return
              */
             public Stream<String> getAsInMemoryLinesStream();
+
+            public byte[] intoByteArray();
         }
 
+        public static interface SingleFileReader extends FileReaderBase
+        {
+            public BatchFileReader from(File... files);
+
+            public BatchFileReader fromDirectory(File directory);
+
+            public BatchFileReader from(File file);
+
+            public FileContent intoInMemoryFileContent();
+        }
+
+        public static interface BatchFileReader extends FileReaderLoader, FileReaderBase
+        {
+
+            public Stream<byte[]> intoByteArrays();
+
+            public MergedFilesContent intoMergedInMemoryFilesContent();
+
+            public Stream<FileContent> intoInMemoryFilesContent();
+        }
+
+        @Data
+        @Builder
+        public static class MergedFilesContent
+        {
+            private final List<File> files;
+            private final byte[]     content;
+
+            public Optional<File> getFirstFile()
+            {
+                return this.files.stream()
+                                 .findFirst();
+            }
+        }
+
+        @Data
+        @Builder
+        public static class FileContent
+        {
+            private final File   file;
+            private final byte[] content;
+        }
+
+    }
+
+    private static class BatchFileReaderImpl implements BatchFileReader, SingleFileReader
+    {
+        private List<File> files    = new ArrayList<>();
+        private Charset    encoding = StandardCharsets.UTF_8;
+
+        @Override
+        public BatchFileReader from(File... files)
+        {
+            if (files != null)
+            {
+                for (File file : files)
+                {
+                    this.from(file);
+                }
+            }
+            return this;
+        }
+
+        @Override
+        public BatchFileReaderImpl from(File file)
+        {
+            if (file != null)
+            {
+                if (file.isFile())
+                {
+                    this.files.add(file);
+                }
+                else if (file.isDirectory())
+                {
+                    this.fromDirectory(file);
+                }
+            }
+            return this;
+        }
+
+        @Override
+        public BatchFileReader fromDirectory(File directory)
+        {
+            if (directory != null)
+            {
+                this.files.addAll(Arrays.asList(directory.listFiles((FileFilter) file -> file.isFile())));
+            }
+            return this;
+        }
+
+        @Override
+        public BatchFileReader usingEncoding(Charset encoding)
+        {
+            this.encoding = encoding;
+            return this;
+        }
+
+        @Override
+        public Stream<String> getAsStringStream()
+        {
+            return this.mapFileToStream(file ->
+            {
+                try
+                {
+                    return Stream.of(org.apache.commons.io.FileUtils.readFileToString(file, this.encoding));
+                }
+                catch (IOException e)
+                {
+                    throw new FileAccessRuntimeException(e);
+                }
+            });
+        }
+
+        @Override
+        public Stream<String> getAsLinesStream()
+        {
+            return this.mapFileToStream(file ->
+            {
+                try
+                {
+                    return FileUtils.toLineStream(file, this.encoding);
+                }
+                catch (RuntimeIOException e)
+                {
+                    throw new FileAccessRuntimeException(e);
+                }
+            });
+        }
+
+        @Override
+        public Stream<String> getAsInMemoryLinesStream()
+        {
+            return this.mapFileToStream(file ->
+            {
+                try
+                {
+                    return org.apache.commons.io.FileUtils.readLines(file, this.encoding)
+                                                          .stream();
+                }
+                catch (IOException e)
+                {
+                    throw new FileAccessRuntimeException(e);
+                }
+            });
+        }
+
+        private <R> Stream<R> mapFileToStream(Function<File, Stream<R>> fileToStreamMapper)
+        {
+            return this.files.stream()
+                             .filter(PredicateUtils.notNull())
+                             .flatMap(fileToStreamMapper);
+        }
+
+        @Override
+        public Stream<byte[]> intoByteArrays()
+        {
+            return this.mapFileToStream(file ->
+            {
+                try
+                {
+                    return Stream.of(org.apache.commons.io.FileUtils.readFileToByteArray(file));
+                }
+                catch (IOException e)
+                {
+                    throw new FileAccessRuntimeException(e);
+                }
+            });
+        }
+
+        @Override
+        public byte[] intoByteArray()
+        {
+            return this.intoByteArrays()
+                       .reduce(ArrayUtils::addAll)
+                       .orElse(new byte[0]);
+        }
+
+        @Override
+        public MergedFilesContent intoMergedInMemoryFilesContent()
+        {
+            return MergedFilesContent.builder()
+                                     .files(Collections.unmodifiableList(this.files))
+                                     .content(this.intoByteArray())
+                                     .build();
+        }
+
+        @Override
+        public Stream<FileContent> intoInMemoryFilesContent()
+        {
+            return StreamUtils.merge2(this.files.stream(), this.intoByteArrays())
+                              .map(fileAndContent -> FileContent.builder()
+                                                                .file(fileAndContent.getFirst())
+                                                                .content(fileAndContent.getSecond())
+                                                                .build());
+        }
+
+        @Override
+        public FileContent intoInMemoryFileContent()
+        {
+            return this.intoInMemoryFilesContent()
+                       .findFirst()
+                       .get();
+        }
     }
 
     public static class FileAccessRuntimeException extends RuntimeException
@@ -601,7 +812,7 @@ public class FileUtils
     }
 
     /**
-     * Returns a new {@link BatchFileReader} instance.<br>
+     * Returns a new {@link FileReaderLoader} instance.<br>
      * <br>
      * Example:<br>
      * 
@@ -614,116 +825,9 @@ public class FileUtils
      * 
      * @return
      */
-    public static BatchFileReader read()
+    public static FileReaderLoader read()
     {
-        return new BatchFileReaderLoaded()
-        {
-            private List<File> files    = new ArrayList<>();
-            private Charset    encoding = StandardCharsets.UTF_8;
-
-            @Override
-            public BatchFileReaderLoaded from(File... files)
-            {
-                if (files != null)
-                {
-                    for (File file : files)
-                    {
-                        this.from(file);
-                    }
-                }
-                return this;
-            }
-
-            @Override
-            public BatchFileReaderLoaded from(File file)
-            {
-                if (file != null)
-                {
-                    if (file.isFile())
-                    {
-                        this.files.add(file);
-                    }
-                    else if (file.isDirectory())
-                    {
-                        this.fromDirectory(file);
-                    }
-                }
-                return this;
-            }
-
-            @Override
-            public BatchFileReaderLoaded fromDirectory(File directory)
-            {
-                if (directory != null)
-                {
-                    this.files.addAll(Arrays.asList(directory.listFiles((FileFilter) file -> file.isFile())));
-                }
-                return this;
-            }
-
-            @Override
-            public BatchFileReaderLoaded usingEncoding(Charset encoding)
-            {
-                this.encoding = encoding;
-                return this;
-            }
-
-            @Override
-            public Stream<String> getAsStringStream()
-            {
-                return this.mapFileToStream(file ->
-                {
-                    try
-                    {
-                        return Stream.of(org.apache.commons.io.FileUtils.readFileToString(file, this.encoding));
-                    }
-                    catch (IOException e)
-                    {
-                        throw new FileAccessRuntimeException(e);
-                    }
-                });
-            }
-
-            @Override
-            public Stream<String> getAsLinesStream()
-            {
-                return this.mapFileToStream(file ->
-                {
-                    try
-                    {
-                        return FileUtils.toLineStream(file, this.encoding);
-                    }
-                    catch (RuntimeIOException e)
-                    {
-                        throw new FileAccessRuntimeException(e);
-                    }
-                });
-            }
-
-            @Override
-            public Stream<String> getAsInMemoryLinesStream()
-            {
-                return this.mapFileToStream(file ->
-                {
-                    try
-                    {
-                        return org.apache.commons.io.FileUtils.readLines(file, this.encoding)
-                                                              .stream();
-                    }
-                    catch (IOException e)
-                    {
-                        throw new FileAccessRuntimeException(e);
-                    }
-                });
-            }
-
-            private Stream<String> mapFileToStream(Function<File, Stream<String>> fileToStreamMapper)
-            {
-                return this.files.stream()
-                                 .filter(PredicateUtils.notNull())
-                                 .flatMap(fileToStreamMapper);
-            }
-        };
+        return new BatchFileReaderImpl();
     }
 
     /**
@@ -1613,6 +1717,13 @@ public class FileUtils
 
         public Stream<DirectoryNavigator> listDirectories();
 
+        /**
+         * Lists non directory files
+         * 
+         * @return
+         */
+        public Stream<FileNavigator> listFiles();
+
         public boolean isNameMatchingRegEx(String regEx);
 
         public Optional<FileNavigator> findFileByName(String name);
@@ -1671,6 +1782,14 @@ public class FileUtils
                 return FileUtils.listDirectoryFiles(directory)
                                 .filter(File::isDirectory)
                                 .map(FileUtils::navigate);
+            }
+
+            @Override
+            public Stream<FileNavigator> listFiles()
+            {
+                return FileUtils.listDirectoryFiles(directory)
+                                .filter(File::isFile)
+                                .map(this.createFileToFileNavigatorMapper());
             }
 
             @Override

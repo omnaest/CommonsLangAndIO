@@ -56,7 +56,7 @@ public class DurationCachedElement<E> implements CachedElement<E>
                                                                                                     .orElseGet(() -> DurationCapture.newInstance()
                                                                                                                                     .start()));
         if (durationMeasurement.stop()
-                               .isDurationLargerThen(this.timeDuration))
+                               .isDurationLargerThan(this.timeDuration))
         {
             this.reset();
         }

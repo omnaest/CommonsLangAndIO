@@ -18,6 +18,10 @@ package org.omnaest.utils;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -555,7 +559,39 @@ public class IOUtils
                             }
                         };
                     }
+
+                    @Override
+                    public WriteResult to(File file)
+                    {
+                        try
+                        {
+                            return this.to(new FileOutputStream(file));
+                        }
+                        catch (FileNotFoundException e)
+                        {
+                            throw new RuntimeIOException(e);
+                        }
+                    }
                 };
+            }
+
+            @Override
+            public InputStreamCopy from(byte[] data)
+            {
+                return this.from(new ByteArrayInputStream(data));
+            }
+
+            @Override
+            public InputStreamCopy from(File file)
+            {
+                try
+                {
+                    return this.from(new FileInputStream(file));
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeIOException(e);
+                }
             }
 
         };
@@ -567,6 +603,10 @@ public class IOUtils
         public ReaderCopy from(Reader reader);
 
         public InputStreamCopy from(InputStream inputStream);
+
+        public InputStreamCopy from(byte[] data);
+
+        public InputStreamCopy from(File file);
 
     }
 
@@ -615,6 +655,8 @@ public class IOUtils
         public WriteResult to(OutputStream outputStream);
 
         public WriteResultElement<byte[]> toByteArray();
+
+        public WriteResult to(File file);
     }
 
     public static interface WriteResult

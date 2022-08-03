@@ -33,16 +33,19 @@
 */
 package org.omnaest.utils;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.omnaest.utils.FileUtils.FileReaderLoader.MergedFilesContent;
 import org.omnaest.utils.FileUtils.FileStringContentConsumer;
 import org.omnaest.utils.FileUtils.FileStringContentSupplier;
 
@@ -82,6 +85,29 @@ public class FileUtilsTest
         assertEquals("test2", lines.get(1));
         assertEquals("test3", lines.get(2));
         assertEquals("test4", lines.get(3));
+    }
+
+    @Test
+    public void testReadIntoByteArray() throws Exception
+    {
+        File tempFile1 = FileUtils.createRandomTempFile();
+        File tempFile2 = FileUtils.createRandomTempFile();
+
+        FileUtils.toConsumer(tempFile1)
+                 .accept("a");
+        FileUtils.toConsumer(tempFile2)
+                 .accept("b");
+
+        byte[] expectedContent = new byte[] { "a".getBytes(StandardCharsets.UTF_8)[0], "b".getBytes(StandardCharsets.UTF_8)[0] };
+        assertArrayEquals(expectedContent, FileUtils.read()
+                                                    .from(tempFile1, tempFile2)
+                                                    .intoByteArray());
+
+        MergedFilesContent mergedFilesContent = FileUtils.read()
+                                                         .from(tempFile1, tempFile2)
+                                                         .intoMergedInMemoryFilesContent();
+        assertEquals(Arrays.asList(tempFile1, tempFile2), mergedFilesContent.getFiles());
+        assertArrayEquals(expectedContent, mergedFilesContent.getContent());
     }
 
     @Test

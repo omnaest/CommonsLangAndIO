@@ -72,7 +72,9 @@ public interface DurationCapture
 
         public DisplayableDuration asTimeUnitDisplay();
 
-        public boolean isDurationLargerThen(TimeDuration timeDuration);
+        public boolean isDurationLargerThan(TimeDuration timeDuration);
+
+        public boolean isDurationLessThan(TimeDuration timeDuration);
 
     }
 
@@ -129,6 +131,8 @@ public interface DurationCapture
         public MeasurementResult stop();
 
         public Instant getStartTime();
+
+        public DurationMeasurement run(Runnable operation);
     }
 
     public DurationMeasurement start();

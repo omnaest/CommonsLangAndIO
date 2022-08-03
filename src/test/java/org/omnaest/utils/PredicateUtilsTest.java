@@ -148,4 +148,13 @@ public class PredicateUtilsTest
                                                    .collect(Collectors.toList()));
     }
 
+    @Test
+    public void testCaptureFirstElement() throws Exception
+    {
+        assertEquals(Arrays.asList("b", "c"), Arrays.asList("a", "b", "c")
+                                                    .stream()
+                                                    .filter(PredicateUtils.captureFirstElement(firstElement -> assertEquals("a", firstElement)))
+                                                    .collect(Collectors.toList()));
+    }
+
 }

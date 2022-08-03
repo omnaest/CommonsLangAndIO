@@ -90,9 +90,15 @@ public class DefaultDurationCapture implements DurationCapture
         }
 
         @Override
-        public boolean isDurationLargerThen(TimeDuration timeDuration)
+        public boolean isDurationLargerThan(TimeDuration timeDuration)
         {
             return this.getDuration(timeDuration.getTimeUnit()) > timeDuration.getDuration();
+        }
+
+        @Override
+        public boolean isDurationLessThan(TimeDuration timeDuration)
+        {
+            return this.getDuration(timeDuration.getTimeUnit()) < timeDuration.getDuration();
         }
 
     }
@@ -189,6 +195,13 @@ public class DefaultDurationCapture implements DurationCapture
             public Instant getStartTime()
             {
                 return Instant.ofEpochMilli(start);
+            }
+
+            @Override
+            public DurationMeasurement run(Runnable operation)
+            {
+                operation.run();
+                return this;
             }
 
         };
