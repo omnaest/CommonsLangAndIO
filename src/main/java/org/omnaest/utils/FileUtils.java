@@ -48,6 +48,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -1116,7 +1117,7 @@ public class FileUtils
             {
                 fileChannel.position(this.position);
                 fileChannel.read(buffer);
-                buffer.flip();
+                ((Buffer) buffer).flip();
                 this.atPosition(this.position + length);
                 return buffer.array();
             }
