@@ -3,6 +3,7 @@ package org.omnaest.utils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
@@ -90,9 +91,10 @@ public class ByteArrayUtils
 
     public static int[] decodeIntegersFromByteArray(byte[] array)
     {
+        Buffer wrappedArray = ByteBuffer.wrap(array);
+        ByteBuffer buffer = (ByteBuffer) wrappedArray.position(0);
         return IntBuffer.allocate(array.length / Integer.BYTES)
-                        .put(((ByteBuffer) ByteBuffer.wrap(array)
-                                                     .position(0)).asIntBuffer())
+                        .put(buffer.asIntBuffer())
                         .array();
     }
 
