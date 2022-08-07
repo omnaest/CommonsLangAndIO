@@ -91,18 +91,17 @@ public class ByteArrayUtils
 
     public static int[] decodeIntegersFromByteArray(byte[] array)
     {
-        Buffer wrappedArray = ByteBuffer.wrap(array);
-        ByteBuffer buffer = (ByteBuffer) wrappedArray.position(0);
+        Buffer buffer = ByteBuffer.wrap(array);
         return IntBuffer.allocate(array.length / Integer.BYTES)
-                        .put(buffer.asIntBuffer())
+                        .put(((ByteBuffer) buffer.position(0)).asIntBuffer())
                         .array();
     }
 
     public static long[] decodeLongsFromByteArray(byte[] array)
     {
+        Buffer buffer = ByteBuffer.wrap(array);
         return LongBuffer.allocate(array.length / Long.BYTES)
-                         .put(((ByteBuffer) ByteBuffer.wrap(array)
-                                                      .position(0)).asLongBuffer())
+                         .put(((ByteBuffer) buffer.position(0)).asLongBuffer())
                          .array();
     }
 
