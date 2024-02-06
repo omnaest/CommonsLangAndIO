@@ -18,10 +18,12 @@ package org.omnaest.utils;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.omnaest.utils.functional.Action;
 
@@ -68,6 +70,31 @@ public class EnumUtils
         {
             return Optional.empty();
         }
+    }
+
+    public static <E extends Enum<?>> Supplier<E> cyclicEnumValueSupplier(Class<E> enumType)
+    {
+        E[] enumConstants = enumType.getEnumConstants();
+        AtomicInteger index = new AtomicInteger();
+        return () -> enumConstants[index.getAndUpdate(previous -> (previous + 1) % enumConstants.length)];
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E extends Enum<?>> E cyclicNextEnumValue(E value)
+    {
+        Class<E> enumType = (Class<E>) Optional.ofNullable(value)
+                                               .map(E::getClass)
+                                               .orElseThrow(() -> new IllegalArgumentException("No valid enum value has been given."));
+        E[] enumConstants = enumType.getEnumConstants();
+        return enumConstants[(value.ordinal() + 1) % enumConstants.length];
+    }
+
+    public static <E extends Enum<?>> Stream<E> toStream(Class<E> enumType)
+    {
+        return Optional.ofNullable(enumType)
+                       .map(Class::getEnumConstants)
+                       .map(Stream::of)
+                       .orElse(Stream.empty());
     }
 
     /**

@@ -19,17 +19,23 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.IntStream.Builder;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.omnaest.utils.StreamUtils;
 import org.omnaest.utils.bitset.binary.BinaryDigits;
 import org.omnaest.utils.bitset.hex.HexDigits;
 
 /**
  * Wrapper around {@link BitSet} which provides further functionality
  * 
+ * @see Bits
+ * @see Bits#newInstance()
  * @author omnaest
  */
 public class BitSetBits implements Bits
@@ -40,6 +46,12 @@ public class BitSetBits implements Bits
     @Override
     public BitSetBits flip(int bitIndex)
     {
+        return this.flipIndex(bitIndex);
+    }
+
+    @Override
+    public BitSetBits flipIndex(int bitIndex)
+    {
         this.adjustLengthIfNecessary(bitIndex);
         this.bits.flip(bitIndex);
         return this;
@@ -48,8 +60,66 @@ public class BitSetBits implements Bits
     @Override
     public BitSetBits clear(int bitIndex)
     {
+        return this.clearIndex(bitIndex);
+    }
+
+    @Override
+    public BitSetBits clearIndex(int bitIndex)
+    {
         this.adjustLengthIfNecessary(bitIndex);
         this.bits.clear(bitIndex);
+        return this;
+    }
+
+    @Override
+    public Bits drainFromLeft(int numberOfBits)
+    {
+        int effectiveNumberOfBits = Math.min(this.length, numberOfBits);
+        Bits result = Bits.of(this.bits.get(0, effectiveNumberOfBits), effectiveNumberOfBits);
+        this.shiftLeft(effectiveNumberOfBits);
+        this.setLength(Math.max(0, this.length - numberOfBits));
+        return result;
+    }
+
+    @Override
+    public Bits drainFromLeftOrDefault(int numberOfBits)
+    {
+        return this.drainFromLeftOrDefault(numberOfBits, false);
+    }
+
+    @Override
+    public Bits drainFromLeftOrDefault(int numberOfBits, boolean defaultValue)
+    {
+        return this.drainFromLeft(numberOfBits)
+                   .setLength(numberOfBits, defaultValue);
+    }
+
+    @Override
+    public Stream<Bits> drainBlocksFromLeftOfSize(int numberOfBitsPerBlock)
+    {
+        return StreamUtils.fromOptionalSupplier(() ->
+        {
+            if (this.isEmpty())
+            {
+                return Optional.empty();
+            }
+            else
+            {
+                return Optional.of(this.drainFromLeftOrDefault(numberOfBitsPerBlock));
+            }
+        });
+    }
+
+    @Override
+    public Stream<Bits> drainBlocksFromLeftOfMaxSize(int numberOfMaxBitsPerBlock)
+    {
+        return StreamUtils.fromSupplier(() -> this.drainFromLeft(numberOfMaxBitsPerBlock), Bits::isEmpty);
+    }
+
+    @Override
+    public Bits shiftLeft(int numberOfBits)
+    {
+        this.bits = this.bits.get(numberOfBits, Math.max(numberOfBits, this.bits.length()));
         return this;
     }
 
@@ -83,23 +153,133 @@ public class BitSetBits implements Bits
     @Override
     public BitSetBits set(int bitIndex)
     {
+        return this.setIndex(bitIndex);
+    }
+
+    @Override
+    public BitSetBits setIndex(int bitIndex)
+    {
         return this.set(bitIndex, true);
     }
 
     @Override
+    public Bits setIndex(int[] bitIndex)
+    {
+        return this.setIndex(bitIndex, true);
+    }
+
+    @Override
+    public Bits setIndex(int[] bitIndex, boolean value)
+    {
+        if (bitIndex != null)
+        {
+            for (int index : bitIndex)
+            {
+                this.setIndex(index, value);
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public boolean getOrSet(int bitIndex)
+    {
+        return this.getOrSet(bitIndex, false);
+    }
+
+    @Override
+    public boolean getOrSet(int bitIndex, boolean defaultValue)
+    {
+        this.adjustLengthIfNecessary(bitIndex, defaultValue);
+        return this.get(bitIndex);
+    }
+
+    @Override
+    public Bits setLength(int length)
+    {
+        return this.setLength(length, false);
+    }
+
+    @Override
+    public Bits setLength(int length, boolean defaultValue)
+    {
+        if (length < 0)
+        {
+            throw new IllegalArgumentException("Length must be greater or equal to zero.");
+        }
+        if (this.bits.length() > length)
+        {
+            this.bits.clear(length, this.bits.length());
+        }
+        else if (this.length < length)
+        {
+            this.bits.set(this.length, length, defaultValue);
+        }
+        this.length = length;
+        return this;
+    }
+
+    @Override
+    public Bits append(Bits bits)
+    {
+        int initialLength = this.length;
+        for (int ii = 0; ii < bits.getLength(); ii++)
+        {
+            this.setIndex(initialLength + ii, bits.get(ii));
+        }
+        return this;
+    }
+
+    @Override
     public BitSetBits set(int bitIndex, boolean value)
+    {
+        return this.setIndex(bitIndex, value);
+    }
+
+    @Override
+    public BitSetBits setIndex(int bitIndex, boolean value)
     {
         this.adjustLengthIfNecessary(bitIndex);
         this.bits.set(bitIndex, value);
         return this;
     }
 
+    @Override
+    public Bits setIndex(int index, Bits bits)
+    {
+        if (bits != null)
+        {
+            bits.forEach((ii, value) -> this.setIndex(index + ii, value));
+        }
+        return this;
+    }
+
     private void adjustLengthIfNecessary(int bitIndex)
+    {
+        this.adjustLengthIfNecessary(bitIndex, false);
+    }
+
+    private void adjustLengthIfNecessary(int bitIndex, boolean defaultValue)
     {
         if (bitIndex >= this.length)
         {
-            this.length = bitIndex + 1;
+            int newLength = bitIndex + 1;
+            this.bits.set(this.length, newLength, defaultValue);
+            this.length = newLength;
         }
+    }
+
+    @Override
+    public Bits forEach(BiConsumer<Integer, Boolean> consumer)
+    {
+        if (consumer != null)
+        {
+            for (int ii = 0; ii < this.length; ii++)
+            {
+                consumer.accept(ii, this.get(ii));
+            }
+        }
+        return this;
     }
 
     @Override
@@ -117,7 +297,40 @@ public class BitSetBits implements Bits
         {
             for (int ii = 0; ii < values.length; ii++)
             {
-                this.set(ii, values[ii]);
+                this.setIndex(ii, values[ii]);
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public Bits set(Bits bits)
+    {
+        if (bits != null)
+        {
+            for (int ii = 0; ii < bits.getLength(); ii++)
+            {
+                this.setIndex(ii, bits.get(ii));
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public Bits set(BitSet bitSet)
+    {
+        return this.set(bitSet, bitSet.length());
+    }
+
+    @Override
+    public Bits set(BitSet bitSet, int length)
+    {
+        this.length = length;
+        if (bitSet != null)
+        {
+            for (int ii = 0; ii < length; ii++)
+            {
+                this.setIndex(ii, bitSet.get(ii));
             }
         }
         return this;
@@ -159,6 +372,17 @@ public class BitSetBits implements Bits
     }
 
     @Override
+    public boolean[] toBooleanArray()
+    {
+        boolean[] result = new boolean[this.length];
+        for (int ii = 0; ii < this.length; ii++)
+        {
+            result[ii] = this.get(ii);
+        }
+        return result;
+    }
+
+    @Override
     public byte[] toBytes()
     {
         return this.bits.toByteArray();
@@ -167,8 +391,10 @@ public class BitSetBits implements Bits
     @Override
     public String toString()
     {
-        return this.toBinaryDigits()
-                   .toString();
+        return IntStream.range(0, this.length)
+                        .boxed()
+                        .map(index -> this.get(index) ? "1" : "0")
+                        .collect(Collectors.joining());
     }
 
     @Override
@@ -182,10 +408,11 @@ public class BitSetBits implements Bits
     @Override
     public Bits subset(int startInclusive, int endExclusive)
     {
-        Bits result = Bits.newInstance();
-        for (int iBitIndex = startInclusive; iBitIndex < endExclusive; iBitIndex++)
+        Bits result = Bits.newInstance()
+                          .setLength(endExclusive - startInclusive);
+        for (int iBitIndex = startInclusive; iBitIndex < endExclusive && iBitIndex < this.length; iBitIndex++)
         {
-            result.set(iBitIndex, this.get(iBitIndex));
+            result.setIndex(iBitIndex - startInclusive, this.get(iBitIndex));
         }
         return result;
     }
@@ -259,6 +486,126 @@ public class BitSetBits implements Bits
             return false;
         }
         return true;
+    }
+
+    @Override
+    public Bits clone()
+    {
+        return Bits.of(this);
+    }
+
+    @Override
+    public Bits and(Bits bits)
+    {
+        if (bits != null)
+        {
+            this.bits.and(bits.toBitSet());
+            this.length = Math.max(this.length, bits.getLength());
+        }
+        return this;
+    }
+
+    @Override
+    public Bits or(Bits bits)
+    {
+        if (bits != null)
+        {
+            this.bits.or(bits.toBitSet());
+            this.length = Math.max(this.length, bits.getLength());
+        }
+        return this;
+    }
+
+    @Override
+    public Bits xor(Bits bits)
+    {
+        if (bits != null)
+        {
+            this.bits.xor(bits.toBitSet());
+            this.length = Math.max(this.length, bits.getLength());
+        }
+        return this;
+    }
+
+    @Override
+    public Bits negate()
+    {
+        if (this.bits != null)
+        {
+            this.bits.flip(0, this.length);
+        }
+        return this;
+    }
+
+    @Override
+    public BitSet toBitSet()
+    {
+        return (BitSet) this.bits.clone();
+    }
+
+    @Override
+    public IntStream toIndexPositions()
+    {
+        Builder builder = IntStream.builder();
+
+        for (int index = this.bits.nextSetBit(0); index >= 0 && index < this.length; index = this.bits.nextSetBit(index + 1))
+        {
+            builder.add(index);
+        }
+
+        return builder.build();
+    }
+
+    @Override
+    public OptionalInt findNextClearBitIndex()
+    {
+        int index = this.bits.nextClearBit(0);
+        return index >= 0 && index < this.length ? OptionalInt.of(index) : OptionalInt.empty();
+    }
+
+    @Override
+    public OptionalInt findNextSetBitIndex()
+    {
+        int index = this.bits.nextSetBit(0);
+        return index >= 0 ? OptionalInt.of(index) : OptionalInt.empty();
+    }
+
+    @Override
+    public OptionalInt findLastSetBitIndex()
+    {
+        for (int ii = this.length - 1; ii >= 0; ii--)
+        {
+            if (this.get(ii))
+            {
+                return OptionalInt.of(ii);
+            }
+        }
+        return OptionalInt.empty();
+    }
+
+    @Override
+    public int[] toIndexPositionArray()
+    {
+        return this.toIndexPositions()
+                   .toArray();
+    }
+
+    @Override
+    public boolean hasAnyBitEqualTo(boolean value)
+    {
+        return value ? this.bits.nextSetBit(0) >= 0 : this.bits.nextClearBit(0) >= 0;
+    }
+
+    @Override
+    public boolean isEmpty()
+    {
+        return this.getLength() == 0;
+    }
+
+    @Override
+    public boolean isNotEmpty()
+    {
+        return !this.isEmpty();
     }
 
 }

@@ -21,6 +21,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.Test;
 
@@ -52,6 +55,31 @@ public class EnumUtilsTest
                             .ifAnyEqualTo(Arrays.asList(TestEnum.ONE, TestEnum.TWO), (matches) -> fail("Wrong matches :" + matches))
                             .isEqualToAny(TestEnum.TWO, TestEnum.THREE));
 
+    }
+
+    @Test
+    public void testCyclicEnumValueSupplier() throws Exception
+    {
+        Supplier<TestEnum> supplier = EnumUtils.cyclicEnumValueSupplier(TestEnum.class);
+        assertEquals(Arrays.asList(TestEnum.ONE, TestEnum.TWO, TestEnum.THREE, TestEnum.ONE), IntStream.range(0, 4)
+                                                                                                       .boxed()
+                                                                                                       .map(index -> supplier.get())
+                                                                                                       .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testCyclicNextEnumValue() throws Exception
+    {
+        assertEquals(TestEnum.TWO, EnumUtils.cyclicNextEnumValue(TestEnum.ONE));
+        assertEquals(TestEnum.THREE, EnumUtils.cyclicNextEnumValue(TestEnum.TWO));
+        assertEquals(TestEnum.ONE, EnumUtils.cyclicNextEnumValue(TestEnum.THREE));
+    }
+
+    @Test
+    public void testToStream() throws Exception
+    {
+        assertEquals(Arrays.asList(TestEnum.ONE, TestEnum.TWO, TestEnum.THREE), EnumUtils.toStream(TestEnum.class)
+                                                                                         .collect(Collectors.toList()));
     }
 
     @Test

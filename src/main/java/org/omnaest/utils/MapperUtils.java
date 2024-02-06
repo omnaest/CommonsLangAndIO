@@ -239,4 +239,15 @@ public class MapperUtils
         return StreamUtils.filterMapper(filter, mapper);
     }
 
+    /**
+     * Returns a mapper {@link Function} that returns the invocation count regardless of the given element.
+     * 
+     * @return
+     */
+    public static <E> Function<E, Integer> counting()
+    {
+        AtomicInteger counter = new AtomicInteger();
+        return element -> counter.getAndIncrement();
+    }
+
 }

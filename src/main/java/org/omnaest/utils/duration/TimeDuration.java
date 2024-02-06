@@ -38,6 +38,16 @@ public class TimeDuration
         this.timeUnit = timeUnit;
     }
 
+    public static TimeDuration ofSeconds(int duration)
+    {
+        return of(duration, TimeUnit.SECONDS);
+    }
+
+    public static TimeDuration ofMilliseconds(int duration)
+    {
+        return of(duration, TimeUnit.MILLISECONDS);
+    }
+
     public static TimeDuration of(long duration, TimeUnit timeUnit)
     {
         return new TimeDuration(duration, timeUnit);

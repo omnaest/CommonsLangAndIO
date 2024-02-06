@@ -53,10 +53,20 @@ public interface BiElement<E1, E2>
 
     public default <NE1> BiElement<NE1, E2> applyToFirstArgument(Function<E1, NE1> mapper)
     {
-        return BiElement.of(mapper.apply(this.getFirst()), this.getSecond());
+        return this.mapFirstArgument(mapper);
     }
 
     public default <NE2> BiElement<E1, NE2> applyToSecondArgument(Function<E2, NE2> mapper)
+    {
+        return this.mapSecondArgument(mapper);
+    }
+
+    public default <NE1> BiElement<NE1, E2> mapFirstArgument(Function<E1, NE1> mapper)
+    {
+        return BiElement.of(mapper.apply(this.getFirst()), this.getSecond());
+    }
+
+    public default <NE2> BiElement<E1, NE2> mapSecondArgument(Function<E2, NE2> mapper)
     {
         return BiElement.of(this.getFirst(), mapper.apply(this.getSecond()));
     }
@@ -153,6 +163,30 @@ public interface BiElement<E1, E2>
     public default BiElement<E2, E1> reverse()
     {
         return BiElement.of(this.getSecond(), this.getFirst());
+    }
+
+    /**
+     * Returns a {@link Function} that return a {@link BiElement} for the given element with the extracted element as first element.
+     * 
+     * @see #appender(Function)
+     * @param extractor
+     * @return
+     */
+    public static <E, E1> Function<E, BiElement<E1, E>> prepender(Function<E, E1> extractor)
+    {
+        return element -> BiElement.of(extractor != null ? extractor.apply(element) : null, element);
+    }
+
+    /**
+     * Returns a {@link Function} that return a {@link BiElement} for the given element with the extracted element as second element.
+     * 
+     * @see #prepender(Function)
+     * @param extractor
+     * @return
+     */
+    public static <E, E1> Function<E, BiElement<E, E1>> appender(Function<E, E1> extractor)
+    {
+        return element -> BiElement.of(element, extractor != null ? extractor.apply(element) : null);
     }
 
 }

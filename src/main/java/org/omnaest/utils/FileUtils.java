@@ -1729,6 +1729,10 @@ public class FileUtils
 
         public Optional<FileNavigator> findFileByName(String name);
 
+        public Stream<FileNavigator> findFileByNameSuffix(String suffix);
+
+        public Stream<FileNavigator> findFileByNamePrefix(String prefix);
+
         public FileNavigator newFile(String name);
 
         /**
@@ -1740,12 +1744,20 @@ public class FileUtils
         public File get();
 
         /**
-         * Finds a {@link File} by name while transitively traversing through the subdirectories.
+         * Finds a {@link File} by name while transitively traversing through the sub directories.
          * 
          * @param name
          * @return
          */
         public Stream<FileNavigator> findTransitivelyFileByName(String name);
+
+        /**
+         * Finds all {@link File}s by name prefix while transitively traversing through the sub directories.
+         * 
+         * @param prefix
+         * @return
+         */
+        public Stream<FileNavigator> findTransitivelyFileByNamePrefix(String prefix);
 
     }
 
@@ -1852,6 +1864,31 @@ public class FileUtils
             }
 
             @Override
+            public Stream<FileNavigator> findFileByNameSuffix(String suffix)
+            {
+                return this.listFiles()
+                           .filter(navigator -> org.apache.commons.lang3.StringUtils.endsWithIgnoreCase(navigator.get()
+                                                                                                                 .getName(),
+                                                                                                        suffix));
+            }
+
+            @Override
+            public Stream<FileNavigator> findFileByNamePrefix(String prefix)
+            {
+                return this.listFiles()
+                           .filter(navigator -> org.apache.commons.lang3.StringUtils.startsWithIgnoreCase(navigator.get()
+                                                                                                                   .getName(),
+                                                                                                          prefix));
+            }
+
+            @Override
+            public Stream<FileNavigator> findTransitivelyFileByNamePrefix(String prefix)
+            {
+                return this.listDirectories()
+                           .flatMap(this.createTransitiveFileFinder2(directory -> directory.findFileByNamePrefix(prefix)));
+            }
+
+            @Override
             public Stream<FileNavigator> findTransitivelyFileByName(String name)
             {
                 return this.listDirectories()
@@ -1860,11 +1897,15 @@ public class FileUtils
 
             private Function<DirectoryNavigator, Stream<FileNavigator>> createTransitiveFileFinder(String name)
             {
-                return directory -> Stream.concat(directory.findFileByName(name)
-                                                           .map(Stream::of)
-                                                           .orElse(Stream.empty()),
-                                                  directory.listDirectories()
-                                                           .flatMap(this.createTransitiveFileFinder(name)));
+                return this.createTransitiveFileFinder2(directory -> directory.findFileByName(name)
+                                                                              .map(Stream::of)
+                                                                              .orElse(Stream.empty()));
+            }
+
+            private Function<DirectoryNavigator, Stream<FileNavigator>> createTransitiveFileFinder2(Function<DirectoryNavigator, Stream<FileNavigator>> function)
+            {
+                return directory -> Stream.concat(function.apply(directory), directory.listDirectories()
+                                                                                      .flatMap(this.createTransitiveFileFinder2(function)));
             }
         };
     }

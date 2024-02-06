@@ -211,19 +211,38 @@ public class ReflectionUtils
                 @Override
                 public <E, R> R invoke(E... args)
                 {
-                    R retval = null;
-                    try
+                    return this.makeMethodAccessibleAndInvoke(() ->
                     {
-                        retval = (R) MethodImpl.this.method.invoke(instance, args);
-                    }
-                    catch (Exception e)
-                    {
-                        new IllegalStateException(e);
-                    }
-
-                    return retval;
+                        try
+                        {
+                            return (R) MethodImpl.this.method.invoke(instance, args);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new IllegalStateException(e);
+                        }
+                    });
                 }
 
+                private <R> R makeMethodAccessibleAndInvoke(Supplier<R> supplier)
+                {
+                    boolean accessible = MethodImpl.this.method.isAccessible();
+                    if (!accessible)
+                    {
+                        MethodImpl.this.method.setAccessible(true);
+                    }
+                    try
+                    {
+                        return supplier.get();
+                    }
+                    finally
+                    {
+                        if (MethodImpl.this.method.isAccessible() != accessible)
+                        {
+                            MethodImpl.this.method.setAccessible(accessible);
+                        }
+                    }
+                }
             };
 
         }
