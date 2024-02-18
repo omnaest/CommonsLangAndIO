@@ -43,6 +43,11 @@ public class TimeDuration
         return of(duration, TimeUnit.SECONDS);
     }
 
+    public static TimeDuration ofSeconds(long duration)
+    {
+        return of(duration, TimeUnit.SECONDS);
+    }
+
     public static TimeDuration ofMilliseconds(int duration)
     {
         return of(duration, TimeUnit.MILLISECONDS);

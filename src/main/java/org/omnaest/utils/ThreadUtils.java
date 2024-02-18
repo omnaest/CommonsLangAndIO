@@ -39,7 +39,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 
+import org.omnaest.utils.duration.DurationCapture;
+import org.omnaest.utils.duration.DurationCapture.DurationMeasurement;
 import org.omnaest.utils.duration.TimeDuration;
 import org.omnaest.utils.exception.handler.ExceptionHandler;
 
@@ -88,13 +91,14 @@ public class ThreadUtils
             {
                 return new IntervalSleepBuilder()
                 {
-                    private List<IntConsumer> operations = new ArrayList<>();
+                    private List<IntConsumer> operations               = new ArrayList<>();
+                    private int               minimumNumberOfIntervals = 0;
 
                     @Override
                     public void until(BooleanSupplier condition)
                     {
                         int counter = 0;
-                        while (!condition.getAsBoolean())
+                        while (counter < this.minimumNumberOfIntervals || !condition.getAsBoolean())
                         {
                             sleepSilently(interval, timeUnit);
                             int currentCount = counter++;
@@ -106,6 +110,23 @@ public class ThreadUtils
                     public IntervalSleepBuilder andExecute(IntConsumer operation)
                     {
                         this.operations.add(operation);
+                        return this;
+                    }
+
+                    @Override
+                    public void forDuration(Supplier<TimeDuration> timeDurationProvider)
+                    {
+                        DurationMeasurement duration = DurationCapture.newInstance()
+                                                                      .start();
+                        this.until(() -> duration.stop()
+                                                 .isDurationLargerThan(timeDurationProvider.get()));
+
+                    }
+
+                    @Override
+                    public IntervalSleepBuilder withMinimumNumberOfIntervals(int minimumNumberOfIntervals)
+                    {
+                        this.minimumNumberOfIntervals = minimumNumberOfIntervals;
                         return this;
                     }
                 };
@@ -120,8 +141,13 @@ public class ThreadUtils
 
     public static interface IntervalSleepBuilder
     {
+        IntervalSleepBuilder andExecute(IntConsumer operation);
+
+        IntervalSleepBuilder withMinimumNumberOfIntervals(int minimumNumberOfIntervals);
+
         void until(BooleanSupplier condition);
 
-        IntervalSleepBuilder andExecute(IntConsumer operation);
+        void forDuration(Supplier<TimeDuration> timeDurationProvider);
+
     }
 }
