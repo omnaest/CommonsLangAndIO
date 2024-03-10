@@ -35,6 +35,7 @@ package org.omnaest.utils;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.function.Predicate;
 
 public class ArrayUtils
 {
@@ -66,6 +67,34 @@ public class ArrayUtils
                            .toArray((E[]) Array.newInstance(array.getClass()
                                                                  .getComponentType(),
                                                             array.length));
+    }
+
+    public static byte[] subArrayStartingFromMatching(Predicate<Byte> matcher, byte[] array)
+    {
+        return org.apache.commons.lang3.ArrayUtils.toPrimitive(subArrayStartingFromMatching(matcher, org.apache.commons.lang3.ArrayUtils.toObject(array)));
+    }
+
+    public static <E> E[] subArrayStartingFromMatching(Predicate<E> matcher, E[] array)
+    {
+        if (array == null)
+        {
+            return null;
+        }
+        else if (matcher == null)
+        {
+            return org.apache.commons.lang3.ArrayUtils.subarray(array, 0, 0);
+        }
+        else
+        {
+            for (int i = 0; i < array.length; i++)
+            {
+                if (matcher.test(array[i]))
+                {
+                    return org.apache.commons.lang3.ArrayUtils.subarray(array, i, array.length);
+                }
+            }
+            return null;
+        }
     }
 
 }

@@ -66,4 +66,14 @@ public class ArrayUtilsTest
         assertEquals(Arrays.asList("c", "b", "a"), Arrays.asList(reverse));
     }
 
+    @Test
+    public void testSubArrayStartingFromMatching()
+    {
+        assertArrayEquals(null, ArrayUtils.subArrayStartingFromMatching(null, (Byte[]) null));
+        assertArrayEquals(new Byte[] { 10, 20, 30 }, ArrayUtils.subArrayStartingFromMatching(value -> value != 0, new Byte[] { 0, 0, 10, 20, 30 }));
+        assertArrayEquals(new Byte[] {}, ArrayUtils.subArrayStartingFromMatching(null, new Byte[] { 0, 0, 10, 20, 30 }));
+
+        assertArrayEquals(new byte[] { 10, 20, 30 }, ArrayUtils.subArrayStartingFromMatching(value -> value != 0, new byte[] { 0, 0, 10, 20, 30 }));
+    }
+
 }
