@@ -18,7 +18,7 @@ package org.omnaest.utils.element.bi;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * @see UnaryBiElement#of(Object, Object)
