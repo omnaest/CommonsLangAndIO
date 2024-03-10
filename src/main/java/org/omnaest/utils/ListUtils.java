@@ -51,6 +51,7 @@ import org.omnaest.utils.list.ComparableListDecorator;
 import org.omnaest.utils.list.crud.CRUDList;
 import org.omnaest.utils.list.crud.CRUDListToListAdapter;
 import org.omnaest.utils.list.crud.ReadList;
+import org.omnaest.utils.list.cyclic.CyclicArrayList;
 import org.omnaest.utils.list.projection.DefaultListAggregationBuilder;
 import org.omnaest.utils.list.projection.ListAggregationBuilder;
 import org.omnaest.utils.list.projection.ListAggregationBuilder.QualifiedAggregationBuilder;
@@ -987,6 +988,31 @@ public class ListUtils
             list.addAll(Arrays.asList(initialElements));
         }
         return list;
+    }
+
+    /**
+     * @see #newCyclicFloatingList(int)
+     * @see CyclicArrayList
+     * @param <E>
+     * @param capacity
+     * @return
+     */
+    public static <E> CyclicArrayList<E> newCyclicList(int capacity)
+    {
+        return new CyclicArrayList<>(capacity);
+    }
+
+    /**
+     * Returns a {@link CyclicArrayList} in floating mode. Floating means that if enough items are added to reach the capacity, every further add will move all
+     * items before the last position to the left, where the first item in the {@link List} is lost.
+     * 
+     * @param <E>
+     * @param capacity
+     * @return
+     */
+    public static <E> CyclicArrayList<E> newCyclicFloatingList(int capacity)
+    {
+        return new CyclicArrayList<>(capacity, true);
     }
 
 }
