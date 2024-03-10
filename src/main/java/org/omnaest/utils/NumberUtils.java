@@ -111,6 +111,13 @@ public class NumberUtils
          */
         public NumberFormatter withFractionDigits(int fractionDigits);
 
+        /**
+         * Returns a new {@link NumberFormat} instance based on the settings of the {@link NumberFormatter} instance.
+         * 
+         * @return
+         */
+        public NumberFormat toNumberFormat();
+
     }
 
     /**
@@ -229,6 +236,12 @@ public class NumberUtils
             {
                 return this.withMinimumFractionDigits(fractionDigits)
                            .withMaximumFractionDigits(fractionDigits);
+            }
+
+            @Override
+            public NumberFormat toNumberFormat()
+            {
+                return this.createNumberFormatInstance();
             }
         };
     }
