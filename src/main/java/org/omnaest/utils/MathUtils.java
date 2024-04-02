@@ -98,4 +98,30 @@ public class MathUtils
     {
         return 1 << power;
     }
+
+    /**
+     * Returns the min value in case the given value is below it and the max value in case the given value is above it and otherwise the value.
+     * 
+     * @param min
+     * @param value
+     * @param max
+     * @return
+     */
+    public static double between(double min, double value, double max)
+    {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    /**
+     * Returns the min value in case the given value is below it and the max value in case the given value is above it and otherwise the value.
+     * 
+     * @param min
+     * @param value
+     * @param max
+     * @return
+     */
+    public static int between(int min, int value, int max)
+    {
+        return Math.max(min, Math.min(max, value));
+    }
 }

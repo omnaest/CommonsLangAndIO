@@ -159,7 +159,7 @@ public class PredicateUtils
      * @param gene
      * @return
      */
-    public static <T> Predicate<T> notEqueals(T object)
+    public static <T> Predicate<T> notEquals(T object)
     {
         return t -> !Objects.equals(t, object);
     }

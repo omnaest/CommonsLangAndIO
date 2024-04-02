@@ -69,4 +69,20 @@ public class MathUtilsTest
         assertEquals(4, MathUtils.pow2(2));
         assertEquals(8, MathUtils.pow2(3));
     }
+
+    @Test
+    public void testBetweenDoubleDoubleDouble()
+    {
+        assertEquals(0.1, MathUtils.between(0.1, 0, 0.5), 0.001);
+        assertEquals(0.5, MathUtils.between(0.1, 0.8, 0.5), 0.001);
+        assertEquals(0.3, MathUtils.between(0.1, 0.3, 0.5), 0.001);
+    }
+
+    @Test
+    public void testBetweenIntIntInt()
+    {
+        assertEquals(1, MathUtils.between(1, 0, 5));
+        assertEquals(5, MathUtils.between(1, 8, 5));
+        assertEquals(3, MathUtils.between(1, 3, 5));
+    }
 }
