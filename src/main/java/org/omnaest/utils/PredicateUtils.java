@@ -30,6 +30,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -156,7 +157,8 @@ public class PredicateUtils
     /**
      * Returns true if the tested element does not match the given
      * 
-     * @param gene
+     * @see #equalsAnyOf(Object...)
+     * @param object
      * @return
      */
     public static <T> Predicate<T> notEquals(T object)
@@ -165,7 +167,27 @@ public class PredicateUtils
     }
 
     /**
-     * Returns allways true for all elements
+     * Returns true, if the tested element does match any on the given elements
+     * 
+     * @see #notEquals(Object)
+     * @param <T>
+     * @param object
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> Predicate<T> equalsAnyOf(T... object)
+    {
+        Set<T> set = Optional.ofNullable(object)
+                             .map(Arrays::asList)
+                             .map(list -> list.stream()
+                                              .filter(PredicateUtils.notNull())
+                                              .collect(Collectors.toUnmodifiableSet()))
+                             .orElse(Collections.emptySet());
+        return (Predicate<T>) PredicateUtils.<T>isContainedIn(set);
+    }
+
+    /**
+     * Returns always true for all elements
      * 
      * @return
      */

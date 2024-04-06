@@ -157,4 +157,13 @@ public class PredicateUtilsTest
                                                     .collect(Collectors.toList()));
     }
 
+    @Test
+    public void testEqualsAnyOf()
+    {
+        assertEquals(Arrays.asList("b", "c"), Arrays.asList("a", "b", "c")
+                                                    .stream()
+                                                    .filter(PredicateUtils.equalsAnyOf("b", "c"))
+                                                    .collect(Collectors.toList()));
+    }
+
 }
