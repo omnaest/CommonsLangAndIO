@@ -33,15 +33,15 @@ public class OptionalUtils
     }
 
     /**
-     * Similar to {@link #both(Optional, Optional)} but wraps the given arguments using {@link Optional#ofNullable(Object)}
+     * Similar to {@link #bothElements(Optional, Optional)} but wraps the given arguments using {@link Optional#ofNullable(Object)}
      * 
      * @param first
      * @param second
      * @return
      */
-    public static <O1, O2> Optional<BiElement<O1, O2>> bothOfNullable(O1 first, O2 second)
+    public static <O1, O2> Optional<BiElement<O1, O2>> bothElementsOfNullable(O1 first, O2 second)
     {
-        return both(Optional.ofNullable(first), Optional.ofNullable(second));
+        return bothElements(Optional.ofNullable(first), Optional.ofNullable(second));
     }
 
     /**
@@ -52,7 +52,7 @@ public class OptionalUtils
      * @param secondOptional
      * @return
      */
-    public static <O1, O2> Optional<BiElement<O1, O2>> both(Optional<O1> firstOptional, Optional<O2> secondOptional)
+    public static <O1, O2> Optional<BiElement<O1, O2>> bothElements(Optional<O1> firstOptional, Optional<O2> secondOptional)
     {
         return Optional.of(BiElement.of(firstOptional, secondOptional))
                        .filter(bi -> bi.hasNoNullValue())
@@ -71,7 +71,7 @@ public class OptionalUtils
      * @param secondOptional
      * @return
      */
-    public static <O1, O2> BiOptional<O1, O2> both2(Optional<O1> firstOptional, Optional<O2> secondOptional)
+    public static <O1, O2> BiOptional<O1, O2> both(Optional<O1> firstOptional, Optional<O2> secondOptional)
     {
         return BiOptional.of(firstOptional, secondOptional);
     }
@@ -83,7 +83,7 @@ public class OptionalUtils
      * @param secondValue
      * @return
      */
-    public static <E1, E2> BiOptional<E1, E2> bothOfNullable2(E1 firstValue, E2 secondValue)
+    public static <E1, E2> BiOptional<E1, E2> bothOfNullable(E1 firstValue, E2 secondValue)
     {
         return BiOptional.ofNullable(firstValue, secondValue);
     }

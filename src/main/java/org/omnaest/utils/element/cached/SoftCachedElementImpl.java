@@ -34,6 +34,7 @@
 package org.omnaest.utils.element.cached;
 
 import java.lang.ref.SoftReference;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -69,6 +70,13 @@ public class SoftCachedElementImpl<E> implements CachedElement<E>
             this.element = new SoftReference<E>(retval);
         }
         return retval;
+    }
+
+    @Override
+    public Optional<E> getIfCached()
+    {
+        E retval = this.element.get();
+        return Optional.ofNullable(retval);
     }
 
     @Override

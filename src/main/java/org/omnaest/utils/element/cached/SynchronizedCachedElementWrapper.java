@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.utils.element.cached;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -32,6 +33,12 @@ public class SynchronizedCachedElementWrapper<E> implements CachedElement<E>
     public synchronized E get()
     {
         return this.cachedElement.get();
+    }
+
+    @Override
+    public synchronized Optional<E> getIfCached()
+    {
+        return this.cachedElement.getIfCached();
     }
 
     @Override

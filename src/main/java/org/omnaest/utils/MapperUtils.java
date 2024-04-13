@@ -15,8 +15,10 @@
  ******************************************************************************/
 package org.omnaest.utils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -212,10 +214,92 @@ public class MapperUtils
         return element -> element != null;
     }
 
-    @SuppressWarnings("unchecked")
     public static <E, E2 extends E> Function<E, E2> castToType(Class<E2> type)
     {
-        return element -> (E2) element;
+        return element -> type.cast(element);
+    }
+
+    /**
+     * Similar to {@link #castToType(Class)} but catches any {@link ClassCastException} and returns null in that case.
+     * 
+     * @param <E>
+     * @param <E2>
+     * @param type
+     * @return
+     */
+    public static <E, E2 extends E> Function<E, E2> castToTypeSilently(Class<E2> type)
+    {
+        return element ->
+        {
+            try
+            {
+                return type.cast(element);
+            }
+            catch (ClassCastException e)
+            {
+                return null;
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E, E2> Function<E, List<E2>> castToListType(Class<E2> elementType)
+    {
+        return element -> (List<E2>) element;
+    }
+
+    /**
+     * Similar to {@link #castToListType(Class)} but catches any {@link ClassCastException} and returns null in that case.
+     * 
+     * @param <E>
+     * @param <E2>
+     * @param elementType
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <E, E2> Function<E, List<E2>> castToListTypeSilently(Class<E2> elementType)
+    {
+        return element ->
+        {
+            try
+            {
+                return (List<E2>) element;
+            }
+            catch (ClassCastException e)
+            {
+                return null;
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E, E2> Function<E, Set<E2>> castToSetType(Class<E2> elementType)
+    {
+        return element -> (Set<E2>) element;
+    }
+
+    /**
+     * Similar to {@link #castToSetType(Class)} but catches any {@link ClassCastException} and returns null in that case.
+     * 
+     * @param <E>
+     * @param <E2>
+     * @param elementType
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static <E, E2> Function<E, Set<E2>> castToSetTypeSilently(Class<E2> elementType)
+    {
+        return element ->
+        {
+            try
+            {
+                return (Set<E2>) element;
+            }
+            catch (ClassCastException e)
+            {
+                return null;
+            }
+        };
     }
 
     /**

@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.omnaest.utils;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -40,5 +41,25 @@ public class FunctionUtils
         {
             throw exceptionSupplier.get();
         };
+    }
+
+    /**
+     * Applies the two given elements to the given {@link BiFunction} mapper. If the mapper is null, the method returns null.
+     * 
+     * @param <E1>
+     * @param <E2>
+     * @param <R>
+     * @param element1
+     * @param element2
+     * @param mapper
+     * @return
+     */
+    public static <E1, E2, R> R applyWith(E1 element1, E2 element2, BiFunction<E1, E2, R> mapper)
+    {
+        if (mapper != null)
+        {
+            return mapper.apply(element1, element2);
+        }
+        return null;
     }
 }

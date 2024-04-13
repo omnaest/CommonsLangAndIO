@@ -36,6 +36,7 @@ package org.omnaest.utils.element.cached.internal;
 import java.io.File;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -100,6 +101,13 @@ public class FileCachedElementImpl<E> implements CachedElement<E>
         E retval = this.fromFileSupplier.get();
         retval = this.getFromSupplierIfNull(retval);
         return retval;
+    }
+
+    @Override
+    public Optional<E> getIfCached()
+    {
+        E retval = this.fromFileSupplier.get();
+        return Optional.ofNullable(retval);
     }
 
     private E getFromSupplierIfNull(E retval)

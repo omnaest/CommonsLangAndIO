@@ -33,6 +33,7 @@
 */
 package org.omnaest.utils.element.cached;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -59,6 +60,13 @@ public class ThreadLocalCachedElementImpl<E> implements CachedElement<E>
         E retval = this.element.get();
         retval = this.getFromSupplierIfNull(retval);
         return retval;
+    }
+
+    @Override
+    public Optional<E> getIfCached()
+    {
+        E retval = this.element.get();
+        return Optional.ofNullable(retval);
     }
 
     private E getFromSupplierIfNull(E retval)

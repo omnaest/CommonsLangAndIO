@@ -50,6 +50,13 @@ public class DurationCachedElement<E> implements CachedElement<E>
         return this.cachedElement.get();
     }
 
+    @Override
+    public Optional<E> getIfCached()
+    {
+        this.resetIfDurationExceeded();
+        return this.cachedElement.getIfCached();
+    }
+
     private void resetIfDurationExceeded()
     {
         DurationMeasurement durationMeasurement = this.measurement.updateAndGet(previous -> Optional.ofNullable(previous)

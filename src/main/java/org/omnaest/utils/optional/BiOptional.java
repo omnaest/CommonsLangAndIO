@@ -1,6 +1,7 @@
 package org.omnaest.utils.optional;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 /**
@@ -32,6 +33,15 @@ public class BiOptional<E1, E2>
         }
     }
 
+    public BiOptional<E1, E2> ifBothPresent(BiConsumer<E1, E2> consumer)
+    {
+        if (consumer != null && this.firstValue.isPresent() && this.secondValue.isPresent())
+        {
+            consumer.accept(this.firstValue.get(), this.secondValue.get());
+        }
+        return this;
+    }
+
     public static <E1, E2> BiOptional<E1, E2> ofNullable(E1 firstValue, E2 secondValue)
     {
         return new BiOptional<>(Optional.ofNullable(firstValue), Optional.ofNullable(secondValue));
@@ -46,4 +56,5 @@ public class BiOptional<E1, E2>
     {
         return new BiOptional<>(firstValue, secondValue);
     }
+
 }

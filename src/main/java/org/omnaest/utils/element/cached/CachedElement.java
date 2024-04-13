@@ -39,6 +39,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -88,6 +89,13 @@ public interface CachedElement<E> extends Provider<E>
      * @return
      */
     public CachedElement<E> reset();
+
+    /**
+     * Returns an element from the cache, if present, but never invokes the underlying {@link Supplier}.
+     * 
+     * @return
+     */
+    public Optional<E> getIfCached();
 
     /**
      * Updates the current value

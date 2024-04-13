@@ -33,6 +33,7 @@
 */
 package org.omnaest.utils.element.cached;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -96,6 +97,12 @@ public class AtomicCachedElementImpl<E> implements CachedElement<E>
     {
         this.element.set(null);
         return this;
+    }
+
+    @Override
+    public Optional<E> getIfCached()
+    {
+        return Optional.ofNullable(this.element.get());
     }
 
     @Override

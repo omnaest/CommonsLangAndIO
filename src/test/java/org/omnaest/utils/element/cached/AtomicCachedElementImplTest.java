@@ -34,6 +34,7 @@
 package org.omnaest.utils.element.cached;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -65,6 +66,16 @@ public class AtomicCachedElementImplTest
 
         assertEquals("2", softCachedElement.reset()
                                            .get());
+    }
+
+    @Test
+    public void testGetIfCached()
+    {
+        assertFalse(this.cachedElement.getIfCached()
+                                      .isPresent());
+        assertEquals("1", this.cachedElement.get());
+        assertEquals("1", this.cachedElement.getIfCached()
+                                            .orElse(null));
     }
 
 }
