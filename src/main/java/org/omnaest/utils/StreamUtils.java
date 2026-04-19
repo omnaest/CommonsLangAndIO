@@ -2292,4 +2292,18 @@ public class StreamUtils
         }
 
     }
+
+    public static <E, R> Stream<R> mapWithPrevious(Stream<E> stream, BiFunction<R, E, R> mapper)
+    {
+        AtomicReference<R> previous = new AtomicReference<>();
+        return Optional.ofNullable(stream)
+                       .orElse(Stream.empty())
+                       .sequential()
+                       .map(value -> previous.updateAndGet(previousValue -> mapper.apply(previousValue, value)));
+    }
+
+    public static <E, R> Optional<R> reduceWithPrevious(Stream<E> stream, BiFunction<R, E, R> mapper)
+    {
+        return mapWithPrevious(stream, mapper).reduce((r1, r2) -> r2);
+    }
 }

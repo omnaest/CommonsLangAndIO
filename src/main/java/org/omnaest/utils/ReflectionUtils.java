@@ -37,6 +37,7 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -371,6 +372,8 @@ public class ReflectionUtils
         public Stream<Field<T>> getFields();
 
         public Optional<Method<T>> getMethod(String methodName);
+
+        public Optional<Method<T>> getMethod(String methodName, List<? extends Class<?>> parameterTypes);
     }
 
     public static <T> TypeReflection<T> of(Class<T> type)
@@ -470,6 +473,14 @@ public class ReflectionUtils
             {
                 return this.getMethods()
                            .filter(method -> StringUtils.equals(method.getName(), methodName))
+                           .findFirst();
+            }
+
+            @Override
+            public Optional<Method<T>> getMethod(String methodName, List<? extends Class<?>> parameterTypes)
+            {
+                return this.getMethods()
+                           .filter(method -> StringUtils.equals(method.getName(), methodName) && Objects.equals(method.getParameterTypes(), parameterTypes))
                            .findFirst();
             }
 

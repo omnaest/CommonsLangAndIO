@@ -43,246 +43,352 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.omnaest.utils.ReflectionUtils.Method;
 import org.omnaest.utils.ReflectionUtils.TypeReflection;
 
+import lombok.RequiredArgsConstructor;
+
 public class ProxyUtils
 {
-	public static interface ProxyBuilder
-	{
-		public <T> ProxyBuilderLoaded<T> of(Class<T> type);
-	}
+    public static interface ProxyBuilder
+    {
+        public <T> ProxyBuilderLoaded<T> of(Class<T> type);
+    }
 
-	public static interface Argument
-	{
-		public <E> E get();
+    public static interface Argument
+    {
+        public <E> E get();
 
-		public <E> E getAs(Function<Object, E> mapper);
+        public <E> E getAs(Function<Object, E> mapper);
 
-	}
+        <E> Class<E> getType();
 
-	public static interface Arguments
-	{
-		public Argument at(int index);
+    }
 
-		public Argument first();
-	}
+    public static interface Arguments
+    {
+        public Argument at(int index);
 
-	private static class ArgumentsImpl implements Arguments
-	{
-		private Object[] args;
+        public Argument first();
 
-		public ArgumentsImpl(Object[] args)
-		{
-			super();
-			this.args = args;
-		}
+        public Stream<Argument> stream();
 
-		@Override
-		public Argument first()
-		{
-			return this.at(0);
-		}
+        public int size();
+    }
 
-		@Override
-		public Argument at(int index)
-		{
-			return new Argument()
-			{
-				@Override
-				public <E> E getAs(Function<Object, E> mapper)
-				{
-					return mapper.apply(ArgumentsImpl.this.args[index]);
-				}
+    @RequiredArgsConstructor
+    private static class ArgumentsImpl implements Arguments
+    {
+        private final Object[]   arguments;
+        private final Class<?>[] types;
 
-				@SuppressWarnings("unchecked")
-				@Override
-				public <E> E get()
-				{
-					return (E) (index >= 0 && ArgumentsImpl.this.args != null && index < ArgumentsImpl.this.args.length ? ArgumentsImpl.this.args[index]
-							: null);
-				}
-			};
-		}
+        @Override
+        public Argument first()
+        {
+            return this.at(0);
+        }
 
-		@Override
-		public String toString()
-		{
-			return "ArgumentsImpl [args=" + Arrays.toString(this.args) + "]";
-		}
+        @Override
+        public Argument at(int index)
+        {
+            return new Argument()
+            {
+                @Override
+                public <E> E getAs(Function<Object, E> mapper)
+                {
+                    return mapper.apply(ArgumentsImpl.this.arguments[index]);
+                }
 
-	}
+                @SuppressWarnings("unchecked")
+                @Override
+                public <E> E get()
+                {
+                    return (E) (index >= 0 && ArgumentsImpl.this.arguments != null && index < ArgumentsImpl.this.arguments.length
+                            ? ArgumentsImpl.this.arguments[index]
+                            : null);
+                }
 
-	public static interface MethodHandler
-	{
-		public Object handle(Arguments arguments) throws Exception;
-	}
+                @Override
+                @SuppressWarnings("unchecked")
+                public <E> Class<E> getType()
+                {
+                    return (Class<E>) (index >= 0 && ArgumentsImpl.this.types != null && index < ArgumentsImpl.this.types.length
+                            ? ArgumentsImpl.this.types[index]
+                            : null);
+                }
+            };
+        }
 
-	public static interface MethodAndHandler
-	{
-		public Method<?> getMethod();
+        @Override
+        public int size()
+        {
+            return this.arguments != null ? this.arguments.length : 0;
+        }
 
-		public MethodHandler getMethodHandler();
+        @Override
+        public Stream<Argument> stream()
+        {
+            return IntStream.range(0, this.size())
+                            .mapToObj(this::at);
+        }
 
-		public default boolean hasHandler()
-		{
-			return this.getMethodHandler() != null;
-		}
-	}
+        @Override
+        public String toString()
+        {
+            return "ArgumentsImpl [args=" + Arrays.toString(this.arguments) + "]";
+        }
 
-	public static interface MethodHandlerBuilder
-	{
-		public MethodHandlerBuilder setHandler(MethodHandler methodHandler);
+    }
 
-		public MethodHandlerBuilder setHandlerIf(Predicate<Method<?>> condition, MethodHandler methodHandler);
+    /**
+     * Similar to {@link MethodHandler} but provides information about the {@link InvocationMethod} in addition.
+     * 
+     * @author omnaest
+     */
+    public static interface MethodInvocationHandler
+    {
+        public Object handle(InvocationMethod method, Arguments arguments) throws Exception;
+    }
 
-		public MethodAndHandler build();
-	}
+    public static interface MethodHandler
+    {
+        public Object handle(Arguments arguments) throws Exception;
 
-	public static interface ProxyBuilderLoaded<T> extends ProxyBuilder
-	{
-		public ProxyBuilderLoaded<T> withHandler(Predicate<Method<?>> methodMatcher, MethodHandler methodHandler);
+        public default MethodInvocationHandler toMethodInvocationHandler()
+        {
+            return new MethodHandlerToMethodInvocationHandlerAdapter(this);
+        }
+    }
 
-		public ProxyBuilderLoaded<T> withHandler(Stream<MethodAndHandler> methodAndHandlers);
+    private static class MethodHandlerToMethodInvocationHandlerAdapter implements MethodInvocationHandler
+    {
+        private final MethodHandler methodHandler;
 
-		public ProxyBuilderLoaded<T> withHandlers(Function<MethodHandlerBuilder, MethodAndHandler> builder);
+        private MethodHandlerToMethodInvocationHandlerAdapter(MethodHandler methodHandler)
+        {
+            this.methodHandler = methodHandler;
+        }
 
-		public T build();
-	}
+        @Override
+        public Object handle(InvocationMethod method, Arguments arguments) throws Exception
+        {
+            return this.methodHandler.handle(arguments);
+        }
+    }
 
-	public static ProxyBuilder builder()
-	{
-		return new ProxyBuilder()
-		{
-			@Override
-			public <T> ProxyBuilderLoaded<T> of(Class<T> type)
-			{
-				ClassLoader classLoader = type.getClassLoader();
-				return new ProxyBuilderLoaded<T>()
-				{
-					private List<Class<?>>									interfaceTypes	= new ArrayList<>();
-					private List<Method<?>>									methods			= new ArrayList<>();
-					private Map<java.lang.reflect.Method, MethodHandler>	handlers		= new LinkedHashMap<>();
+    public static interface InvocationMethod
+    {
+        public String getName();
 
-					@SuppressWarnings("unchecked")
-					@Override
-					public <T2> ProxyBuilderLoaded<T2> of(Class<T2> type)
-					{
-						TypeReflection<T2> typeReflection = ReflectionUtils.of(type);
+        public Class<?> getReturnType();
 
-						this.methods.addAll(typeReflection	.getMethods()
-															.collect(Collectors.toList()));
+        public List<Class<?>> getArgumentTypes();
 
-						this.interfaceTypes.add(type);
-						return (ProxyBuilderLoaded<T2>) this;
-					}
+    }
 
-					@Override
-					public ProxyBuilderLoaded<T> withHandler(Predicate<Method<?>> methodMatcher, MethodHandler methodHandler)
-					{
-						this.handlers.putAll(this.methods	.stream()
-															.filter(methodMatcher)
-															.map(method -> method.getRawMethod())
-															.collect(Collectors.toMap(method -> method, method -> methodHandler)));
-						return this;
-					}
+    public static interface MethodAndHandler
+    {
+        public Method<?> getMethod();
 
-					@Override
-					public ProxyBuilderLoaded<T> withHandler(Stream<MethodAndHandler> methodAndHandlers)
-					{
-						this.handlers.putAll(methodAndHandlers	.filter(mah -> mah != null)
-																.collect(Collectors.toMap(	mah -> mah	.getMethod()
-																										.getRawMethod(),
-																							mah -> mah.getMethodHandler())));
-						return this;
-					}
+        public MethodHandler getMethodHandler();
 
-					@Override
-					public ProxyBuilderLoaded<T> withHandlers(Function<MethodHandlerBuilder, MethodAndHandler> builder)
-					{
-						this.methods.stream()
-									.map(method -> (MethodHandlerBuilder) new MethodHandlerBuilder()
-									{
-										private MethodHandler methodHandler;
+        public default boolean hasHandler()
+        {
+            return this.getMethodHandler() != null;
+        }
+    }
 
-										@Override
-										public MethodHandlerBuilder setHandler(MethodHandler methodHandler)
-										{
-											this.methodHandler = methodHandler;
-											return this;
-										}
+    public static interface MethodHandlerBuilder
+    {
+        public MethodHandlerBuilder setHandler(MethodHandler methodHandler);
 
-										@Override
-										public MethodHandlerBuilder setHandlerIf(Predicate<Method<?>> condition, MethodHandler methodHandler)
-										{
-											if (condition.test(method))
-											{
-												this.setHandler(methodHandler);
-											}
-											return this;
-										}
+        public MethodHandlerBuilder setHandlerIf(Predicate<Method<?>> condition, MethodHandler methodHandler);
 
-										@Override
-										public MethodAndHandler build()
-										{
-											return new MethodAndHandler()
-											{
-												@Override
-												public MethodHandler getMethodHandler()
-												{
-													return methodHandler;
-												}
+        public MethodAndHandler build();
+    }
 
-												@Override
-												public Method<?> getMethod()
-												{
-													return method;
-												}
+    public static interface ProxyBuilderLoaded<T> extends ProxyBuilder
+    {
+        public ProxyBuilderLoaded<T> withHandler(Predicate<Method<?>> methodMatcher, MethodHandler methodHandler);
 
-												@Override
-												public boolean hasHandler()
-												{
-													return this.getMethodHandler() != null;
-												}
+        public ProxyBuilderLoaded<T> withHandler(Predicate<Method<?>> methodMatcher, MethodInvocationHandler methodInvocationHandler);
 
-											};
-										}
-									})
-									.map(builder)
-									.filter(handler -> handler != null)
-									.filter(MethodAndHandler::hasHandler)
-									.forEach(methodAndHandler ->
-									{
-										this.handlers.put(	methodAndHandler.getMethod()
-																			.getRawMethod(),
-															methodAndHandler.getMethodHandler());
-									});
-						return this;
-					}
+        public ProxyBuilderLoaded<T> withHandler(Stream<MethodAndHandler> methodAndHandlers);
 
-					@SuppressWarnings("unchecked")
-					@Override
-					public T build()
-					{
-						InvocationHandler invocationHandler = (proxy, method, args) ->
-						{
-							Object retval = null;
+        public ProxyBuilderLoaded<T> withHandlers(Function<MethodHandlerBuilder, MethodAndHandler> builder);
 
-							MethodHandler methodHandler = this.handlers.get(method);
-							if (methodHandler != null)
-							{
-								retval = methodHandler.handle(new ArgumentsImpl(args));
-							}
+        public T build();
+    }
 
-							return retval;
-						};
-						return (T) Proxy.newProxyInstance(classLoader, this.interfaceTypes.toArray(new Class[0]), invocationHandler);
-					}
-				}.of(type);
-			}
-		};
-	}
+    public static ProxyBuilder builder()
+    {
+        return new ProxyBuilder()
+        {
+            @Override
+            public <T> ProxyBuilderLoaded<T> of(Class<T> type)
+            {
+                ClassLoader classLoader = type.getClassLoader();
+                return new ProxyBuilderLoaded<T>()
+                {
+                    private List<Class<?>>                                         interfaceTypes = new ArrayList<>();
+                    private List<Method<?>>                                        methods        = new ArrayList<>();
+                    private Map<java.lang.reflect.Method, MethodInvocationHandler> handlers       = new LinkedHashMap<>();
+
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    public <T2> ProxyBuilderLoaded<T2> of(Class<T2> type)
+                    {
+                        TypeReflection<T2> typeReflection = ReflectionUtils.of(type);
+
+                        this.methods.addAll(typeReflection.getMethods()
+                                                          .collect(Collectors.toList()));
+
+                        this.interfaceTypes.add(type);
+                        return (ProxyBuilderLoaded<T2>) this;
+                    }
+
+                    @Override
+                    public ProxyBuilderLoaded<T> withHandler(Predicate<Method<?>> methodMatcher, MethodInvocationHandler methodInvocationHandler)
+                    {
+                        this.handlers.putAll(this.methods.stream()
+                                                         .filter(methodMatcher)
+                                                         .map(method -> method.getRawMethod())
+                                                         .collect(Collectors.toMap(method -> method, method -> methodInvocationHandler)));
+                        return this;
+                    }
+
+                    @Override
+                    public ProxyBuilderLoaded<T> withHandler(Predicate<Method<?>> methodMatcher, MethodHandler methodHandler)
+                    {
+                        return this.withHandler(methodMatcher, methodHandler.toMethodInvocationHandler());
+                    }
+
+                    @Override
+                    public ProxyBuilderLoaded<T> withHandler(Stream<MethodAndHandler> methodAndHandlers)
+                    {
+                        this.handlers.putAll(methodAndHandlers.filter(mah -> mah != null)
+                                                              .collect(Collectors.toMap(mah -> mah.getMethod()
+                                                                                                  .getRawMethod(),
+                                                                                        mah -> mah.getMethodHandler()
+                                                                                                  .toMethodInvocationHandler())));
+                        return this;
+                    }
+
+                    @Override
+                    public ProxyBuilderLoaded<T> withHandlers(Function<MethodHandlerBuilder, MethodAndHandler> builder)
+                    {
+                        this.methods.stream()
+                                    .map(method -> (MethodHandlerBuilder) new MethodHandlerBuilder()
+                                    {
+                                        private MethodHandler methodHandler;
+
+                                        @Override
+                                        public MethodHandlerBuilder setHandler(MethodHandler methodHandler)
+                                        {
+                                            this.methodHandler = methodHandler;
+                                            return this;
+                                        }
+
+                                        @Override
+                                        public MethodHandlerBuilder setHandlerIf(Predicate<Method<?>> condition, MethodHandler methodHandler)
+                                        {
+                                            if (condition.test(method))
+                                            {
+                                                this.setHandler(methodHandler);
+                                            }
+                                            return this;
+                                        }
+
+                                        @Override
+                                        public MethodAndHandler build()
+                                        {
+                                            return new MethodAndHandler()
+                                            {
+                                                @Override
+                                                public MethodHandler getMethodHandler()
+                                                {
+                                                    return methodHandler;
+                                                }
+
+                                                @Override
+                                                public Method<?> getMethod()
+                                                {
+                                                    return method;
+                                                }
+
+                                                @Override
+                                                public boolean hasHandler()
+                                                {
+                                                    return this.getMethodHandler() != null;
+                                                }
+
+                                            };
+                                        }
+                                    })
+                                    .map(builder)
+                                    .filter(handler -> handler != null)
+                                    .filter(MethodAndHandler::hasHandler)
+                                    .forEach(methodAndHandler ->
+                                    {
+                                        this.handlers.put(methodAndHandler.getMethod()
+                                                                          .getRawMethod(),
+                                                          methodAndHandler.getMethodHandler()
+                                                                          .toMethodInvocationHandler());
+                                    });
+                        return this;
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    public T build()
+                    {
+                        InvocationHandler invocationHandler = (proxy, method, args) ->
+                        {
+                            Object retval = null;
+
+                            MethodInvocationHandler methodHandler = this.handlers.get(method);
+                            if (methodHandler != null)
+                            {
+                                retval = methodHandler.handle(this.createInvocationMethod(method), new ArgumentsImpl(args, method.getParameterTypes()));
+                            }
+
+                            return retval;
+                        };
+                        return (T) Proxy.newProxyInstance(classLoader, this.interfaceTypes.toArray(new Class[0]), invocationHandler);
+                    }
+
+                    private InvocationMethod createInvocationMethod(java.lang.reflect.Method method)
+                    {
+                        return new InvocationMethod()
+                        {
+
+                            @Override
+                            public String getName()
+                            {
+                                return method.getName();
+                            }
+
+                            @Override
+                            public Class<?> getReturnType()
+                            {
+                                return method.getReturnType();
+                            }
+
+                            @Override
+                            public List<Class<?>> getArgumentTypes()
+                            {
+                                return Arrays.asList(method.getParameterTypes());
+                            }
+
+                        };
+                    }
+
+                }.of(type);
+            }
+        };
+    }
 
 }

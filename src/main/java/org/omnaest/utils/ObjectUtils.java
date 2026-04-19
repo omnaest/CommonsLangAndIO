@@ -33,6 +33,7 @@
 */
 package org.omnaest.utils;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +41,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.omnaest.utils.ExceptionUtils.Operation;
+import org.omnaest.utils.exception.handler.RuntimeExceptionHandler;
 
 /**
  * Helper for common {@link Object} instances
@@ -269,5 +272,18 @@ public class ObjectUtils
 
             }
         };
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <P> P getPrimitiveDefault(Class<P> primitiveType)
+    {
+        if (ClassUtils.isPrimitiveOrWrapper(primitiveType))
+        {
+            return (P) Array.get(Array.newInstance(primitiveType, 1), 0);
+        }
+        else
+        {
+            return null;
+        }
     }
 }

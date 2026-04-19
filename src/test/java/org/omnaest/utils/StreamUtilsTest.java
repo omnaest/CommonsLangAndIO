@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -669,6 +670,32 @@ public class StreamUtilsTest
                                                                .combine((a, b) -> a + b)
                                                                .stream()
                                                                .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testMapWithPrevious()
+    {
+        BiFunction<String, Integer, String> mapper = (previous, value) -> Optional.ofNullable(previous)
+                                                                                  .map(previousValue -> previousValue + "-")
+                                                                                  .orElse("")
+                + value;
+        assertEquals(List.of("0", "0-1", "0-1-2"), StreamUtils.mapWithPrevious(IntStream.range(0, 3)
+                                                                                        .boxed(),
+                                                                               mapper)
+                                                              .toList());
+    }
+
+    @Test
+    public void testReduceWithPrevious()
+    {
+        BiFunction<String, Integer, String> mapper = (previous, value) -> Optional.ofNullable(previous)
+                                                                                  .map(previousValue -> previousValue + "-")
+                                                                                  .orElse("")
+                + value;
+        assertEquals("0-1-2", StreamUtils.reduceWithPrevious(IntStream.range(0, 3)
+                                                                      .boxed(),
+                                                             mapper)
+                                         .get());
     }
 
 }
