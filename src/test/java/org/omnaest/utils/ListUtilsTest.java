@@ -43,13 +43,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.omnaest.utils.duration.DurationCapture;
+import org.omnaest.utils.element.bi.BiElement;
 
 public class ListUtilsTest
 {
@@ -431,5 +434,41 @@ public class ListUtilsTest
     public void testToArrayList() throws Exception
     {
         assertEquals(Arrays.asList("a"), ListUtils.toArrayList("a"));
+    }
+
+    @Test
+    public void testModifiedPositions()
+    {
+        assertEquals(List.of("", "1", ""), ListUtils.modifiedPositions(List.of("", "", ""), modifier -> modifier.atPosition(1, previous -> previous + "1")
+                                                                                                                .atPosition(3, previous -> previous + "3")));
+    }
+
+    @Test
+    public void testAllCombinationsPairwise()
+    {
+        assertEquals(Set.of(BiElement.of(0, 1), BiElement.of(0, 2), BiElement.of(1, 2), BiElement.of(1, 0), BiElement.of(2, 0), BiElement.of(2, 1),
+                            BiElement.of(0, 0), BiElement.of(1, 1), BiElement.of(2, 2)),
+                     ListUtils.allCombinationsPairwise(List.of(0, 1, 2)));
+    }
+
+    @Test
+    public void testAllCombinationsPairwiseExcludingIdentities()
+    {
+        assertEquals(Set.of(BiElement.of(0, 1), BiElement.of(0, 2), BiElement.of(1, 2), BiElement.of(1, 0), BiElement.of(2, 0), BiElement.of(2, 1)),
+                     ListUtils.allCombinationsPairwiseExcludingIdentities(List.of(0, 1, 2)));
+    }
+
+    @Test
+    public void testProcessWithContextAndGetContext()
+    {
+        assertEquals(6, ListUtils.processWithContextAndGetContext(List.of(1, 2, 3), new AtomicInteger(), (value, counter) -> counter.addAndGet(value))
+                                 .get());
+    }
+
+    @Test
+    public void testProcessWithContextAndGetList()
+    {
+        assertEquals(List.of(1, 3, 6),
+                     ListUtils.processWithContextAndGetList(List.of(1, 2, 3), new AtomicInteger(), (value, counter) -> counter.addAndGet(value)));
     }
 }

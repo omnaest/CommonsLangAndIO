@@ -64,7 +64,7 @@ public class DefaultUnaryBiElement<E> implements UnaryBiElement<E>
     @Override
     public String toString()
     {
-        return "DefaultUnaryBiElement [element1=" + this.element1 + ", element2=" + this.element2 + "]";
+        return "[" + this.element1 + ", " + this.element2 + "]";
     }
 
     @Override
@@ -88,31 +88,31 @@ public class DefaultUnaryBiElement<E> implements UnaryBiElement<E>
         {
             return false;
         }
-        if (this.getClass() != obj.getClass())
+        if (!(obj instanceof BiElement))
         {
             return false;
         }
         @SuppressWarnings("rawtypes")
-        DefaultUnaryBiElement other = (DefaultUnaryBiElement) obj;
+        BiElement other = (BiElement) obj;
         if (this.element1 == null)
         {
-            if (other.element1 != null)
+            if (other.getFirst() != null)
             {
                 return false;
             }
         }
-        else if (!this.element1.equals(other.element1))
+        else if (!this.element1.equals(other.getFirst()))
         {
             return false;
         }
         if (this.element2 == null)
         {
-            if (other.element2 != null)
+            if (other.getSecond() != null)
             {
                 return false;
             }
         }
-        else if (!this.element2.equals(other.element2))
+        else if (!this.element2.equals(other.getSecond()))
         {
             return false;
         }

@@ -76,4 +76,13 @@ public class ArrayUtilsTest
         assertArrayEquals(new byte[] { 10, 20, 30 }, ArrayUtils.subArrayStartingFromMatching(value -> value != 0, new byte[] { 0, 0, 10, 20, 30 }));
     }
 
+    @Test
+    public void testMergeByteArrayArray()
+    {
+        assertArrayEquals(new byte[] { 10, 20, 30 }, ArrayUtils.merge(new byte[] { 10 }, new byte[] { 20, 30 }));
+        assertArrayEquals(new byte[] {}, ArrayUtils.merge(new byte[] {}, new byte[] {}));
+        assertArrayEquals(new byte[] {}, ArrayUtils.merge((byte[]) null));
+        assertArrayEquals(new byte[] {}, ArrayUtils.merge());
+    }
+
 }

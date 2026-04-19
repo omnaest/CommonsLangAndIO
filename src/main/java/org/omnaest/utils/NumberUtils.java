@@ -33,8 +33,12 @@
 */
 package org.omnaest.utils;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Currency;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class NumberUtils
@@ -71,6 +75,14 @@ public class NumberUtils
         public String format(double value);
 
         /**
+         * Formats the given {@link BigDecimal} value
+         * 
+         * @param value
+         * @return
+         */
+        public String format(BigDecimal value);
+
+        /**
          * Formats the given {@link Float} value
          * 
          * @param value
@@ -96,12 +108,20 @@ public class NumberUtils
 
         public NumberFormatter withThousandSeparator();
 
+        public NumberFormatter withCurrency(Currency currency);
+
+        public NumberFormatter withAlwaysIncludedSignPrefix();
+
         /**
          * Defines the render syntax to be e.g. like "0.1%"
          * 
          * @return
          */
         public NumberFormatter asPercentage();
+
+        public NumberFormatter asCurrency();
+
+        public NumberFormatter asInteger();
 
         /**
          * Sets {@link #withMinimumFractionDigits(int)} and {@link #withMaximumFractionDigits(int)} to the given value.
@@ -129,17 +149,16 @@ public class NumberUtils
     {
         return new NumberFormatter()
         {
-            private Locale                         locale                = Locale.US;
-            private Integer                        minimumFractionDigits = null;
-            private Integer                        maximumFractionDigits = null;
-            private Integer                        minimumIntegerDigits  = null;
-            private Integer                        maximumIntegerDigits  = null;
-            private boolean                        useThousandSeparator  = false;
-            private Function<Locale, NumberFormat> formatterFactory      = locale ->
-                                                                         {
-                                                                             return locale != null ? NumberFormat.getNumberInstance(locale)
-                                                                                     : NumberFormat.getNumberInstance();
-                                                                         };
+            private Locale                         locale                   = Locale.US;
+            private Integer                        minimumFractionDigits    = null;
+            private Integer                        maximumFractionDigits    = null;
+            private Integer                        minimumIntegerDigits     = null;
+            private Integer                        maximumIntegerDigits     = null;
+            private boolean                        useThousandSeparator     = false;
+            private Optional<Currency>             currency                 = Optional.empty();
+            private boolean                        alwaysIncludedSignPrefix = false;
+            private Function<Locale, NumberFormat> formatterFactory         = locale -> locale != null ? NumberFormat.getNumberInstance(locale)
+                    : NumberFormat.getNumberInstance();
 
             @Override
             public NumberFormatter withThousandSeparator()
@@ -160,9 +179,45 @@ public class NumberUtils
             }
 
             @Override
+            public NumberFormatter asCurrency()
+            {
+                this.formatterFactory = locale -> locale != null ? NumberFormat.getCurrencyInstance(locale) : NumberFormat.getCurrencyInstance();
+                if (this.maximumFractionDigits == null)
+                {
+                    this.maximumFractionDigits = 2;
+                }
+                return this;
+            }
+
+            @Override
+            public NumberFormatter asInteger()
+            {
+                this.formatterFactory = locale -> locale != null ? NumberFormat.getIntegerInstance(locale) : NumberFormat.getIntegerInstance();
+                if (this.maximumFractionDigits == null)
+                {
+                    this.maximumFractionDigits = 0;
+                }
+                return this;
+            }
+
+            @Override
             public NumberFormatter forLocale(Locale locale)
             {
                 this.locale = locale;
+                return this;
+            }
+
+            @Override
+            public NumberFormatter withCurrency(Currency currency)
+            {
+                this.currency = Optional.ofNullable(currency);
+                return this;
+            }
+
+            @Override
+            public NumberFormatter withAlwaysIncludedSignPrefix()
+            {
+                this.alwaysIncludedSignPrefix = true;
                 return this;
             }
 
@@ -206,6 +261,13 @@ public class NumberUtils
             }
 
             @Override
+            public String format(BigDecimal value)
+            {
+                return this.createNumberFormatInstance()
+                           .format(value);
+            }
+
+            @Override
             public String format(long value)
             {
                 return this.createNumberFormatInstance()
@@ -221,6 +283,15 @@ public class NumberUtils
                 retval.setMinimumIntegerDigits(ObjectUtils.defaultIfNull(this.minimumIntegerDigits, 1));
                 retval.setMaximumIntegerDigits(ObjectUtils.defaultIfNull(this.maximumIntegerDigits, Integer.MAX_VALUE));
                 retval.setGroupingUsed(this.useThousandSeparator);
+                this.currency.ifPresent(currency -> retval.setCurrency(currency));
+
+                if (this.alwaysIncludedSignPrefix && retval instanceof DecimalFormat)
+                {
+
+                    DecimalFormat decimalFormat = (DecimalFormat) retval;
+                    decimalFormat.setPositivePrefix(StringUtils.ensurePrefix(decimalFormat.getPositivePrefix(), "+"));
+                }
+
                 return retval;
             }
 

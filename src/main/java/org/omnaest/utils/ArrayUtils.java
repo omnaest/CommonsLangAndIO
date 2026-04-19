@@ -35,7 +35,11 @@ package org.omnaest.utils;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class ArrayUtils
 {
@@ -95,6 +99,27 @@ public class ArrayUtils
             }
             return null;
         }
+    }
+
+    @SafeVarargs
+    public static <E> E[] merge(IntFunction<E[]> constructorFunction, E[]... arrays)
+    {
+        return Optional.ofNullable(arrays)
+                       .map(Stream::of)
+                       .orElse(Stream.empty())
+                       .filter(Objects::nonNull)
+                       .flatMap(Stream::of)
+                       .toArray(constructorFunction);
+    }
+
+    public static byte[] merge(byte[]... byteArrays)
+    {
+        return org.apache.commons.lang3.ArrayUtils.toPrimitive(merge(Byte[]::new, Optional.ofNullable(byteArrays)
+                                                                                          .map(Stream::of)
+                                                                                          .orElse(Stream.empty())
+                                                                                          .filter(Objects::nonNull)
+                                                                                          .map(org.apache.commons.lang3.ArrayUtils::toObject)
+                                                                                          .toArray(Byte[][]::new)));
     }
 
 }

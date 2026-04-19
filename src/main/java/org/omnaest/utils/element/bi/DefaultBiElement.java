@@ -71,31 +71,31 @@ public class DefaultBiElement<E1, E2> implements BiElement<E1, E2>
         {
             return false;
         }
-        if (this.getClass() != obj.getClass())
+        if (!(obj instanceof BiElement))
         {
             return false;
         }
         @SuppressWarnings("rawtypes")
-        DefaultBiElement other = (DefaultBiElement) obj;
+        BiElement other = (BiElement) obj;
         if (this.first == null)
         {
-            if (other.first != null)
+            if (other.getFirst() != null)
             {
                 return false;
             }
         }
-        else if (!this.first.equals(other.first))
+        else if (!this.first.equals(other.getFirst()))
         {
             return false;
         }
         if (this.second == null)
         {
-            if (other.second != null)
+            if (other.getSecond() != null)
             {
                 return false;
             }
         }
-        else if (!this.second.equals(other.second))
+        else if (!this.second.equals(other.getSecond()))
         {
             return false;
         }

@@ -18,6 +18,7 @@ package org.omnaest.utils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -653,5 +654,25 @@ public class PredicateUtils
                 return result;
             }
         };
+    }
+
+    /**
+     * Returns a filter {@link Predicate} that excludes any element of the given {@link Set} only until it is matched once. After the first match of an element
+     * it is going to be included.
+     * 
+     * @param shared
+     * @return
+     */
+    public static <E> Predicate<E> isNotContainedInOnce(Set<E> elements)
+    {
+        Set<E> effectiveSet = Collections.synchronizedSet(Optional.ofNullable(elements)
+                                                                  .map(HashSet::new)
+                                                                  .orElse(new HashSet<>()));
+        return element -> !effectiveSet.remove(element);
+    }
+
+    public static Predicate<String> contains(String text)
+    {
+        return value -> StringUtils.contains(value, text);
     }
 }

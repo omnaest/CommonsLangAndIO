@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -686,6 +688,26 @@ public class ListUtils
         return result;
     }
 
+    public static <E> Set<UnaryBiElement<E>> allCombinationsPairwise(List<E> list)
+    {
+        Set<UnaryBiElement<E>> result = new HashSet<>();
+
+        Optional.ofNullable(list)
+                .orElse(Collections.emptyList())
+                .forEach(elementFirst -> Optional.ofNullable(list)
+                                                 .orElse(Collections.emptyList())
+                                                 .forEach(elementSecond -> result.add(UnaryBiElement.of(elementFirst, elementSecond))));
+
+        return result;
+    }
+
+    public static <E> Set<UnaryBiElement<E>> allCombinationsPairwiseExcludingIdentities(List<E> list)
+    {
+        return allCombinationsPairwise(list).stream()
+                                            .filter(biElement -> !biElement.hasEqualValues())
+                                            .collect(Collectors.toSet());
+    }
+
     public static <E> Set<Set<E>> allCombinations(List<E> list)
     {
         Set<Set<E>> result = new HashSet<>();
@@ -1013,6 +1035,60 @@ public class ListUtils
     public static <E> CyclicArrayList<E> newCyclicFloatingList(int capacity)
     {
         return new CyclicArrayList<>(capacity, true);
+    }
+
+    public static interface ListModifier<E>
+    {
+        public ListModifier<E> atPosition(int index, UnaryOperator<E> positionModifier);
+    }
+
+    public static <E> List<E> modifiedPositions(List<E> list, Consumer<ListModifier<E>> modifier)
+    {
+        List<E> result = new ArrayList<>(Optional.ofNullable(list)
+                                                 .orElse(Collections.emptyList()));
+        if (modifier != null)
+        {
+            modifier.accept(new ListModifier<E>()
+            {
+                @Override
+                public ListModifier<E> atPosition(int index, UnaryOperator<E> positionModifier)
+                {
+                    if (positionModifier != null && index >= 0 && index < list.size())
+                    {
+                        E element = result.get(index);
+                        E newElement = positionModifier.apply(element);
+                        result.set(index, newElement);
+                    }
+                    return this;
+                }
+            });
+        }
+        return result;
+    }
+
+    public static <E, C> C processWithContextAndGetContext(Iterable<E> iterable, C context, BiConsumer<E, C> elementAndContextConsumer)
+    {
+        if (iterable != null && elementAndContextConsumer != null)
+        {
+            for (E element : iterable)
+            {
+                elementAndContextConsumer.accept(element, context);
+            }
+        }
+        return context;
+    }
+
+    public static <E, C, R> List<R> processWithContextAndGetList(Iterable<E> iterable, C context, BiFunction<E, C, R> elementWithContextMapper)
+    {
+        List<R> result = new ArrayList<>();
+        if (iterable != null && elementWithContextMapper != null)
+        {
+            for (E element : iterable)
+            {
+                result.add(elementWithContextMapper.apply(element, context));
+            }
+        }
+        return result;
     }
 
 }

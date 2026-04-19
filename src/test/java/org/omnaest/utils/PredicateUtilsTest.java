@@ -39,7 +39,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -164,6 +167,32 @@ public class PredicateUtilsTest
                                                     .stream()
                                                     .filter(PredicateUtils.equalsAnyOf("b", "c"))
                                                     .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testIsNotContainedInOnce()
+    {
+        assertEquals(List.of("2"), Stream.of("1", "2")
+                                         .filter(PredicateUtils.isNotContainedInOnce(Set.of("1")))
+                                         .toList());
+        assertEquals(List.of(), Stream.of("1", "2")
+                                      .filter(PredicateUtils.isNotContainedInOnce(Set.of("1", "2")))
+                                      .toList());
+        assertEquals(List.of("2", "1"), Stream.of("1", "2", "1")
+                                              .filter(PredicateUtils.isNotContainedInOnce(Set.of("1")))
+                                              .toList());
+        assertEquals(List.of("2", "1", "2", "1"), Stream.of("1", "2", "1", "2", "1")
+                                                        .filter(PredicateUtils.isNotContainedInOnce(Set.of("1")))
+                                                        .toList());
+    }
+
+    @Test
+    public void testContains()
+    {
+        assertTrue(PredicateUtils.contains("a")
+                                 .test("abc"));
+        assertFalse(PredicateUtils.contains("d")
+                                  .test("abc"));
     }
 
 }

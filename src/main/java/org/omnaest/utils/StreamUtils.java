@@ -624,6 +624,19 @@ public class StreamUtils
         return framed(frameSize, stream, preserveTokens);
     }
 
+    /**
+     * Similar to {@link #framed(int, Stream)} for a given {@link IntStream}
+     * 
+     * @param <E>
+     * @param frameSize
+     * @param stream
+     * @return
+     */
+    public static <E> Stream<int[]> framed(int frameSize, IntStream stream)
+    {
+        return framed(frameSize, stream.boxed()).map(ArrayUtils::toPrimitive);
+    }
+
     private static <E> Stream<E[]> framed(int frameSize, Stream<E> stream, boolean preserveTokens)
     {
         if (stream != null)
@@ -1503,22 +1516,22 @@ public class StreamUtils
             @Override
             public String toString()
             {
-                return "Options [start=" + start + ", increment=" + increment + ", terminationPredicate=" + terminationPredicate + "]";
+                return "Options [start=" + this.start + ", increment=" + this.increment + ", terminationPredicate=" + this.terminationPredicate + "]";
             }
 
             public int getStart()
             {
-                return start;
+                return this.start;
             }
 
             public int getIncrement()
             {
-                return increment;
+                return this.increment;
             }
 
             public Predicate<Integer> getTerminationPredicate()
             {
-                return terminationPredicate;
+                return this.terminationPredicate;
             }
 
         }

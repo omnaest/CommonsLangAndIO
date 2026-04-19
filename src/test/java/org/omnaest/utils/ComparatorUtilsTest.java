@@ -35,7 +35,10 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.math.NumberUtils;
 import org.junit.Test;
@@ -99,6 +102,17 @@ public class ComparatorUtilsTest
         assertEquals(true, ComparatorUtils.isBefore(comparator, 1, 2));
         assertEquals(true, ComparatorUtils.isAfter(comparator, 2, 1));
         assertEquals(true, ComparatorUtils.isBefore(comparator, 10, 2));
+    }
+
+    @Test
+    public void testMappedToComparable()
+    {
+        assertEquals(List.of("1", "3", "5", "8", "9"), Stream.of("9", "8", "1", "5", "3")
+                                                             .sorted(ComparatorUtils.mappedToComparable(Integer::valueOf))
+                                                             .toList());
+        assertEquals(Arrays.asList(null, "1", "3", "5", "8", "9"), Stream.of("9", "8", "1", "5", "3", null)
+                                                                         .sorted(ComparatorUtils.mappedToComparable(Integer::valueOf))
+                                                                         .toList());
     }
 
 }

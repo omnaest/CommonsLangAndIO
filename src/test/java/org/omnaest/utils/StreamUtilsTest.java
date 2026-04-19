@@ -244,6 +244,15 @@ public class StreamUtilsTest
     }
 
     @Test
+    public void testFramedIntIntStream()
+    {
+        assertEquals(List.of(List.of(0, 1, 2), List.of(3, 4, 5), List.of(6, 7)), StreamUtils.framed(3, IntStream.range(0, 8))
+                                                                                            .map(org.apache.commons.lang3.ArrayUtils::toObject)
+                                                                                            .map(Arrays::asList)
+                                                                                            .toList());
+    }
+
+    @Test
     public void testMerge() throws Exception
     {
         assertEquals("A1B2C", StreamUtils.merge(Arrays.asList("A", "B", "C")
@@ -661,4 +670,5 @@ public class StreamUtilsTest
                                                                .stream()
                                                                .collect(Collectors.toList()));
     }
+
 }

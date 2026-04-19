@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoderFactory;
 import org.omnaest.utils.StringUtils.StringEncoderAndDecoder;
+import org.omnaest.utils.bitset.Bits;
 import org.omnaest.utils.element.bi.BiElement;
 
 public class StringUtilsTest
@@ -333,6 +334,13 @@ public class StringUtilsTest
         assertEquals("abc", StringUtils.leftUntilLast("abcabc", "a"));
         assertEquals("", StringUtils.leftUntilLast("abc", "a"));
         assertEquals("", StringUtils.leftUntilLast(null, "a"));
+    }
+
+    @Test
+    public void testSplitToStreamByBitMask()
+    {
+        assertEquals(List.of("a", "b", "cd", ""), StringUtils.splitToStreamByBitMask("a b cd ", Bits.of(false, true, false, true, false, false, true))
+                                                             .toList());
     }
 
 }

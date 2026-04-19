@@ -502,8 +502,8 @@ public class ComparatorUtils
 
     public static <T, C extends Comparable<C>> Comparator<T> comparatorFunction(Function<T, C> extractFunction)
     {
-        return (o1, o2) -> extractFunction.apply(o1)
-                                          .compareTo(extractFunction.apply(o2));
+        return mappedToComparable(extractFunction);
+
     }
 
     public static <T> boolean isBefore(Comparator<T> comparator, T value1, T value2)
@@ -533,6 +533,35 @@ public class ComparatorUtils
                                                                               .map(v -> (Comparable<T>) v)
                                                                               .map(v -> -1 * v.compareTo(c2)))
                                        .orElse(0);
+    }
+
+    public static <T, C extends Comparable<C>> Comparator<T> mappedToComparableAndReversed(Function<T, C> mapper)
+    {
+        return mappedToComparable(mapper).reversed();
+    }
+
+    public static <T, C extends Comparable<C>> Comparator<T> mappedToComparable(Function<T, C> mapper)
+    {
+        Comparator<C> naturalComparator = natural();
+        return (value1, value2) ->
+        {
+            if (value1 == null && value2 == null)
+            {
+                return 0;
+            }
+            else if (value1 != null && value2 == null)
+            {
+                return 1;
+            }
+            else if (value1 == null && value2 != null)
+            {
+                return -1;
+            }
+            else
+            {
+                return naturalComparator.compare(mapper.apply(value1), mapper.apply(value2));
+            }
+        };
     }
 
 }

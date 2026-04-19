@@ -35,6 +35,8 @@ package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import java.math.BigDecimal;
+
 import org.junit.Test;
 
 public class NumberUtilsTest
@@ -84,6 +86,16 @@ public class NumberUtilsTest
         assertEquals("1.0000", NumberUtils.formatter()
                                           .withFractionDigits(4)
                                           .format(1));
+    }
+
+    @Test
+    public void testFormatterWithBigDecimal() throws Exception
+    {
+        assertEquals("1.00001", NumberUtils.formatter()
+                                           .format(new BigDecimal("1.00001")));
+        assertEquals("0.33", NumberUtils.formatter()
+                                        .withMaximumFractionDigits(2)
+                                        .format(new BigDecimal(1.0 / 3.0)));
     }
 
 }

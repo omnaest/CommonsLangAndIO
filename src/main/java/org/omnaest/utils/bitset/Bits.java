@@ -223,16 +223,18 @@ public interface Bits extends ImmutableBits
     /**
      * Finds the next bit index where the bit is set to false.
      * 
+     * @see #findNextClearBitIndex(int)
      * @return
      */
-    public OptionalInt findNextClearBitIndex();
+    public OptionalInt findFirstClearBitIndex();
 
     /**
      * Finds the next bit index where the bit is set to true.
      * 
+     * @see #findNextSetBitIndex(int)
      * @return
      */
-    public OptionalInt findNextSetBitIndex();
+    public OptionalInt findFirstSetBitIndex();
 
     /**
      * Finds the index of the last bit that is set.
@@ -240,6 +242,20 @@ public interface Bits extends ImmutableBits
      * @return
      */
     public OptionalInt findLastSetBitIndex();
+
+    /**
+     * @see #findFirstSetBitIndex()
+     * @param startIndex
+     * @return
+     */
+    public OptionalInt findNextSetBitIndex(int startIndex);
+
+    /**
+     * @see #findFirstClearBitIndex()
+     * @param startIndex
+     * @return
+     */
+    public OptionalInt findNextClearBitIndex(int startIndex);
 
     /**
      * Returns an array of the bit index positions with flags set to true.

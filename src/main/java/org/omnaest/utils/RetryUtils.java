@@ -172,6 +172,10 @@ public class RetryUtils
                 {
                     return this.operation(operation);
                 }
+                catch (RuntimeException e)
+                {
+                    throw e;
+                }
                 catch (Exception e)
                 {
                     throw new RuntimeException(e);
@@ -184,6 +188,10 @@ public class RetryUtils
                 try
                 {
                     this.operation(operation);
+                }
+                catch (RuntimeException e)
+                {
+                    throw e;
                 }
                 catch (Exception e)
                 {

@@ -557,16 +557,36 @@ public class BitSetBits implements Bits
     }
 
     @Override
-    public OptionalInt findNextClearBitIndex()
+    public OptionalInt findFirstClearBitIndex()
     {
-        int index = this.bits.nextClearBit(0);
+        return this.findNextClearBitIndex(0);
+    }
+
+    @Override
+    public OptionalInt findFirstSetBitIndex()
+    {
+        return this.findNextSetBitIndex(0);
+    }
+
+    @Override
+    public OptionalInt findNextClearBitIndex(int startIndex)
+    {
+        if (startIndex < 0)
+        {
+            return OptionalInt.empty();
+        }
+        int index = this.bits.nextClearBit(startIndex);
         return index >= 0 && index < this.length ? OptionalInt.of(index) : OptionalInt.empty();
     }
 
     @Override
-    public OptionalInt findNextSetBitIndex()
+    public OptionalInt findNextSetBitIndex(int startIndex)
     {
-        int index = this.bits.nextSetBit(0);
+        if (startIndex < 0)
+        {
+            return OptionalInt.empty();
+        }
+        int index = this.bits.nextSetBit(startIndex);
         return index >= 0 ? OptionalInt.of(index) : OptionalInt.empty();
     }
 

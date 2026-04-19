@@ -63,6 +63,7 @@ import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoder;
 import org.omnaest.utils.EncoderUtils.TextEncoderAndDecoderFactory;
 import org.omnaest.utils.MapUtils.MapBuilder;
 import org.omnaest.utils.StringUtils.StringTextBuilder.ProcessorSupport;
+import org.omnaest.utils.bitset.Bits;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.iterator.StringIterator;
 
@@ -83,6 +84,32 @@ public class StringUtils
     public static Deque<String> splitToDequeue(String text)
     {
         return new LinkedList<>(splitToStream(text).collect(Collectors.toList()));
+    }
+
+    /**
+     * Splits a given {@link String} into parts at each bit of the bitmask that is set to true. The characters at the {@link Bits} that are set to true will be
+     * excluded.
+     * 
+     * @param str
+     * @param delimiterBits
+     * @return
+     */
+    public static Stream<String> splitToStreamByBitMask(String str, Bits delimiterBits)
+    {
+        String effectiveStr = org.apache.commons.lang3.StringUtils.defaultString(str);
+        return Stream.concat(Stream.of(-1), Optional.ofNullable(delimiterBits)
+                                                    .orElse(Bits.newInstance())
+                                                    .toIndexPositions()
+                                                    .boxed())
+                     .map(position -> position + 1)
+                     .map(startPosition -> BiElement.of(startPosition, delimiterBits.findNextSetBitIndex(startPosition + 1)
+                                                                                    .orElse(effectiveStr.length())))
+                     .map(startAndEndPosition ->
+                     {
+                         int start = startAndEndPosition.getFirst();
+                         int end = startAndEndPosition.getSecond();
+                         return org.apache.commons.lang3.StringUtils.substring(effectiveStr, start, end);
+                     });
     }
 
     /**
