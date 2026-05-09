@@ -309,8 +309,8 @@ public class BitSetBits implements Bits
     @Override
     public Bits set(long value)
     {
-        IntStream.range(0, Long.SIZE - 1)
-                 .forEach(i -> this.set(i, 0 != (value & 1l << i)));
+        IntStream.range(0, Long.SIZE)
+                 .forEach(i -> this.set(i, 0 != (value & (1l << i))));
         return this;
     }
 
@@ -486,6 +486,14 @@ public class BitSetBits implements Bits
     {
         return IntStream.range(0, Integer.SIZE)
                         .map(index -> this.getOrDefault(index) ? 1 << index : 0)
+                        .reduce(0, (a, b) -> a | b);
+    }
+
+    @Override
+    public long toLong()
+    {
+        return IntStream.range(0, Long.SIZE)
+                        .mapToLong(index -> this.getOrDefault(index) ? 1l << index : 0)
                         .reduce(0, (a, b) -> a | b);
     }
 
@@ -690,6 +698,18 @@ public class BitSetBits implements Bits
     public boolean isNotEmpty()
     {
         return !this.isEmpty();
+    }
+
+    @Override
+    public Bits reverse()
+    {
+        int lastIndex = this.getLength() - 1;
+        this.clone()
+            .forEach((index, value) ->
+            {
+                this.setIndex(lastIndex - index, value);
+            });
+        return this;
     }
 
 }

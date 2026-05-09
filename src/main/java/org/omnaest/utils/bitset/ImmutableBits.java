@@ -30,5 +30,7 @@ public interface ImmutableBits
 
     public int toInt();
 
+    public long toLong();
+
     public boolean hasAnyBitEqualTo(boolean value);
 }

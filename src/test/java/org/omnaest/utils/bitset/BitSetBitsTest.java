@@ -22,16 +22,16 @@ public class BitSetBitsTest
     @Test
     public void testToString() throws Exception
     {
-        assertEquals("100000000000000000000000000000000000000000000000000000000000000", Bits.of(1l)
-                                                                                            .toString());
-        assertEquals("010000000000000000000000000000000000000000000000000000000000000", Bits.of(2l)
-                                                                                            .toString());
-        assertEquals("110000000000000000000000000000000000000000000000000000000000000", Bits.of(3l)
-                                                                                            .toString());
-        assertEquals("111000000000000000000000000000000000000000000000000000000000000", Bits.of(7l)
-                                                                                            .toString());
-        assertEquals("000100000000000000000000000000000000000000000000000000000000000", Bits.of(8l)
-                                                                                            .toString());
+        assertEquals("1000000000000000000000000000000000000000000000000000000000000000", Bits.of(1l)
+                                                                                             .toString());
+        assertEquals("0100000000000000000000000000000000000000000000000000000000000000", Bits.of(2l)
+                                                                                             .toString());
+        assertEquals("1100000000000000000000000000000000000000000000000000000000000000", Bits.of(3l)
+                                                                                             .toString());
+        assertEquals("1110000000000000000000000000000000000000000000000000000000000000", Bits.of(7l)
+                                                                                             .toString());
+        assertEquals("0001000000000000000000000000000000000000000000000000000000000000", Bits.of(8l)
+                                                                                             .toString());
     }
 
     @Test
@@ -274,6 +274,59 @@ public class BitSetBitsTest
         assertTrue(bits.get(0));
         assertEquals(1, bits.toInt());
         assertEquals(1, bits.getLength());
+    }
+
+    @Test
+    public void testToLong()
+    {
+        assertEquals(0l, Bits.ofBinaryString("0")
+                             .toLong());
+        assertEquals(1l, Bits.ofBinaryString("1")
+                             .toLong());
+        assertEquals(2l, Bits.ofBinaryString("10")
+                             .toLong());
+        assertEquals(4l, Bits.ofBinaryString("100")
+                             .toLong());
+        assertEquals(5l, Bits.ofBinaryString("101")
+                             .toLong());
+        assertEquals(Integer.MAX_VALUE, Bits.ofBinaryString(Bits.of(Integer.MAX_VALUE)
+                                                                .toBinaryString())
+                                            .toLong());
+        assertEquals(Long.MAX_VALUE, Bits.ofBinaryString(Bits.of(Long.MAX_VALUE)
+                                                             .toBinaryString())
+                                         .toLong());
+        assertEquals(Long.MIN_VALUE, Bits.ofBinaryString(Bits.of(Long.MIN_VALUE)
+                                                             .toBinaryString())
+                                         .toLong());
+    }
+
+    @Test
+    public void testToInt()
+    {
+        assertEquals(1, Bits.ofBinaryString("1")
+                            .toInt());
+        assertEquals(2, Bits.ofBinaryString("10")
+                            .toInt());
+        assertEquals(4, Bits.ofBinaryString("100")
+                            .toInt());
+        assertEquals(5, Bits.ofBinaryString("101")
+                            .toInt());
+        assertEquals(12345678, Bits.ofBinaryString(Bits.of(12345678)
+                                                       .toBinaryString())
+                                   .toInt());
+        assertEquals(Integer.MAX_VALUE, Bits.ofBinaryString(Bits.of(Integer.MAX_VALUE)
+                                                                .toBinaryString())
+                                            .toInt());
+        assertEquals(Integer.MIN_VALUE, Bits.ofBinaryString(Bits.of(Integer.MIN_VALUE)
+                                                                .toBinaryString())
+                                            .toInt());
+    }
+
+    @Test
+    public void testReverse()
+    {
+        assertEquals(Bits.ofBinaryString("100010"), Bits.ofBinaryString("010001")
+                                                        .reverse());
     }
 
 }

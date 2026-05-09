@@ -223,6 +223,13 @@ public interface Bits extends ImmutableBits
      */
     public Bits negate();
 
+    /**
+     * Reverses the current {@link Bits}
+     * 
+     * @return
+     */
+    public Bits reverse();
+
     public Stream<Boolean> toBooleanStream();
 
     /**
