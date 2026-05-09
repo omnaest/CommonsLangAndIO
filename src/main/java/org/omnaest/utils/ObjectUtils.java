@@ -277,7 +277,11 @@ public class ObjectUtils
     @SuppressWarnings("unchecked")
     public static <P> P getPrimitiveDefault(Class<P> primitiveType)
     {
-        if (ClassUtils.isPrimitiveOrWrapper(primitiveType))
+        if (void.class.equals(primitiveType))
+        {
+            return null;
+        }
+        else if (ClassUtils.isPrimitiveOrWrapper(primitiveType))
         {
             return (P) Array.get(Array.newInstance(primitiveType, 1), 0);
         }

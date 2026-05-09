@@ -2304,6 +2304,8 @@ public class StreamUtils
 
     public static <E, R> Optional<R> reduceWithPrevious(Stream<E> stream, BiFunction<R, E, R> mapper)
     {
-        return mapWithPrevious(stream, mapper).reduce((r1, r2) -> r2);
+        return mapWithPrevious(stream, mapper).map(Optional::ofNullable)
+                                              .reduce((r1, r2) -> r2)
+                                              .flatMap(Function.identity());
     }
 }

@@ -3,6 +3,7 @@ package org.omnaest.utils.bitset;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 
@@ -21,15 +22,15 @@ public class BitSetBitsTest
     @Test
     public void testToString() throws Exception
     {
-        assertEquals("100000000000000000000000000000000000000000000000000000000000000", Bits.of(1)
+        assertEquals("100000000000000000000000000000000000000000000000000000000000000", Bits.of(1l)
                                                                                             .toString());
-        assertEquals("010000000000000000000000000000000000000000000000000000000000000", Bits.of(2)
+        assertEquals("010000000000000000000000000000000000000000000000000000000000000", Bits.of(2l)
                                                                                             .toString());
-        assertEquals("110000000000000000000000000000000000000000000000000000000000000", Bits.of(3)
+        assertEquals("110000000000000000000000000000000000000000000000000000000000000", Bits.of(3l)
                                                                                             .toString());
-        assertEquals("111000000000000000000000000000000000000000000000000000000000000", Bits.of(7)
+        assertEquals("111000000000000000000000000000000000000000000000000000000000000", Bits.of(7l)
                                                                                             .toString());
-        assertEquals("000100000000000000000000000000000000000000000000000000000000000", Bits.of(8)
+        assertEquals("000100000000000000000000000000000000000000000000000000000000000", Bits.of(8l)
                                                                                             .toString());
     }
 
@@ -75,6 +76,14 @@ public class BitSetBitsTest
         byte[] bytes = "I am a little fox".getBytes(StandardCharsets.UTF_8);
         assertArrayEquals(bytes, Bits.of(bytes)
                                      .toBytes());
+
+        assertArrayEquals(new byte[] { 11 }, Bits.of(11)
+                                                 .setLength(8)
+                                                 .toBytes());
+
+        assertArrayEquals(new byte[] { 0 }, Bits.of(0)
+                                                .setLength(8)
+                                                .toBytes());
     }
 
     @Test
@@ -171,12 +180,29 @@ public class BitSetBitsTest
     }
 
     @Test
-    public void testShiftLeft() throws Exception
+    public void testShiftRight() throws Exception
     {
         assertEquals(Bits.of(true, false, false), Bits.of(false, true, false)
+                                                      .shiftRight(1));
+        assertEquals(Bits.of(false, true, false), Bits.of(true, false, true)
+                                                      .shiftRight(1));
+    }
+
+    @Test
+    public void testShiftLeft()
+    {
+        assertEquals(Bits.of(false, false, true), Bits.of(false, true, false)
                                                       .shiftLeft(1));
         assertEquals(Bits.of(false, true, false), Bits.of(true, false, true)
                                                       .shiftLeft(1));
+        assertEquals(Bits.ofBinaryString("00010"), Bits.ofBinaryString("00001")
+                                                       .shiftLeft(1));
+        assertEquals(Bits.ofBinaryString("00100"), Bits.ofBinaryString("00001")
+                                                       .shiftLeft(2));
+        assertEquals(Bits.ofBinaryString("10000"), Bits.ofBinaryString("00001")
+                                                       .shiftLeft(4));
+        assertEquals(Bits.ofBinaryString("00000"), Bits.ofBinaryString("00001")
+                                                       .shiftLeft(5));
     }
 
     @Test
@@ -211,6 +237,43 @@ public class BitSetBitsTest
     {
         assertEquals(true, Bits.of(true)
                                .getOrSet(1, true));
+    }
+
+    @Test
+    public void testPartition()
+    {
+        assertEquals(2, Bits.ofBinaryString("00010001")
+                            .partition(4)
+                            .count());
+        Bits.ofBinaryString("00010001")
+            .partition(4)
+            .forEach(bits -> assertEquals(0b0001, bits.toInt()));
+    }
+
+    @Test
+    public void testToBinaryString()
+    {
+        assertEquals("00010001", Bits.ofBinaryString("00010001")
+                                     .toBinaryString());
+        assertEquals(0b00010001, Bits.ofBinaryString("00010001")
+                                     .toInt());
+    }
+
+    @Test
+    public void testGetAndSet()
+    {
+        Bits bits = Bits.ofBinaryString("0001");
+        assertTrue(bits.getAndSet(0, false));
+        assertEquals(0, bits.toInt());
+    }
+
+    @Test
+    public void testOfBoolean()
+    {
+        Bits bits = Bits.of(true);
+        assertTrue(bits.get(0));
+        assertEquals(1, bits.toInt());
+        assertEquals(1, bits.getLength());
     }
 
 }

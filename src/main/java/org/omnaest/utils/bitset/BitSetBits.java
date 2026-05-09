@@ -76,7 +76,7 @@ public class BitSetBits implements Bits
     {
         int effectiveNumberOfBits = Math.min(this.length, numberOfBits);
         Bits result = Bits.of(this.bits.get(0, effectiveNumberOfBits), effectiveNumberOfBits);
-        this.shiftLeft(effectiveNumberOfBits);
+        this.shiftRight(effectiveNumberOfBits);
         this.setLength(Math.max(0, this.length - numberOfBits));
         return result;
     }
@@ -117,10 +117,25 @@ public class BitSetBits implements Bits
     }
 
     @Override
-    public Bits shiftLeft(int numberOfBits)
+    public Bits shiftRight(int numberOfBits)
     {
         this.bits = this.bits.get(numberOfBits, Math.max(numberOfBits, this.bits.length()));
         return this;
+    }
+
+    @Override
+    public Bits shiftLeft(int numberOfBits)
+    {
+        int length = this.getLength();
+        for (int i = length - 1; i >= 0; i--)
+        {
+            this.setIndex(i + numberOfBits, this.get(i));
+        }
+        for (int i = 0; i < numberOfBits; i++)
+        {
+            this.setIndex(i, false);
+        }
+        return this.setLength(length);
     }
 
     @Override
@@ -192,6 +207,15 @@ public class BitSetBits implements Bits
     {
         this.adjustLengthIfNecessary(bitIndex, defaultValue);
         return this.get(bitIndex);
+    }
+
+    @Override
+    public boolean getAndSet(int bitIndex, boolean value)
+    {
+        this.adjustLengthIfNecessary(bitIndex);
+        boolean result = this.get(bitIndex);
+        this.setIndex(bitIndex, value);
+        return result;
     }
 
     @Override
@@ -383,15 +407,55 @@ public class BitSetBits implements Bits
     }
 
     @Override
+    public boolean[] toReverseBooleanArray()
+    {
+        boolean[] result = new boolean[this.length];
+        for (int ii = 0; ii < this.length; ii++)
+        {
+            result[ii] = this.get(this.length - 1 - ii);
+        }
+        return result;
+    }
+
+    @Override
     public byte[] toBytes()
     {
-        return this.bits.toByteArray();
+        return ArrayUtils.toPrimitive(this.partition(8)
+                                          .map(Bits::toByte)
+                                          .toArray(Byte[]::new));
+    }
+
+    @Override
+    public byte toByte()
+    {
+        int bitShift = Integer.SIZE - Byte.SIZE;
+        int value = this.toInt() << bitShift;
+        return (byte) (value / (1 << bitShift));
+    }
+
+    @Override
+    public Stream<Bits> partition(int partitionSize)
+    {
+        int length = this.getLength();
+        return IntStream.range(0, (length / partitionSize) + ((length % partitionSize) == 0 ? 0 : 1))
+                        .map(partitionIndex -> partitionIndex * partitionSize)
+                        .mapToObj(startIndex -> this.subset(startIndex, startIndex + partitionSize));
     }
 
     @Override
     public String toString()
     {
         return IntStream.range(0, this.length)
+                        .boxed()
+                        .map(index -> this.get(index) ? "1" : "0")
+                        .collect(Collectors.joining());
+    }
+
+    @Override
+    public String toBinaryString()
+    {
+        return IntStream.range(0, this.length)
+                        .map(value -> this.length - 1 - value)
                         .boxed()
                         .map(index -> this.get(index) ? "1" : "0")
                         .collect(Collectors.joining());

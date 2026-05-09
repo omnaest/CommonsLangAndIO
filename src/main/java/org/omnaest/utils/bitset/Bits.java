@@ -1,12 +1,14 @@
 package org.omnaest.utils.bitset;
 
 import java.util.BitSet;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.omnaest.utils.StreamUtils;
 import org.omnaest.utils.bitset.binary.BinaryDigits;
 
 /**
@@ -89,6 +91,15 @@ public interface Bits extends ImmutableBits
     public Stream<Bits> drainBlocksFromLeftOfMaxSize(int numberOfMaxBitsPerBlock);
 
     /**
+     * Shifts all bits to the right by the given number of bit positions. Keeps the {@link #getLength()} of the {@link Bits} unchanged. Missing bits from the
+     * left will be set to false.
+     * 
+     * @param numberOfBits
+     * @return
+     */
+    public Bits shiftRight(int numberOfBits);
+
+    /**
      * Shifts all bits to the left by the given number of bit positions. Keeps the {@link #getLength()} of the {@link Bits} unchanged. Missing bits from the
      * right will be set to false.
      * 
@@ -155,6 +166,15 @@ public interface Bits extends ImmutableBits
     public boolean getOrSet(int bitIndex, boolean defaultValue);
 
     /**
+     * Gets the value of the given bit index and sets the given value to it.
+     * 
+     * @param bitIndex
+     * @param value
+     * @return previous value
+     */
+    public boolean getAndSet(int bitIndex, boolean value);
+
+    /**
      * Sets the length and fills possible gaps with false/0 values
      * 
      * @param length
@@ -205,11 +225,32 @@ public interface Bits extends ImmutableBits
 
     public Stream<Boolean> toBooleanStream();
 
+    /**
+     * Partitions the current {@link Bits} into a {@link Stream} of smaller {@link Bits} with the given partition size. The last Bits will always have the left
+     * over size, please set the {@link #setLength(int)} upfront to ensure that also the last {@link Bits} of the partitions will have the same partition size.
+     * 
+     * @param partitionSize
+     * @return
+     */
+    public Stream<Bits> partition(int partitionSize);
+
     public boolean[] toBooleanArray();
+
+    public boolean[] toReverseBooleanArray();
 
     public BinaryDigits toBinaryDigits();
 
+    /**
+     * Returns a {@link String} representation like e.g. "...0101010101" where the last character is the index = 0 of the Bits.
+     * 
+     * @see Bits#ofBinaryString(String)
+     * @return
+     */
+    public String toBinaryString();
+
     public byte[] toBytes();
+
+    public byte toByte();
 
     public BitSet toBitSet();
 
@@ -289,6 +330,18 @@ public interface Bits extends ImmutableBits
         return newInstance().set(value);
     }
 
+    public static Bits of(int value)
+    {
+        return newInstance().set((long) value)
+                            .setLength(Integer.SIZE);
+    }
+
+    public static Bits of(byte value)
+    {
+        return newInstance().set((long) value)
+                            .setLength(Byte.SIZE);
+    }
+
     public static Bits of(boolean... values)
     {
         return newInstance().set(values);
@@ -320,12 +373,30 @@ public interface Bits extends ImmutableBits
     }
 
     /**
+     * Interprets {@link String}s in the format like e.g. "...010000101". The index = 0 of the Bits instance is represented by the last character.
+     * 
+     * @see Bits#toBinaryString()
+     * @param binaryString
+     * @return
+     */
+    public static Bits ofBinaryString(String binaryString)
+    {
+        return of(StreamUtils.reverse(Optional.ofNullable(binaryString)
+                                              .map(String::toCharArray)
+                                              .map(ArrayUtils::toObject)
+                                              .map(Stream::of)
+                                              .orElse(Stream.empty()))
+                             .map(character -> character != '0')
+                             .toArray(Boolean[]::new));
+    }
+
+    /**
      * Returns {@link Bits} instance with the give bit index positions set to true.
      * 
      * @param bitIndex
      * @return
      */
-    public static Bits ofIndexPositions(int[] bitIndex)
+    public static Bits ofIndexPositions(int... bitIndex)
     {
         return newInstance().setIndex(bitIndex);
     }
