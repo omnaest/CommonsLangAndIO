@@ -41,7 +41,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
+            <version>2.22.0</version>
         </dependency>
         <dependency>
             <groupId>commons-lang</groupId>
@@ -51,25 +51,25 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.12.0</version>
+            <version>3.20.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.10.0</version>
+            <version>1.15.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>31.1-jre</version>
+            <version>33.6.0-jre</version>
         </dependency>
 
         <dependency>
             <groupId>com.pivovarit</groupId>
             <artifactId>parallel-collectors</artifactId>
-            <version>2.5.0</version>
+            <version>4.1.1</version>
         </dependency>
 
         <dependency>
