@@ -52,143 +52,143 @@ import org.omnaest.utils.list.AbstractList;
  */
 public class EnumBitSetList<E extends Enum<?>> extends AbstractList<E> implements EnumList<E>
 {
-	private int		size	= 0;
-	private BitSet	bitSet	= new BitSet();
+    private int                     size   = 0;
+    private BitSet                  bitSet = new BitSet();
 
-	private EnumBitSetTranslator<E> enumTranslator;
+    private EnumBitSetTranslator<E> enumTranslator;
 
-	public EnumBitSetList(Class<E> enumType)
-	{
-		super();
-		this.enumTranslator = BitSetUtils.enumTranslator(enumType);
-	}
+    public EnumBitSetList(Class<E> enumType)
+    {
+        super();
+        this.enumTranslator = BitSetUtils.enumTranslator(enumType);
+    }
 
-	public EnumBitSetList(Class<E> enumType, Collection<E> collection)
-	{
-		super();
-		this.enumTranslator = BitSetUtils.enumTranslator(enumType);
-		this.addAll(collection);
-	}
+    public EnumBitSetList(Class<E> enumType, Collection<E> collection)
+    {
+        super();
+        this.enumTranslator = BitSetUtils.enumTranslator(enumType);
+        this.addAll(collection);
+    }
 
-	@Override
-	public int size()
-	{
-		return this.size;
-	}
+    @Override
+    public int size()
+    {
+        return this.size;
+    }
 
-	@Override
-	public E get(int index)
-	{
-		E retval = this.enumTranslator.toEnum(this	.determineBitSetFrame(index)
-													.get());
-		return retval;
-	}
+    @Override
+    public E get(int index)
+    {
+        E retval = this.enumTranslator.toEnum(this.determineBitSetFrame(index)
+                                                  .get());
+        return retval;
+    }
 
-	private BitSetFrame determineBitSetFrame(int index)
-	{
-		int frameSize = this.enumTranslator.getNumberOfBitsPerEnum();
-		int frameIndex = index;
-		BitSetFrame frame = BitSetUtils.frame(this.bitSet, frameSize, frameIndex);
-		return frame;
-	}
+    private BitSetFrame determineBitSetFrame(int index)
+    {
+        int frameSize = this.enumTranslator.getNumberOfBitsPerEnum();
+        int frameIndex = index;
+        BitSetFrame frame = BitSetUtils.frame(this.bitSet, frameSize, frameIndex);
+        return frame;
+    }
 
-	@Override
-	public E set(int index, E element)
-	{
-		BitSetFrame frame = this.determineBitSetFrame(index);
+    @Override
+    public E set(int index, E element)
+    {
+        BitSetFrame frame = this.determineBitSetFrame(index);
 
-		E retval = this.enumTranslator.toEnum(frame.get());
-		frame.set(this.enumTranslator.toBitSet(element));
+        E retval = this.enumTranslator.toEnum(frame.get());
+        frame.set(this.enumTranslator.toBitSet(element));
 
-		return retval;
-	}
+        return retval;
+    }
 
-	@Override
-	public void add(int index, E element)
-	{
-		for (int ii = this.size; ii > index; ii--)
-		{
-			this.set(ii, this.get(ii - 1));
-		}
+    @Override
+    public void add(int index, E element)
+    {
+        for (int ii = this.size; ii > index; ii--)
+        {
+            this.set(ii, this.get(ii - 1));
+        }
 
-		this.set(index, element);
-		this.size++;
-	}
+        this.set(index, element);
+        this.size++;
+    }
 
-	@Override
-	public E remove(int index)
-	{
-		E retval = null;
+    @Override
+    public E remove(int index)
+    {
+        E retval = null;
 
-		for (int ii = index; ii < this.size; ii++)
-		{
-			E removedElement = this.set(ii, this.get(ii + 1));
-			if (retval == null)
-			{
-				retval = removedElement;
-			}
-		}
+        for (int ii = index; ii < this.size; ii++)
+        {
+            E removedElement = this.set(ii, this.get(ii + 1));
+            if (retval == null)
+            {
+                retval = removedElement;
+            }
+        }
 
-		this.size--;
+        this.size--;
 
-		return retval;
-	}
+        return retval;
+    }
 
-	@Override
-	public int hashCode()
-	{
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((this.bitSet == null) ? 0 : this.bitSet.hashCode());
-		result = prime * result + this.size;
-		return result;
-	}
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((this.bitSet == null) ? 0 : this.bitSet.hashCode());
+        result = prime * result + this.size;
+        return result;
+    }
 
-	@SuppressWarnings("rawtypes")
-	@Override
-	public boolean equals(Object obj)
-	{
-		if (this == obj)
-		{
-			return true;
-		}
-		if (obj == null)
-		{
-			return false;
-		}
-		if (this.getClass() != obj.getClass())
-		{
-			return false;
-		}
-		EnumBitSetList other = (EnumBitSetList) obj;
-		if (this.bitSet == null)
-		{
-			if (other.bitSet != null)
-			{
-				return false;
-			}
-		}
-		else if (!this.bitSet.equals(other.bitSet))
-		{
-			return false;
-		}
-		if (this.size != other.size)
-		{
-			return false;
-		}
-		return true;
-	}
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null)
+        {
+            return false;
+        }
+        if (this.getClass() != obj.getClass())
+        {
+            return false;
+        }
+        EnumBitSetList other = (EnumBitSetList) obj;
+        if (this.bitSet == null)
+        {
+            if (other.bitSet != null)
+            {
+                return false;
+            }
+        }
+        else if (!this.bitSet.equals(other.bitSet))
+        {
+            return false;
+        }
+        if (this.size != other.size)
+        {
+            return false;
+        }
+        return true;
+    }
 
-	public List<E> toEnumList()
-	{
-		return this.enumTranslator	.toEnumStream(this.bitSet)
-									.collect(Collectors.toList());
-	}
+    public List<E> toEnumList()
+    {
+        return this.enumTranslator.toEnumStream(this.bitSet)
+                                  .collect(Collectors.toList());
+    }
 
-	@Override
-	public String toString()
-	{
-		return "EnumBitSetList [" + this.toEnumList() + "]";
-	}
+    @Override
+    public String toString()
+    {
+        return "EnumBitSetList [" + this.toEnumList() + "]";
+    }
 
 }

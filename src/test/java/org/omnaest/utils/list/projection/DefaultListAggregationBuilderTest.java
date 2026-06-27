@@ -43,31 +43,31 @@ import org.junit.Test;
 
 public class DefaultListAggregationBuilderTest
 {
-	@Test
-	public void testQualified()
-	{
-		ListAggregationBuilder builder = new DefaultListAggregationBuilder();
+    @Test
+    public void testQualified()
+    {
+        ListAggregationBuilder builder = new DefaultListAggregationBuilder();
 
-		List<String> result = builder	.withQualifiedSource()
-										.withReadAggregation(elements -> elements.getFirstElement() + "" + elements.getSecondElement())
-										.andWriteAggregation(element -> null)
-										.usingSources(Arrays.asList("A", "B"), Arrays.asList(1, 2))
-										.build();
-		assertEquals("A1,B2", result.stream()
-									.collect(Collectors.joining(",")));
-	}
+        List<String> result = builder.withQualifiedSource()
+                                     .withReadAggregation(elements -> elements.getFirstElement() + "" + elements.getSecondElement())
+                                     .andWriteAggregation(element -> null)
+                                     .usingSources(Arrays.asList("A", "B"), Arrays.asList(1, 2))
+                                     .build();
+        assertEquals("A1,B2", result.stream()
+                                    .collect(Collectors.joining(",")));
+    }
 
-	@Test
-	public void testUnary()
-	{
-		ListAggregationBuilder builder = new DefaultListAggregationBuilder();
+    @Test
+    public void testUnary()
+    {
+        ListAggregationBuilder builder = new DefaultListAggregationBuilder();
 
-		List<String> result = builder	.withUnarySource()
-										.withReadProjection(elements -> elements.get(0) + "" + elements.get(1))
-										.andWriteProjection(element -> null)
-										.usingSources(Arrays.asList(Arrays.asList("A", "B"), Arrays.asList(1, 2)))
-										.build();
-		assertEquals("A1,B2", result.stream()
-									.collect(Collectors.joining(",")));
-	}
+        List<String> result = builder.withUnarySource()
+                                     .withReadProjection(elements -> elements.get(0) + "" + elements.get(1))
+                                     .andWriteProjection(element -> null)
+                                     .usingSources(Arrays.asList(Arrays.asList("A", "B"), Arrays.asList(1, 2)))
+                                     .build();
+        assertEquals("A1,B2", result.stream()
+                                    .collect(Collectors.joining(",")));
+    }
 }

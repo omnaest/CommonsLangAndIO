@@ -66,8 +66,7 @@ public class PeekUtils
      */
     public static <E> IncrementCounter<E> incrementCounter(Counter counter)
     {
-        return new IncrementCounter<E>()
-        {
+        return new IncrementCounter<E>() {
             private int increment = 1;
 
             @Override

@@ -72,7 +72,7 @@ public class MathUtils
                                                 .mapToDouble(v -> v.doubleValue())
                                                 .map(v -> Math.pow(Math.abs(average - v), 2))
                                                 .sum()
-                    / (values.size() - 1));
+                                          / (values.size() - 1));
         }
         return new AverageAndStandardDeviation(average, standardDeviation);
 

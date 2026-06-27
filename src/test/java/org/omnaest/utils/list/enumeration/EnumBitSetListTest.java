@@ -50,93 +50,93 @@ import org.omnaest.utils.list.enumeration.EnumBitSetList;
 public class EnumBitSetListTest
 {
 
-	private enum TestEnum
-	{
-		A, B, C, D, E
-	}
+    private enum TestEnum
+    {
+        A, B, C, D, E
+    }
 
-	@Test
-	public void testSize() throws Exception
-	{
-		List<TestEnum> list = new EnumBitSetList<>(TestEnum.class);
-		assertEquals(0, list.size());
-		assertTrue(list.isEmpty());
+    @Test
+    public void testSize() throws Exception
+    {
+        List<TestEnum> list = new EnumBitSetList<>(TestEnum.class);
+        assertEquals(0, list.size());
+        assertTrue(list.isEmpty());
 
-		list.add(TestEnum.A);
-		assertEquals(1, list.size());
-		assertFalse(list.isEmpty());
-	}
+        list.add(TestEnum.A);
+        assertEquals(1, list.size());
+        assertFalse(list.isEmpty());
+    }
 
-	@Test
-	public void testGetAndAdd() throws Exception
-	{
-		List<TestEnum> list = new EnumBitSetList<>(TestEnum.class);
+    @Test
+    public void testGetAndAdd() throws Exception
+    {
+        List<TestEnum> list = new EnumBitSetList<>(TestEnum.class);
 
-		list.add(TestEnum.A);
-		assertEquals(TestEnum.A, list.get(0));
+        list.add(TestEnum.A);
+        assertEquals(TestEnum.A, list.get(0));
 
-		list.add(TestEnum.B);
-		assertEquals(TestEnum.B, list.get(1));
+        list.add(TestEnum.B);
+        assertEquals(TestEnum.B, list.get(1));
 
-		list.add(TestEnum.C);
-		assertEquals(TestEnum.C, list.get(2));
+        list.add(TestEnum.C);
+        assertEquals(TestEnum.C, list.get(2));
 
-		list.add(0, TestEnum.C);
-		assertEquals(TestEnum.C, list.get(0));
-		assertEquals(TestEnum.A, list.get(1));
+        list.add(0, TestEnum.C);
+        assertEquals(TestEnum.C, list.get(0));
+        assertEquals(TestEnum.A, list.get(1));
 
-		assertEquals(new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C)), list);
-	}
+        assertEquals(new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C)), list);
+    }
 
-	@Test
-	public void testToArray()
-	{
-		List<TestEnum> sourceList = Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C);
-		List<TestEnum> list = new EnumBitSetList<>(TestEnum.class, sourceList);
-		TestEnum[] testEnums = list.toArray(new TestEnum[0]);
-		assertEquals(sourceList, Arrays.asList(testEnums));
-	}
+    @Test
+    public void testToArray()
+    {
+        List<TestEnum> sourceList = Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C);
+        List<TestEnum> list = new EnumBitSetList<>(TestEnum.class, sourceList);
+        TestEnum[] testEnums = list.toArray(new TestEnum[0]);
+        assertEquals(sourceList, Arrays.asList(testEnums));
+    }
 
-	@Test
-	public void testRemove() throws Exception
-	{
-		{
-			List<TestEnum> list = new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C));
-			list.remove(0);
-			assertEquals(new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.A, TestEnum.B, TestEnum.C)), list);
-		}
-		{
-			List<TestEnum> list = new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C));
-			list.remove(1);
-			assertEquals(new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.B, TestEnum.C)), list);
-		}
-		{
-			List<TestEnum> list = new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C));
-			list.remove(3);
-			assertEquals(new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B)), list);
-		}
-	}
+    @Test
+    public void testRemove() throws Exception
+    {
+        {
+            List<TestEnum> list = new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C));
+            list.remove(0);
+            assertEquals(new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.A, TestEnum.B, TestEnum.C)), list);
+        }
+        {
+            List<TestEnum> list = new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C));
+            list.remove(1);
+            assertEquals(new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.B, TestEnum.C)), list);
+        }
+        {
+            List<TestEnum> list = new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B, TestEnum.C));
+            list.remove(3);
+            assertEquals(new EnumBitSetList<>(TestEnum.class, Arrays.asList(TestEnum.C, TestEnum.A, TestEnum.B)), list);
+        }
+    }
 
-	/**
-	 * Tests with java visual vm showed reduction from 450 MB to 70 MB -> so about a factor 6
-	 */
-	@Test
-	@Ignore
-	public void memoryConsumptionTest()
-	{
-		List<TestEnum> list = new ArrayList<>();
-		for (int ii = 0; ii < 100000000; ii++)
-		{
-			list.add(TestEnum.values()[ii % TestEnum.values().length]);
-		}
+    /**
+     * Tests with java visual vm showed reduction from 450 MB to 70 MB -> so about a factor 6
+     */
+    @Test
+    @Ignore
+    public void memoryConsumptionTest()
+    {
+        List<TestEnum> list = new ArrayList<>();
+        for (int ii = 0; ii < 100000000; ii++)
+        {
+            list.add(TestEnum.values()[ii % TestEnum.values().length]);
+        }
 
-		System.gc();
-		ThreadUtils.sleepSilently(10, TimeUnit.SECONDS);
+        System.gc();
+        ThreadUtils.sleepSilently(10, TimeUnit.SECONDS);
 
-		list = new EnumBitSetList<>(TestEnum.class, list);
+        list = new EnumBitSetList<>(TestEnum.class, list);
 
-		System.gc();
-		ThreadUtils.sleepSilently(10, TimeUnit.SECONDS);
-	}
+        System.gc();
+        ThreadUtils.sleepSilently(10, TimeUnit.SECONDS);
+    }
 
 }

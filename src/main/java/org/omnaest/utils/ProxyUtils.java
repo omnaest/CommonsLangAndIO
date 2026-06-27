@@ -94,8 +94,7 @@ public class ProxyUtils
         @Override
         public Argument at(int index)
         {
-            return new Argument()
-            {
+            return new Argument() {
                 @Override
                 public <E> E getAs(Function<Object, E> mapper)
                 {
@@ -225,14 +224,12 @@ public class ProxyUtils
 
     public static ProxyBuilder builder()
     {
-        return new ProxyBuilder()
-        {
+        return new ProxyBuilder() {
             @Override
             public <T> ProxyBuilderLoaded<T> of(Class<T> type)
             {
                 ClassLoader classLoader = type.getClassLoader();
-                return new ProxyBuilderLoaded<T>()
-                {
+                return new ProxyBuilderLoaded<T>() {
                     private List<Class<?>>                                         interfaceTypes = new ArrayList<>();
                     private List<Method<?>>                                        methods        = new ArrayList<>();
                     private Map<java.lang.reflect.Method, MethodInvocationHandler> handlers       = new LinkedHashMap<>();
@@ -281,8 +278,7 @@ public class ProxyUtils
                     public ProxyBuilderLoaded<T> withHandlers(Function<MethodHandlerBuilder, MethodAndHandler> builder)
                     {
                         this.methods.stream()
-                                    .map(method -> (MethodHandlerBuilder) new MethodHandlerBuilder()
-                                    {
+                                    .map(method -> (MethodHandlerBuilder) new MethodHandlerBuilder() {
                                         private MethodHandler methodHandler;
 
                                         @Override
@@ -305,8 +301,7 @@ public class ProxyUtils
                                         @Override
                                         public MethodAndHandler build()
                                         {
-                                            return new MethodAndHandler()
-                                            {
+                                            return new MethodAndHandler() {
                                                 @Override
                                                 public MethodHandler getMethodHandler()
                                                 {
@@ -362,8 +357,7 @@ public class ProxyUtils
 
                     private InvocationMethod createInvocationMethod(java.lang.reflect.Method method)
                     {
-                        return new InvocationMethod()
-                        {
+                        return new InvocationMethod() {
 
                             @Override
                             public String getName()

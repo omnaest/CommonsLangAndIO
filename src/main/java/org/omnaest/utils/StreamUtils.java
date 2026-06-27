@@ -486,8 +486,7 @@ public class StreamUtils
                 terminated.set(true);
             }
         });
-        Iterator<E> prefetchIterator = new Iterator<E>()
-        {
+        Iterator<E> prefetchIterator = new Iterator<E>() {
             @Override
             public boolean hasNext()
             {
@@ -507,8 +506,7 @@ public class StreamUtils
             }
 
         };
-        return new Drainage<E>()
-        {
+        return new Drainage<E>() {
             @Override
             public Stream<E> getStream()
             {
@@ -704,8 +702,7 @@ public class StreamUtils
         return cyclicBuffer.asStream()
                            .filter(PredicateUtils.modulo(step)
                                                  .equalsZero())
-                           .map(window -> new Window<E>()
-                           {
+                           .map(window -> new Window<E>() {
                                @Override
                                public List<E> getBefore()
                                {
@@ -761,6 +758,49 @@ public class StreamUtils
         return merge(stream1, stream2).map(lar -> lar.asBiElement());
     }
 
+    /**
+     * Alternates elements from two {@link Stream}s into a single flat {@link Stream}: a0, b0, a1, b1, a2, b2, ...
+     * Stops when the shorter stream is exhausted.
+     * <br>
+     * <br>
+     * Example:
+     * <pre>
+     * StreamUtils.interleave(Stream.of(1, 2, 3), Stream.of(10, 20))
+     * // → [1, 10, 2, 20]
+     * </pre>
+     * Null streams are treated as empty streams.
+     *
+     * @param streamA first source stream; may be {@code null}
+     * @param streamB second source stream; may be {@code null}
+     * @return a {@link Stream} alternating elements from streamA and streamB, stopping when either is exhausted
+     */
+    public static <E> Stream<E> interleave(Stream<E> streamA, Stream<E> streamB)
+    {
+        Iterator<E> iterA = Optional.ofNullable(streamA)
+                                    .orElse(Stream.empty())
+                                    .iterator();
+        Iterator<E> iterB = Optional.ofNullable(streamB)
+                                    .orElse(Stream.empty())
+                                    .iterator();
+        return fromIterator(new Iterator<E>() {
+            private boolean useA = true;
+
+            @Override
+            public boolean hasNext()
+            {
+                return this.useA ? (iterA.hasNext() && iterB.hasNext()) : iterB.hasNext();
+            }
+
+            @Override
+            public E next()
+            {
+                boolean currentUseA = this.useA;
+                this.useA = !this.useA;
+                return currentUseA ? iterA.next() : iterB.next();
+            }
+        });
+    }
+
     public static interface StreamMerger
     {
         public SortedStreamMergerChooser ofSorted();
@@ -800,8 +840,7 @@ public class StreamUtils
 
     public static interface UnaryTypedSortedStreamMergerIdentityDefiner
     {
-        public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType, Class<I> identityType,
-                                                                                                    Function<E, I> identityFunction);
+        public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType, Class<I> identityType, Function<E, I> identityFunction);
     }
 
     public static interface UnaryTypedSortedStreamMerger<E, I extends Comparable<I>>
@@ -833,27 +872,21 @@ public class StreamUtils
 
     public static StreamMerger merger()
     {
-        return new StreamMerger()
-        {
+        return new StreamMerger() {
             @Override
             public SortedStreamMergerChooser ofSorted()
             {
-                return new SortedStreamMergerChooser()
-                {
+                return new SortedStreamMergerChooser() {
 
                     @Override
                     public UnaryTypedSortedStreamMergerIdentityDefiner unary()
                     {
                         MultiTypedSortedStreamMergerIdentityDefiner multiTypedSortedStreamMerger = this.multiTyped();
-                        return new UnaryTypedSortedStreamMergerIdentityDefiner()
-                        {
+                        return new UnaryTypedSortedStreamMergerIdentityDefiner() {
                             @Override
-                            public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType,
-                                                                                                                        Class<I> identityType,
-                                                                                                                        Function<E, I> identityFunction)
+                            public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType, Class<I> identityType, Function<E, I> identityFunction)
                             {
-                                return new UnaryTypedSortedStreamMerger<E, I>()
-                                {
+                                return new UnaryTypedSortedStreamMerger<E, I>() {
                                     private List<Stream<E>> streams = new ArrayList<>();
 
                                     @Override
@@ -903,8 +936,7 @@ public class StreamUtils
                                         }
                                     }
 
-                                    private Stream<E> applyOuterReducer(Class<E> elementType, Class<I> identityType, Function<E, I> identityFunction,
-                                                                        BinaryOperator<E> mergeFunction, Collection<Stream<E>> currentStreams)
+                                    private Stream<E> applyOuterReducer(Class<E> elementType, Class<I> identityType, Function<E, I> identityFunction, BinaryOperator<E> mergeFunction, Collection<Stream<E>> currentStreams)
                                     {
                                         return StreamUtils.merger()
                                                           .ofSorted()
@@ -921,13 +953,11 @@ public class StreamUtils
                     @Override
                     public MultiTypedSortedStreamMergerIdentityDefiner multiTyped()
                     {
-                        return new MultiTypedSortedStreamMergerIdentityDefiner()
-                        {
+                        return new MultiTypedSortedStreamMergerIdentityDefiner() {
                             @Override
                             public <I extends Comparable<I>> MultiTypedSortedStreamMerger<I> withIdentityType(Class<I> type)
                             {
-                                return new MultiTypedSortedStreamMerger<I>()
-                                {
+                                return new MultiTypedSortedStreamMerger<I>() {
                                     private List<StreamAndIdentityFunction<?, I>> streams = new ArrayList<>();
 
                                     @Override
@@ -1085,6 +1115,30 @@ public class StreamUtils
     {
         AtomicInteger counter = new AtomicInteger(seed);
         return stream.map(element -> BiElement.of(element, counter.getAndIncrement()));
+    }
+
+    /**
+     * Pairs each element of the given {@link Stream} with its 0-based position index,
+     * returning a {@link Stream} of {@link BiElement} where the first value is the index ({@link Long})
+     * and the second value is the element.
+     * <br>
+     * <br>
+     * Example:
+     * <pre>
+     * StreamUtils.enumerate(Stream.of("a", "b", "c"))
+     * // → BiElement(0, "a"), BiElement(1, "b"), BiElement(2, "c")
+     * </pre>
+     * A {@code null} stream is treated as an empty stream.
+     *
+     * @param stream source stream; may be {@code null}
+     * @return a {@link Stream} of index-element pairs in encounter order
+     */
+    public static <E> Stream<BiElement<Long, E>> enumerate(Stream<E> stream)
+    {
+        AtomicLong counter = new AtomicLong(0L);
+        return Optional.ofNullable(stream)
+                       .orElse(Stream.empty())
+                       .map(element -> BiElement.of(counter.getAndIncrement(), element));
     }
 
     public static <E> Stream<List<E>> chop(Stream<E> stream, Predicate<E> chopStartMatcher)
@@ -1266,11 +1320,9 @@ public class StreamUtils
                                                            .withNumberOfThreads(parallelism.getNumberOfThreads());
 
         return framedAsList(parallelism.getNumberOfThreads(), stream).flatMap(elements -> parallelExecution.executeTasks(elements.stream()
-                                                                                                                                 .map(element -> new Callable<R>()
-                                                                                                                                 {
+                                                                                                                                 .map(element -> new Callable<R>() {
                                                                                                                                      @Override
-                                                                                                                                     public R call()
-                                                                                                                                             throws Exception
+                                                                                                                                     public R call() throws Exception
                                                                                                                                      {
                                                                                                                                          return mappingFunction.apply(element);
                                                                                                                                      }
@@ -1351,8 +1403,7 @@ public class StreamUtils
 
     public static StreamBuilder builder()
     {
-        return new StreamBuilder()
-        {
+        return new StreamBuilder() {
             @Override
             public <E> Stream<E> build()
             {
@@ -1611,20 +1662,17 @@ public class StreamUtils
 
     public static StreamGenerator generate()
     {
-        return new StreamGenerator()
-        {
+        return new StreamGenerator() {
 
             @Override
             public BiIntStreamGenerator biIntStream()
             {
-                return new BiIntStreamGenerator()
-                {
+                return new BiIntStreamGenerator() {
 
                     @Override
                     public LeftSidedBiIntStreamGenerator withLeftSide(int leftSideStartInclusive, int leftSideEndExclusive)
                     {
-                        return new LeftSidedBiIntStreamGenerator()
-                        {
+                        return new LeftSidedBiIntStreamGenerator() {
                             @Override
                             public Stream<IntUnaryBiElement> withRightSide(int rightSideStartInclusive, int rightSideEndExclusive)
                             {
@@ -1641,8 +1689,7 @@ public class StreamUtils
             @Override
             public IntStreamGenerator intStream()
             {
-                return new IntStreamGenerator()
-                {
+                return new IntStreamGenerator() {
                     @Override
                     public IntStream with(Options options)
                     {
@@ -1673,8 +1720,7 @@ public class StreamUtils
                     @Override
                     public LimitedIntStreamConfigurator limited()
                     {
-                        return new LimitedIntStreamConfigurator()
-                        {
+                        return new LimitedIntStreamConfigurator() {
                             @Override
                             public IntStreamConfigurator withTerminationPredicate(IntPredicate terminationPredicate)
                             {
@@ -1707,8 +1753,7 @@ public class StreamUtils
             @Override
             public <E, R> Stream<R> recursive(E startElement, Function<E, R> mapper, Function<R, E> nextElementFunction)
             {
-                return StreamUtils.fromSupplier(new Supplier<R>()
-                {
+                return StreamUtils.fromSupplier(new Supplier<R>() {
                     private AtomicReference<E> element = new AtomicReference<>(startElement);
 
                     @Override
@@ -1732,8 +1777,7 @@ public class StreamUtils
             @Override
             public <E, S extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function)
             {
-                return StreamUtils.fromSupplier(new Supplier<E>()
-                {
+                return StreamUtils.fromSupplier(new Supplier<E>() {
                     private E element = startElement;
 
                     @Override
@@ -1796,8 +1840,7 @@ public class StreamUtils
      * @param aggregationFunction
      * @return
      */
-    public static <E, A> Stream<A> aggregate(Stream<E> stream, Predicate<E> startBarrierMatcher, Predicate<E> endBarrierMatcher,
-                                             Function<Stream<E>, Stream<A>> aggregationFunction)
+    public static <E, A> Stream<A> aggregate(Stream<E> stream, Predicate<E> startBarrierMatcher, Predicate<E> endBarrierMatcher, Function<Stream<E>, Stream<A>> aggregationFunction)
     {
         return Optional.ofNullable(stream)
                        .map(s ->
@@ -1933,8 +1976,7 @@ public class StreamUtils
         Iterator<E> iterator = Optional.ofNullable(stream)
                                        .orElse(Stream.empty())
                                        .iterator();
-        return new SplittedStream<E>()
-        {
+        return new SplittedStream<E>() {
             private List<E> includedStack = new ArrayList<>();
             private List<E> excludedStack = new ArrayList<>();
 
@@ -2018,9 +2060,53 @@ public class StreamUtils
     }
 
     /**
+     * Returns a stateful {@link Predicate} that passes only the first element seen for each key
+     * computed by the given key extractor. Subsequent elements whose key was already seen are rejected.
+     * Suitable for use with {@link Stream#filter(Predicate)} to deduplicate a stream by a custom key
+     * while preserving encounter order.
+     * <br>
+     * <br>
+     * Example:
+     * <pre>
+     * Stream.of("apple", "ant", "banana", "avocado")
+     *       .filter(StreamUtils.distinctBy(s -&gt; s.charAt(0)))
+     * // → "apple", "banana"
+     * </pre>
+     * Note: The returned {@link Predicate} is stateful and not thread-safe. Create a fresh instance
+     * for each pipeline.
+     *
+     * @param keyExtractor function that derives the deduplication key from each element
+     * @return a stateful {@link Predicate} that returns {@code true} only for the first element per key
+     */
+    public static <E, K> Predicate<E> distinctBy(Function<E, K> keyExtractor)
+    {
+        java.util.Set<K> seen = new java.util.HashSet<>();
+        return element -> seen.add(keyExtractor.apply(element));
+    }
+
+    /**
+     * Returns a {@link Stream} containing only the first element per key value as computed by
+     * the given key extractor, preserving encounter order. Analogous to {@link Stream#distinct()}
+     * but using a custom key instead of element equality.
+     * <br>
+     * <br>
+     * A {@code null} stream is treated as an empty stream.
+     *
+     * @param stream       source stream; may be {@code null}
+     * @param keyExtractor function that derives the deduplication key from each element
+     * @return a new {@link Stream} with at most one element per distinct key
+     */
+    public static <E, K> Stream<E> distinctBy(Stream<E> stream, Function<E, K> keyExtractor)
+    {
+        return Optional.ofNullable(stream)
+                       .orElse(Stream.empty())
+                       .filter(distinctBy(keyExtractor));
+    }
+
+    /**
      * Recursively flattens the given {@link Stream} using the flattening mapper. The result {@link Stream} will contain the original elements but also the
      * elements created by the flattener function and this recursively until the flattener function does return an empty {@link Stream}.
-     * 
+     *
      * @param stream
      * @param flattener
      * @return
@@ -2047,8 +2133,7 @@ public class StreamUtils
      */
     public static <E, R> FilterMapper<E, R> filterMapper(Predicate<E> filter, Function<E, R> mapper)
     {
-        return new FilterMapper<E, R>()
-        {
+        return new FilterMapper<E, R>() {
             @Override
             public boolean test(E t)
             {
@@ -2165,8 +2250,7 @@ public class StreamUtils
         @Override
         public <A> SourcedStreamPipeline<A> source(Stream<A> stream)
         {
-            return new SourcedStreamPipeline<A>()
-            {
+            return new SourcedStreamPipeline<A>() {
                 @Override
                 public Stream<A> stream()
                 {
@@ -2196,8 +2280,7 @@ public class StreamUtils
         @Override
         public <S> SeededStreamPipeline<S> seed(Collection<S> seeds)
         {
-            return new SeededStreamPipeline<S>()
-            {
+            return new SeededStreamPipeline<S>() {
                 @Override
                 public <A> SourcedStreamPipeline<A> source(Function<Stream<S>, Stream<A>> stream)
                 {
@@ -2205,8 +2288,7 @@ public class StreamUtils
                 }
 
                 @Override
-                public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA,
-                                                                    Function<Stream<S>, Stream<B>> streamProviderB)
+                public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA, Function<Stream<S>, Stream<B>> streamProviderB)
                 {
                     return pipeline().sources(streamProviderA.apply(seeds.stream()), streamProviderB.apply(seeds.stream()));
                 }
@@ -2216,14 +2298,12 @@ public class StreamUtils
         @Override
         public <S> UnbatchedSeededStreamPipeline<S> seed(Stream<S> seeds)
         {
-            return new UnbatchedSeededStreamPipeline<S>()
-            {
+            return new UnbatchedSeededStreamPipeline<S>() {
                 @Override
                 public SeededStreamPipeline<S> batch(int batchSize)
                 {
                     Stream<List<S>> seedBatches = StreamUtils.framedAsList(batchSize, seeds);
-                    return new SeededStreamPipeline<S>()
-                    {
+                    return new SeededStreamPipeline<S>() {
                         @Override
                         public <A> SourcedStreamPipeline<A> source(Function<Stream<S>, Stream<A>> streamProvider)
                         {
@@ -2231,8 +2311,7 @@ public class StreamUtils
                         }
 
                         @Override
-                        public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA,
-                                                                            Function<Stream<S>, Stream<B>> streamProviderB)
+                        public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA, Function<Stream<S>, Stream<B>> streamProviderB)
                         {
                             return pipeline().source(seedBatches)
                                              .fork()

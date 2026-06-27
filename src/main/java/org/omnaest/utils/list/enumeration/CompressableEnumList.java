@@ -47,11 +47,11 @@ import java.util.function.Function;
  */
 public class CompressableEnumList<E extends Enum<E>> extends EnumListDecorator<E> implements EnumList<E>
 {
-    private boolean  inMemoryCompression = false;
-    private Class<E> enumType;
+    private boolean                            inMemoryCompression = false;
+    private Class<E>                           enumType;
 
-    private Function<EnumList<E>, EnumList<E>> compressFunction   = list -> new EnumBitSetList<>(this.enumType, list);
-    private Function<EnumList<E>, EnumList<E>> unCompressFunction = list -> new EnumArrayList<>(list);
+    private Function<EnumList<E>, EnumList<E>> compressFunction    = list -> new EnumBitSetList<>(this.enumType, list);
+    private Function<EnumList<E>, EnumList<E>> unCompressFunction  = list -> new EnumArrayList<>(list);
 
     public CompressableEnumList(Class<E> enumType)
     {

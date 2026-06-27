@@ -53,8 +53,7 @@ public class ComparatorUtils
     {
         return chainedComparator(Arrays.asList(function)
                                        .stream()
-                                       .map(ifunction -> new Comparator<T>()
-                                       {
+                                       .map(ifunction -> new Comparator<T>() {
                                            @Override
                                            public int compare(T o1, T o2)
                                            {
@@ -63,18 +62,15 @@ public class ComparatorUtils
                                        }));
     }
 
-    public static <T, R1 extends Comparable<? super R1>, R2 extends Comparable<? super R2>> Comparator<T> chainedComparator(Function<T, R1> function1,
-                                                                                                                            Function<T, R2> function2)
+    public static <T, R1 extends Comparable<? super R1>, R2 extends Comparable<? super R2>> Comparator<T> chainedComparator(Function<T, R1> function1, Function<T, R2> function2)
     {
-        return chainedComparator(new Comparator<T>()
-        {
+        return chainedComparator(new Comparator<T>() {
             @Override
             public int compare(T o1, T o2)
             {
                 return ComparatorUtils.compare(function1.apply(o1), function1.apply(o2));
             }
-        }, new Comparator<T>()
-        {
+        }, new Comparator<T>() {
             @Override
             public int compare(T o1, T o2)
             {
@@ -83,26 +79,21 @@ public class ComparatorUtils
         });
     }
 
-    public static <T, R1 extends Comparable<? super R1>, R2 extends Comparable<? super R2>, R3 extends Comparable<? super R3>> Comparator<T> chainedComparator(Function<T, R1> function1,
-                                                                                                                                                               Function<T, R2> function2,
-                                                                                                                                                               Function<T, R3> function3)
+    public static <T, R1 extends Comparable<? super R1>, R2 extends Comparable<? super R2>, R3 extends Comparable<? super R3>> Comparator<T> chainedComparator(Function<T, R1> function1, Function<T, R2> function2, Function<T, R3> function3)
     {
-        return chainedComparator(new Comparator<T>()
-        {
+        return chainedComparator(new Comparator<T>() {
             @Override
             public int compare(T o1, T o2)
             {
                 return ComparatorUtils.compare(function1.apply(o1), function1.apply(o2));
             }
-        }, new Comparator<T>()
-        {
+        }, new Comparator<T>() {
             @Override
             public int compare(T o1, T o2)
             {
                 return ComparatorUtils.compare(function2.apply(o1), function2.apply(o2));
             }
-        }, new Comparator<T>()
-        {
+        }, new Comparator<T>() {
             @Override
             public int compare(T o1, T o2)
             {
@@ -116,8 +107,7 @@ public class ComparatorUtils
     {
         return chainedComparator(Arrays.asList(functions)
                                        .stream()
-                                       .map(function -> new Comparator<T>()
-                                       {
+                                       .map(function -> new Comparator<T>() {
                                            @Override
                                            public int compare(T o1, T o2)
                                            {
@@ -136,8 +126,7 @@ public class ComparatorUtils
     public static <T> Comparator<T> chainedComparator(Stream<Comparator<T>> comparators)
     {
         List<Comparator<T>> comparatorList = comparators.collect(Collectors.toList());
-        return new Comparator<T>()
-        {
+        return new Comparator<T>() {
             @Override
             public int compare(T o1, T o2)
             {
@@ -180,7 +169,7 @@ public class ComparatorUtils
         return ObjectUtils.compare(c1, c2);
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public static int compareObject(Object o1, Object o2)
     {
         if (o1 instanceof Comparable && o2 instanceof Comparable)
@@ -207,7 +196,7 @@ public class ComparatorUtils
                                                                         .compareTo(compareFunction.apply(o2)));
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @SuppressWarnings({"unchecked", "rawtypes"})
         @Override
         public ComparatorBuilderLoaded<T> withIdentity()
         {
@@ -223,8 +212,7 @@ public class ComparatorUtils
         @Override
         public ComparatorBuilderLoaded<T> with(Comparator<T> comparator)
         {
-            return new ComparatorBuilderLoaded<T>()
-            {
+            return new ComparatorBuilderLoaded<T>() {
                 private List<Comparator<T>> comparators = new ArrayList<>(Arrays.asList(comparator));
                 private boolean             reversed    = false;
 
@@ -249,7 +237,7 @@ public class ComparatorUtils
                                                                                .compareTo(compareFunction.apply(o2)));
                 }
 
-                @SuppressWarnings({ "rawtypes", "unchecked" })
+                @SuppressWarnings({"rawtypes", "unchecked"})
                 @Override
                 public ComparatorBuilderLoaded<T> andIdentity()
                 {
@@ -373,8 +361,7 @@ public class ComparatorUtils
      */
     public static ComparatorBuilder builder()
     {
-        return new ComparatorBuilder()
-        {
+        return new ComparatorBuilder() {
             @Override
             public <T> TypedComparatorBuilder<T> of(Class<? super T> type)
             {
@@ -384,13 +371,11 @@ public class ComparatorUtils
             @Override
             public <T> ExecutableComparatorBuilder<T> of(T o1, T o2)
             {
-                return new ExecutableComparatorBuilder<T>()
-                {
+                return new ExecutableComparatorBuilder<T>() {
                     @Override
                     public ExecutableComparatorBuilderLoaded<T> with(Comparator<T> comparator)
                     {
-                        return new ExecutableComparatorBuilderLoaded<T>()
-                        {
+                        return new ExecutableComparatorBuilderLoaded<T>() {
                             @SuppressWarnings("unchecked")
                             private ComparatorBuilderLoaded<T> comparatorBuilderLoaded = ComparatorUtils.builder()
                                                                                                         .of((Class<T>) o1.getClass())
@@ -418,8 +403,7 @@ public class ComparatorUtils
                             }
 
                             @Override
-                            public <C extends Comparable<C>, I> ExecutableComparatorBuilderLoaded<T> and(Function<T, I> compareFunction,
-                                                                                                         Function<I, C> mapFunction)
+                            public <C extends Comparable<C>, I> ExecutableComparatorBuilderLoaded<T> and(Function<T, I> compareFunction, Function<I, C> mapFunction)
                             {
                                 this.comparatorBuilderLoaded = this.comparatorBuilderLoaded.and(compareFunction, mapFunction);
                                 return this;
@@ -441,7 +425,7 @@ public class ComparatorUtils
                                                                                     .compareTo(compareFunction.apply(o2)));
                     }
 
-                    @SuppressWarnings({ "rawtypes", "unchecked" })
+                    @SuppressWarnings({"rawtypes", "unchecked"})
                     @Override
                     public ExecutableComparatorBuilderLoaded<T> withIdentity()
                     {
@@ -459,8 +443,7 @@ public class ComparatorUtils
             @Override
             public <S, T> MapperComparatorBuilder<S, T> of(Function<S, T> mapper)
             {
-                return new MapperComparatorBuilder<S, T>()
-                {
+                return new MapperComparatorBuilder<S, T>() {
                     @Override
                     public Comparator<S> natural()
                     {

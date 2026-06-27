@@ -48,37 +48,38 @@ import java.util.concurrent.BlockingQueue;
 public class QueueUtils
 {
 
-	public static <E> List<E> drain(int number, Queue<E> queue)
-	{
-		List<E> retlist = new ArrayList<>();
+    public static <E> List<E> drain(int number, Queue<E> queue)
+    {
+        List<E> retlist = new ArrayList<>();
 
-		E element = null;
-		for (int ii = 0; ii < number && (ii == 0 || element != null); ii++)
-		{
-			element = queue.poll();
-			if (element != null)
-			{
-				retlist.add(element);
-			}
-		}
+        E element = null;
+        for (int ii = 0; ii < number && (ii == 0 || element != null); ii++)
+        {
+            element = queue.poll();
+            if (element != null)
+            {
+                retlist.add(element);
+            }
+        }
 
-		return retlist;
-	}
+        return retlist;
+    }
 
-	public static <E> List<E> drainAll(Queue<E> queue)
-	{
-		List<E> retlist = new ArrayList<>();
+    public static <E> List<E> drainAll(Queue<E> queue)
+    {
+        List<E> retlist = new ArrayList<>();
 
-		E element = null;
-		do
-		{
-			element = queue.poll();
-			if (element != null)
-			{
-				retlist.add(element);
-			}
-		} while (element != null);
+        E element = null;
+        do
+        {
+            element = queue.poll();
+            if (element != null)
+            {
+                retlist.add(element);
+            }
+        }
+        while (element != null);
 
-		return retlist;
-	}
+        return retlist;
+    }
 }

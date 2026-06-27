@@ -40,7 +40,7 @@ public class DefaultProgressCounterTest
         IntStream.range(0, 100)
                  .forEach(counter -> assertEquals(counter + 1, Math.round(progressCounter.increment()
                                                                                          .getProgress()
-                         * 100)));
+                                                                          * 100)));
     }
 
     @Test
@@ -51,6 +51,7 @@ public class DefaultProgressCounterTest
         IntStream.range(0, 100)
                  .forEach(counter -> assertEquals(100 * (1 - 1.0 / (1.0 + Math.log10(counter + 1.0 + 1))), progressCounter.increment()
                                                                                                                           .getProgress()
-                         * 100, 0.01));
+                                                                                                           * 100,
+                                                  0.01));
     }
 }

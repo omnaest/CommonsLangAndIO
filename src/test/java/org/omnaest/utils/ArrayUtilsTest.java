@@ -47,7 +47,7 @@ public class ArrayUtilsTest
     @Test
     public void testDeepClone() throws Exception
     {
-        String[][] matrix = new String[][] { new String[] { "1", "2" }, new String[] { "3", "4" } };
+        String[][] matrix = new String[][] {new String[] {"1", "2"}, new String[] {"3", "4"}};
 
         String[][] clone = ArrayUtils.deepClone(matrix);
         assertArrayEquals(matrix, clone);
@@ -62,7 +62,7 @@ public class ArrayUtilsTest
     @Test
     public void testReverse() throws Exception
     {
-        String[] reverse = ArrayUtils.reverse(new String[] { "a", "b", "c" });
+        String[] reverse = ArrayUtils.reverse(new String[] {"a", "b", "c"});
         assertEquals(Arrays.asList("c", "b", "a"), Arrays.asList(reverse));
     }
 
@@ -70,16 +70,16 @@ public class ArrayUtilsTest
     public void testSubArrayStartingFromMatching()
     {
         assertArrayEquals(null, ArrayUtils.subArrayStartingFromMatching(null, (Byte[]) null));
-        assertArrayEquals(new Byte[] { 10, 20, 30 }, ArrayUtils.subArrayStartingFromMatching(value -> value != 0, new Byte[] { 0, 0, 10, 20, 30 }));
-        assertArrayEquals(new Byte[] {}, ArrayUtils.subArrayStartingFromMatching(null, new Byte[] { 0, 0, 10, 20, 30 }));
+        assertArrayEquals(new Byte[] {10, 20, 30}, ArrayUtils.subArrayStartingFromMatching(value -> value != 0, new Byte[] {0, 0, 10, 20, 30}));
+        assertArrayEquals(new Byte[] {}, ArrayUtils.subArrayStartingFromMatching(null, new Byte[] {0, 0, 10, 20, 30}));
 
-        assertArrayEquals(new byte[] { 10, 20, 30 }, ArrayUtils.subArrayStartingFromMatching(value -> value != 0, new byte[] { 0, 0, 10, 20, 30 }));
+        assertArrayEquals(new byte[] {10, 20, 30}, ArrayUtils.subArrayStartingFromMatching(value -> value != 0, new byte[] {0, 0, 10, 20, 30}));
     }
 
     @Test
     public void testMergeByteArrayArray()
     {
-        assertArrayEquals(new byte[] { 10, 20, 30 }, ArrayUtils.merge(new byte[] { 10 }, new byte[] { 20, 30 }));
+        assertArrayEquals(new byte[] {10, 20, 30}, ArrayUtils.merge(new byte[] {10}, new byte[] {20, 30}));
         assertArrayEquals(new byte[] {}, ArrayUtils.merge(new byte[] {}, new byte[] {}));
         assertArrayEquals(new byte[] {}, ArrayUtils.merge((byte[]) null));
         assertArrayEquals(new byte[] {}, ArrayUtils.merge());

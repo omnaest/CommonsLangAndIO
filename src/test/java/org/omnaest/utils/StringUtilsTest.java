@@ -156,8 +156,7 @@ public class StringUtilsTest
     @Test
     public void testFromSupplier() throws Exception
     {
-        assertEquals("abc", StringUtils.repeat(new Supplier<String>()
-        {
+        assertEquals("abc", StringUtils.repeat(new Supplier<String>() {
             private int    pos  = 0;
             private String text = "abc";
 

@@ -54,8 +54,7 @@ public class MapperUtils
 
     public static <K1, V1, K2, V2> Function<Map.Entry<K1, V1>, Map.Entry<K2, V2>> mapEntry(Function<K1, K2> keyMapper, Function<V1, V2> valueMapper)
     {
-        return entry -> new Map.Entry<K2, V2>()
-        {
+        return entry -> new Map.Entry<K2, V2>() {
             @Override
             public K2 getKey()
             {
@@ -160,8 +159,7 @@ public class MapperUtils
      */
     public static <K, V> Function<BiElement<K, V>, Map.Entry<K, V>> mapBiElementToEntry()
     {
-        return biElement -> new Map.Entry<K, V>()
-        {
+        return biElement -> new Map.Entry<K, V>() {
             @Override
             public K getKey()
             {

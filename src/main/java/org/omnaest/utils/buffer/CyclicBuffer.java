@@ -150,8 +150,7 @@ public class CyclicBuffer<E>
         //
         long position = this.readPosition.getAndIncrement();
 
-        Window<E> retval = new Window<E>()
-        {
+        Window<E> retval = new Window<E>() {
             private Object[] buffer = CyclicBuffer.this.cloneBuffer();
 
             @Override
@@ -257,8 +256,7 @@ public class CyclicBuffer<E>
 
     public Iterator<Window<E>> asIterator()
     {
-        return new Iterator<Window<E>>()
-        {
+        return new Iterator<Window<E>>() {
             @Override
             public boolean hasNext()
             {

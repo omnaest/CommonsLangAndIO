@@ -251,14 +251,12 @@ public class ObjectUtils
 
     public static <E> Condition<E> is(E element)
     {
-        return new Condition<E>()
-        {
+        return new Condition<E>() {
             @SuppressWarnings("unchecked")
             @Override
             public BooleanResult ofAny(E... matchElement)
             {
-                return new BooleanResult()
-                {
+                return new BooleanResult() {
                     private boolean value = Arrays.asList(matchElement)
                                                   .stream()
                                                   .anyMatch(m -> m.equals(element));

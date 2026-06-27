@@ -99,8 +99,7 @@ public class BeanUtils
 
         private <T> NestedFlattenedProperty wrapSubNestedProperty(FlattenedProperty parentProperty, NestedFlattenedProperty flattenedProperty)
         {
-            return new AbstractFlattenedProperty()
-            {
+            return new AbstractFlattenedProperty() {
                 @Override
                 public Property<Object> getProperty()
                 {
@@ -246,7 +245,8 @@ public class BeanUtils
                 {
                     retlist.add(0, parentProperty);
                 }
-            } while (parentProperty != null);
+            }
+            while (parentProperty != null);
             return retlist;
         }
 
@@ -410,7 +410,8 @@ public class BeanUtils
     }
 
     private static class FlattenedPropertyAccessorMapImpl extends MapDecorator<List<String>, UnknownTypePropertyAccessor>
-            implements FlattenedPropertyAccessorMap
+            implements
+                FlattenedPropertyAccessorMap
     {
 
         public FlattenedPropertyAccessorMapImpl(Map<List<String>, UnknownTypePropertyAccessor> map)
@@ -477,7 +478,7 @@ public class BeanUtils
 
     private static class CachedBeanAnalyzer<T> implements BeanAnalyzer<T>
     {
-        private BeanAnalyzer<T> analyzer;
+        private BeanAnalyzer<T>                              analyzer;
 
         private CachedElement<List<Property<T>>>             properties                = CachedElement.of(() -> this.analyzer.getProperties()
                                                                                                                              .collect(Collectors.toList()));
@@ -565,15 +566,13 @@ public class BeanUtils
 
     public static <T> BeanAnalyzer<T> analyze(Class<T> type)
     {
-        return new CachedBeanAnalyzer<>(new BeanAnalyzer<T>()
-        {
+        return new CachedBeanAnalyzer<>(new BeanAnalyzer<T>() {
             @Override
             public T newProxy(Consumer<BeanPropertyAccessorRegistry> registerStream)
             {
                 Map<Property<?>, BeanPropertyAccessor<?>> propertyToAccessors = new HashMap<>();
                 this.getProperties()
-                    .map(property -> new BeanPropertyAccessorRegistryImpl(property)
-                    {
+                    .map(property -> new BeanPropertyAccessorRegistryImpl(property) {
                         @Override
                         public <T1> void attach(BeanPropertyAccessor<T1> accessor)
                         {
@@ -597,8 +596,7 @@ public class BeanUtils
                                                                      List<MethodAndHandler> methodAndHandlers = new ArrayList<>();
                                                                      if (readMethod != null)
                                                                      {
-                                                                         methodAndHandlers.add(new ProxyUtils.MethodAndHandler()
-                                                                         {
+                                                                         methodAndHandlers.add(new ProxyUtils.MethodAndHandler() {
                                                                              @Override
                                                                              public MethodHandler getMethodHandler()
                                                                              {
@@ -614,8 +612,7 @@ public class BeanUtils
                                                                      }
                                                                      if (writeMethod != null)
                                                                      {
-                                                                         methodAndHandlers.add(new ProxyUtils.MethodAndHandler()
-                                                                         {
+                                                                         methodAndHandlers.add(new ProxyUtils.MethodAndHandler() {
                                                                              @Override
                                                                              public MethodHandler getMethodHandler()
                                                                              {
@@ -643,15 +640,13 @@ public class BeanUtils
             @Override
             public MapToProxyMapper<T> toMapToProxyMapper()
             {
-                return new MapToProxyMapper<T>()
-                {
+                return new MapToProxyMapper<T>() {
                     @Override
                     public T apply(Map<String, ? extends Object> map)
                     {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> referenceMap = (Map<String, Object>) map;
-                        T proxy = newProxy(registry -> registry.attach(new BeanPropertyAccessor<Object>()
-                        {
+                        T proxy = newProxy(registry -> registry.attach(new BeanPropertyAccessor<Object>() {
                             private String property = registry.getProperty()
                                                               .getName();
 
@@ -683,8 +678,7 @@ public class BeanUtils
             @Override
             public MapToBeanMapper<T> toMapToBeanMapper()
             {
-                return new MapToBeanMapper<T>()
-                {
+                return new MapToBeanMapper<T>() {
                     private Class<Annotation> fieldAnnotationType;
 
                     @Override
@@ -758,10 +752,10 @@ public class BeanUtils
 
             private boolean isPropertyMethod(Method<T> method)
             {
-                boolean isGetter = StringUtils.startsWithAny(method.getName(), new String[] { "is", "get" }) && method.getParameterTypes()
-                                                                                                                      .isEmpty();
-                boolean isSetter = StringUtils.startsWithAny(method.getName(), new String[] { "set" }) && method.getParameterTypes()
-                                                                                                                .size() == 1;
+                boolean isGetter = StringUtils.startsWithAny(method.getName(), new String[] {"is", "get"}) && method.getParameterTypes()
+                                                                                                                    .isEmpty();
+                boolean isSetter = StringUtils.startsWithAny(method.getName(), new String[] {"set"}) && method.getParameterTypes()
+                                                                                                              .size() == 1;
 
                 boolean isJavaInternalMethod = method.getName()
                                                      .equals("getClass");
@@ -782,8 +776,8 @@ public class BeanUtils
                 return methods.stream()
                               .filter(method -> method.getName()
                                                       .startsWith("get")
-                                      || method.getName()
-                                               .startsWith("is"))
+                                                || method.getName()
+                                                         .startsWith("is"))
                               .findFirst()
                               .orElse(null);
             }
@@ -797,8 +791,7 @@ public class BeanUtils
 
             private Property<T> wrapMethodAsProperty(String property, Field<T> field, Method<T> readMethod, Method<T> writeMethod)
             {
-                return new Property<T>()
-                {
+                return new Property<T>() {
                     @Override
                     public String getName()
                     {
@@ -808,8 +801,7 @@ public class BeanUtils
                     @Override
                     public AccessMethods<T> getAccessMethods()
                     {
-                        return new AccessMethods<T>()
-                        {
+                        return new AccessMethods<T>() {
                             @Override
                             public Method<T> getReadMethod()
                             {
@@ -850,8 +842,7 @@ public class BeanUtils
                     @Override
                     public <E> PropertyAccessor<E> access(Class<E> propertyType, Supplier<T> instance)
                     {
-                        return new PropertyAccessor<E>()
-                        {
+                        return new PropertyAccessor<E>() {
                             @Override
                             public E get()
                             {
@@ -940,8 +931,7 @@ public class BeanUtils
             @Override
             public InstanceAccessor<T> access(Supplier<T> instance)
             {
-                return new InstanceAccessor<T>()
-                {
+                return new InstanceAccessor<T>() {
                     private CachedElement<PropertyAccessorMap>          propertyAccessorMap          = CachedElement.of(() -> this.asMapUncached());
                     private CachedElement<FlattenedPropertyAccessorMap> flattenedPropertyAccessorMap = CachedElement.of(() -> this.asFlattenedMapUncached());
 
@@ -980,8 +970,7 @@ public class BeanUtils
                                                                             boolean hasPrimitiveType = propertyAccessor.hasPrimitiveType();
                                                                             if (hasPrimitiveType)
                                                                             {
-                                                                                Map.Entry<List<String>, UnknownTypePropertyAccessor> flattenedEntry = new Map.Entry<List<String>, UnknownTypePropertyAccessor>()
-                                                                                {
+                                                                                Map.Entry<List<String>, UnknownTypePropertyAccessor> flattenedEntry = new Map.Entry<List<String>, UnknownTypePropertyAccessor>() {
                                                                                     @Override
                                                                                     public List<String> getKey()
                                                                                     {
@@ -1015,8 +1004,7 @@ public class BeanUtils
                                                                                                    .stream()
                                                                                                    .map(subEntry ->
                                                                                                    {
-                                                                                                       Map.Entry<List<String>, UnknownTypePropertyAccessor> retval = new Map.Entry<List<String>, UnknownTypePropertyAccessor>()
-                                                                                                       {
+                                                                                                       Map.Entry<List<String>, UnknownTypePropertyAccessor> retval = new Map.Entry<List<String>, UnknownTypePropertyAccessor>() {
                                                                                                            @Override
                                                                                                            public List<String> getKey()
                                                                                                            {

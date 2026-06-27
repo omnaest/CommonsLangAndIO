@@ -42,32 +42,32 @@ import org.omnaest.utils.element.lar.IntegerLeftAndRight;
 public class IntegerLeftAndRightTest
 {
 
-	@Test
-	public void testGetMin() throws Exception
-	{
-		assertEquals(1, new IntegerLeftAndRight(1, 2)	.getMin()
-														.intValue());
-		assertEquals(1, new IntegerLeftAndRight(2, 1)	.getMin()
-														.intValue());
-		assertEquals(1, new IntegerLeftAndRight(1, null).getMin()
-														.intValue());
-		assertEquals(1, new IntegerLeftAndRight(null, 1).getMin()
-														.intValue());
-		assertNull(new IntegerLeftAndRight(null, null).getMin());
-	}
+    @Test
+    public void testGetMin() throws Exception
+    {
+        assertEquals(1, new IntegerLeftAndRight(1, 2).getMin()
+                                                     .intValue());
+        assertEquals(1, new IntegerLeftAndRight(2, 1).getMin()
+                                                     .intValue());
+        assertEquals(1, new IntegerLeftAndRight(1, null).getMin()
+                                                        .intValue());
+        assertEquals(1, new IntegerLeftAndRight(null, 1).getMin()
+                                                        .intValue());
+        assertNull(new IntegerLeftAndRight(null, null).getMin());
+    }
 
-	@Test
-	public void testGetMax() throws Exception
-	{
-		assertEquals(2, new IntegerLeftAndRight(1, 2)	.getMax()
-														.intValue());
-		assertEquals(2, new IntegerLeftAndRight(2, 1)	.getMax()
-														.intValue());
-		assertEquals(2, new IntegerLeftAndRight(null, 2).getMax()
-														.intValue());
-		assertEquals(2, new IntegerLeftAndRight(2, null).getMax()
-														.intValue());
-		assertNull(new IntegerLeftAndRight(null, null).getMax());
-	}
+    @Test
+    public void testGetMax() throws Exception
+    {
+        assertEquals(2, new IntegerLeftAndRight(1, 2).getMax()
+                                                     .intValue());
+        assertEquals(2, new IntegerLeftAndRight(2, 1).getMax()
+                                                     .intValue());
+        assertEquals(2, new IntegerLeftAndRight(null, 2).getMax()
+                                                        .intValue());
+        assertEquals(2, new IntegerLeftAndRight(2, null).getMax()
+                                                        .intValue());
+        assertNull(new IntegerLeftAndRight(null, null).getMax());
+    }
 
 }

@@ -48,29 +48,29 @@ import org.omnaest.utils.CollectionUtils.CollectionDelta;
 public class CollectionUtilsTest
 {
 
-	@Test
-	public void testDelta() throws Exception
-	{
-		CollectionDelta<String> collectionDelta = CollectionUtils.delta(Arrays.asList("a", "b"), Arrays.asList("b", "c"));
+    @Test
+    public void testDelta() throws Exception
+    {
+        CollectionDelta<String> collectionDelta = CollectionUtils.delta(Arrays.asList("a", "b"), Arrays.asList("b", "c"));
 
-		assertEquals(	Arrays.asList("a")
-							.stream()
-							.collect(Collectors.toSet()),
-						collectionDelta.getRemoved());
-		assertEquals(	Arrays.asList("b")
-							.stream()
-							.collect(Collectors.toSet()),
-						collectionDelta.getShared());
-		assertEquals(	Arrays.asList("c")
-							.stream()
-							.collect(Collectors.toSet()),
-						collectionDelta.getAdded());
-	}
+        assertEquals(Arrays.asList("a")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     collectionDelta.getRemoved());
+        assertEquals(Arrays.asList("b")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     collectionDelta.getShared());
+        assertEquals(Arrays.asList("c")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     collectionDelta.getAdded());
+    }
 
-	@Test
-	public void testLast() throws Exception
-	{
-		assertEquals("b", CollectionUtils.last(Arrays.asList("a", "b")));
-	}
+    @Test
+    public void testLast() throws Exception
+    {
+        assertEquals("b", CollectionUtils.last(Arrays.asList("a", "b")));
+    }
 
 }

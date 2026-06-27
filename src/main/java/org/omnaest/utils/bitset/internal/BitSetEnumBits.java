@@ -23,7 +23,7 @@ public class BitSetEnumBits<E extends Enum<E>> implements EnumBits<E>
         this.bits = MultiBits.newInstance(Bits.of(this.enumValues.size())
                                               .findLastSetBitIndex()
                                               .orElse(0)
-                + 1);
+                                          + 1);
     }
 
     @Override

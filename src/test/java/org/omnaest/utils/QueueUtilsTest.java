@@ -48,24 +48,24 @@ import org.junit.Test;
  */
 public class QueueUtilsTest
 {
-	@Test
-	public void testDrainAll() throws Exception
-	{
-		Queue<String> queue = new LinkedBlockingDeque<>();
-		queue.addAll(Arrays.asList("1", "2", "3"));
+    @Test
+    public void testDrainAll() throws Exception
+    {
+        Queue<String> queue = new LinkedBlockingDeque<>();
+        queue.addAll(Arrays.asList("1", "2", "3"));
 
-		List<String> drained = QueueUtils.drainAll(queue);
-		assertEquals(Arrays.asList("1", "2", "3"), drained);
-	}
+        List<String> drained = QueueUtils.drainAll(queue);
+        assertEquals(Arrays.asList("1", "2", "3"), drained);
+    }
 
-	@Test
-	public void testDrain() throws Exception
-	{
-		Queue<String> queue = new LinkedBlockingDeque<>();
-		queue.addAll(Arrays.asList("1", "2", "3"));
+    @Test
+    public void testDrain() throws Exception
+    {
+        Queue<String> queue = new LinkedBlockingDeque<>();
+        queue.addAll(Arrays.asList("1", "2", "3"));
 
-		List<String> drained = QueueUtils.drain(2, queue);
-		assertEquals(Arrays.asList("1", "2"), drained);
-	}
+        List<String> drained = QueueUtils.drain(2, queue);
+        assertEquals(Arrays.asList("1", "2"), drained);
+    }
 
 }

@@ -152,8 +152,7 @@ public class EnumUtils
      */
     public static <E extends Enum<E>> Decider<E> decideOn(E value)
     {
-        return new Decider<E>()
-        {
+        return new Decider<E>() {
             private E effectiveValue = value;
 
             @Override

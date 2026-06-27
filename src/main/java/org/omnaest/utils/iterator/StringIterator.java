@@ -37,25 +37,25 @@ import java.util.Iterator;
 
 public class StringIterator implements Iterator<String>
 {
-	private String	text;
-	private int		position	= -1;
+    private String text;
+    private int    position = -1;
 
-	public StringIterator(String text)
-	{
-		this.text = text;
-	}
+    public StringIterator(String text)
+    {
+        this.text = text;
+    }
 
-	@Override
-	public boolean hasNext()
-	{
-		return this.text != null && this.position + 1 < this.text.length();
-	}
+    @Override
+    public boolean hasNext()
+    {
+        return this.text != null && this.position + 1 < this.text.length();
+    }
 
-	@Override
-	public String next()
-	{
-		int index = ++this.position;
-		return this.text != null ? this.text.substring(index, index + 1) : null;
-	}
+    @Override
+    public String next()
+    {
+        int index = ++this.position;
+        return this.text != null ? this.text.substring(index, index + 1) : null;
+    }
 
 }

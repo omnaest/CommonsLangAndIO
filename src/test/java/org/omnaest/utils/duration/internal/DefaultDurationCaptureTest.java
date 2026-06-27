@@ -41,24 +41,25 @@ import org.omnaest.utils.duration.DurationCapture;
 public class DefaultDurationCaptureTest
 {
 
-	@Test
-	public void testMeasure() throws Exception
-	{
-		DurationCapture	.newInstance()
-						.measure(() ->
-						{
-							try
-							{
-								Thread.sleep(100);
-							} catch (InterruptedException e)
-							{
-							}
-						})
-						.doWithResult(result ->
-						{
-							System.out.println(result.getDurationAsString(TimeUnit.MILLISECONDS));
-							System.out.println(result.getDurationAsString(TimeUnit.MICROSECONDS));
-						});
-	}
+    @Test
+    public void testMeasure() throws Exception
+    {
+        DurationCapture.newInstance()
+                       .measure(() ->
+                       {
+                           try
+                           {
+                               Thread.sleep(100);
+                           }
+                           catch (InterruptedException e)
+                           {
+                           }
+                       })
+                       .doWithResult(result ->
+                       {
+                           System.out.println(result.getDurationAsString(TimeUnit.MILLISECONDS));
+                           System.out.println(result.getDurationAsString(TimeUnit.MICROSECONDS));
+                       });
+    }
 
 }

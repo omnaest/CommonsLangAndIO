@@ -46,7 +46,7 @@ public class MultithreadedHashTextFileIndex implements TextFileIndex
     {
         this(directory, Integer.MAX_VALUE, 2 * Runtime.getRuntime()
                                                       .availableProcessors()
-                + 1);
+                                           + 1);
     }
 
     public MultithreadedHashTextFileIndex(File directory, int capacity, int numberOfThreads)

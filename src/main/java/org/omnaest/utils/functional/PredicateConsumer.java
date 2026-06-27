@@ -22,8 +22,7 @@ public interface PredicateConsumer<E> extends Predicate<E>, Consumer<E>
      */
     public static <E> PredicateConsumer<E> of(Predicate<E> predicate, Consumer<E> consumer)
     {
-        return new PredicateConsumer<E>()
-        {
+        return new PredicateConsumer<E>() {
             @Override
             public void accept(E element)
             {

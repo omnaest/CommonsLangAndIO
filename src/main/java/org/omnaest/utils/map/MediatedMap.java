@@ -47,8 +47,7 @@ public class MediatedMap<K, V, KS, VS> implements Map<K, V>
         this(map, keyMapper, keyMapper, valueMapper, valueMapper);
     }
 
-    public MediatedMap(Map<KS, VS> map, BidirectionalFunction<K, KS> keyWriteMapper, BidirectionalFunction<K, KS> keyReadMapper,
-                       BidirectionalFunction<V, VS> valueWriteMapper, BidirectionalFunction<V, VS> valueReadMapper)
+    public MediatedMap(Map<KS, VS> map, BidirectionalFunction<K, KS> keyWriteMapper, BidirectionalFunction<K, KS> keyReadMapper, BidirectionalFunction<V, VS> valueWriteMapper, BidirectionalFunction<V, VS> valueReadMapper)
     {
         super();
         this.map = map;
@@ -70,7 +69,7 @@ public class MediatedMap<K, V, KS, VS> implements Map<K, V>
         return this.map.isEmpty();
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     @Override
     public boolean containsKey(Object key)
     {
@@ -202,8 +201,7 @@ public class MediatedMap<K, V, KS, VS> implements Map<K, V>
     {
         return Collections.unmodifiableSet(this.map.entrySet()
                                                    .stream()
-                                                   .map(entry -> new Map.Entry<K, V>()
-                                                   {
+                                                   .map(entry -> new Map.Entry<K, V>() {
                                                        @Override
                                                        public K getKey()
                                                        {
@@ -245,7 +243,7 @@ public class MediatedMap<K, V, KS, VS> implements Map<K, V>
     public String toString()
     {
         return "MediatedMap [map=" + this.map + ", keyWriteMapper=" + this.keyWriteMapper + ", keyReadMapper=" + this.keyReadMapper + ", valueWriteMapper="
-                + this.valueWriteMapper + ", valueReadMapper=" + this.valueReadMapper + "]";
+               + this.valueWriteMapper + ", valueReadMapper=" + this.valueReadMapper + "]";
     }
 
 }

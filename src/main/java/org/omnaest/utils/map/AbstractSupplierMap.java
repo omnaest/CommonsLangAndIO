@@ -25,7 +25,8 @@ import org.omnaest.utils.SupplierUtils;
 import org.omnaest.utils.map.AbstractSupplierMap.KeySupplier;
 
 public class AbstractSupplierMap<K, V, SK extends Supplier<K>, SV extends Supplier<V>> extends MappingMapDecorator<SK, KeySupplier<K>, SV, Supplier<V>>
-        implements SupplierMap<K, V, SK, SV>
+        implements
+            SupplierMap<K, V, SK, SV>
 {
     private boolean usingSoftReferenceCache = true;
 
@@ -80,11 +81,10 @@ public class AbstractSupplierMap<K, V, SK extends Supplier<K>, SV extends Suppli
         this(() -> new HashMap<>(), keySupplierFunction, valueSupplierFunction);
     }
 
-    public AbstractSupplierMap(Supplier<Map<KeySupplier<K>, Supplier<V>>> sourceMap, Function<Supplier<K>, SK> keySupplierFunction,
-                               Function<Supplier<V>, SV> valueSupplierFunction)
+    public AbstractSupplierMap(Supplier<Map<KeySupplier<K>, Supplier<V>>> sourceMap, Function<Supplier<K>, SK> keySupplierFunction, Function<Supplier<V>, SV> valueSupplierFunction)
     {
         super(sourceMap, k -> keySupplierFunction.apply(k), k -> new KeySupplier<>(k), v -> valueSupplierFunction.apply(v), v -> v, k -> new KeySupplier<>(k),
-                v -> v);
+              v -> v);
     }
 
     @Override

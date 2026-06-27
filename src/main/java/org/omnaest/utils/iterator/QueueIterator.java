@@ -45,44 +45,44 @@ import java.util.function.Function;
  */
 public class QueueIterator<E> implements Iterator<E>
 {
-	private Queue<E>				queue;
-	private Function<Queue<E>, E>	elementDrainFunction	= Queue::poll;
+    private Queue<E>              queue;
+    private Function<Queue<E>, E> elementDrainFunction = Queue::poll;
 
-	/**
-	 * Defines the source {@link Queue} and the drain function like {@link Queue#poll()}
-	 * 
-	 * @param queue
-	 * @param elementDrainFunction
-	 */
-	public QueueIterator(Queue<E> queue, Function<Queue<E>, E> elementDrainFunction)
-	{
-		super();
-		this.queue = queue;
-		this.elementDrainFunction = elementDrainFunction;
-	}
+    /**
+     * Defines the source {@link Queue} and the drain function like {@link Queue#poll()}
+     * 
+     * @param queue
+     * @param elementDrainFunction
+     */
+    public QueueIterator(Queue<E> queue, Function<Queue<E>, E> elementDrainFunction)
+    {
+        super();
+        this.queue = queue;
+        this.elementDrainFunction = elementDrainFunction;
+    }
 
-	/**
-	 * Similar to {@link #QueueIterator(Queue, Function)} with {@link Queue#poll()} method as drain function
-	 * 
-	 * @param queue
-	 */
-	public QueueIterator(Queue<E> queue)
-	{
-		super();
-		this.queue = queue;
-	}
+    /**
+     * Similar to {@link #QueueIterator(Queue, Function)} with {@link Queue#poll()} method as drain function
+     * 
+     * @param queue
+     */
+    public QueueIterator(Queue<E> queue)
+    {
+        super();
+        this.queue = queue;
+    }
 
-	@Override
-	public boolean hasNext()
-	{
-		return !this.queue.isEmpty();
-	}
+    @Override
+    public boolean hasNext()
+    {
+        return !this.queue.isEmpty();
+    }
 
-	@Override
-	public E next()
-	{
+    @Override
+    public E next()
+    {
 
-		return this.elementDrainFunction.apply(this.queue);
-	}
+        return this.elementDrainFunction.apply(this.queue);
+    }
 
 }

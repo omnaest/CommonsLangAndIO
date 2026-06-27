@@ -40,28 +40,28 @@ package org.omnaest.utils.element.lar;
  */
 public class IntegerLeftAndRight extends UnaryLeftAndRight<Integer>
 {
-	public IntegerLeftAndRight(Integer left, Integer right)
-	{
-		super(left, right);
-	}
+    public IntegerLeftAndRight(Integer left, Integer right)
+    {
+        super(left, right);
+    }
 
-	public Integer getMax()
-	{
-		Integer retval = this.left;
-		if (retval == null || (this.right != null && retval < this.right))
-		{
-			retval = this.right;
-		}
-		return retval;
-	}
+    public Integer getMax()
+    {
+        Integer retval = this.left;
+        if (retval == null || (this.right != null && retval < this.right))
+        {
+            retval = this.right;
+        }
+        return retval;
+    }
 
-	public Integer getMin()
-	{
-		Integer retval = this.left;
-		if (retval == null || (this.right != null && retval > this.right))
-		{
-			retval = this.right;
-		}
-		return retval;
-	}
+    public Integer getMin()
+    {
+        Integer retval = this.left;
+        if (retval == null || (this.right != null && retval > this.right))
+        {
+            retval = this.right;
+        }
+        return retval;
+    }
 }

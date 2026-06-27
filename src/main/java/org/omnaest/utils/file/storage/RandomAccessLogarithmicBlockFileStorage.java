@@ -109,7 +109,8 @@ public class RandomAccessLogarithmicBlockFileStorage implements ByteArrayBlockFi
 
                 subArray = partitionFileAccessor.read(rowIndex);
                 subArrays.add(subArray);
-            } while (subArray.length > 0);
+            }
+            while (subArray.length > 0);
         }
 
         //
@@ -249,8 +250,7 @@ public class RandomAccessLogarithmicBlockFileStorage implements ByteArrayBlockFi
     @Override
     public StringBlockFileStorage asStringBlockFileStorage()
     {
-        return new StringBlockFileStorage()
-        {
+        return new StringBlockFileStorage() {
             @Override
             public void write(int rowIndex, String content)
             {

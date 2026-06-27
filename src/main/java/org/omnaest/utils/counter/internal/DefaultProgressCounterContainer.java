@@ -70,8 +70,7 @@ public class DefaultProgressCounterContainer implements ProgressCounterContainer
     }
 
     @Override
-    public ProgressCounterContainer newDurationProgressCounterWithWeight(String name, double weight,
-                                                                         Consumer<DurationProgressCounter> durationProgressCounterConsumer)
+    public ProgressCounterContainer newDurationProgressCounterWithWeight(String name, double weight, Consumer<DurationProgressCounter> durationProgressCounterConsumer)
     {
         durationProgressCounterConsumer.accept(this.newDurationProgressCounterWithWeight(name, weight));
         return this;
@@ -134,8 +133,7 @@ public class DefaultProgressCounterContainer implements ProgressCounterContainer
                                                                 .from(time));
         };
 
-        AbstractImmutableProgressCounter progressCounter = new AbstractImmutableProgressCounter(new CounterAdapter(() -> this.getOverallCount()))
-        {
+        AbstractImmutableProgressCounter progressCounter = new AbstractImmutableProgressCounter(new CounterAdapter(() -> this.getOverallCount())) {
             @Override
             protected LongSupplier getMaximumProvider()
             {
@@ -149,8 +147,7 @@ public class DefaultProgressCounterContainer implements ProgressCounterContainer
             }
         };
 
-        return new AbstractImmutableDurationProgressCounter(progressCounter)
-        {
+        return new AbstractImmutableDurationProgressCounter(progressCounter) {
             @Override
             protected Optional<DurationMeasurement> getDurationMeasurement()
             {

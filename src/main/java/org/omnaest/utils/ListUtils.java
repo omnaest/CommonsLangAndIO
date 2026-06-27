@@ -168,14 +168,12 @@ public class ListUtils
 
     public static <E> Comparator<List<E>> comparator(Comparator<E> comparator)
     {
-        return new Comparator<List<E>>()
-        {
+        return new Comparator<List<E>>() {
             @Override
             public int compare(List<E> o1, List<E> o2)
             {
                 return ComparatorUtils.<List<E>>chainedComparator(IntStream.range(0, Math.max(o1.size(), o2.size()))
-                                                                           .mapToObj(index -> new Comparator<List<E>>()
-                                                                           {
+                                                                           .mapToObj(index -> new Comparator<List<E>>() {
                                                                                @Override
                                                                                public int compare(List<E> o1, List<E> o2)
                                                                                {
@@ -471,25 +469,27 @@ public class ListUtils
 
                     retlist.add(retval);
                 }
-            } while (propertiesChanged);
+            }
+            while (propertiesChanged);
             return retlist;
         }
 
-        private BeanAnalyzer<E> beanAnalyzer;
+        private BeanAnalyzer<E>                            beanAnalyzer;
 
-        private Map<String, NestedFlattenedProperty> properties      = new LinkedHashMap<>();
-        private AtomicInteger                        position        = new AtomicInteger();
-        private Map<String, Integer>                 propertyToIndex = new LinkedHashMap<>();
+        private Map<String, NestedFlattenedProperty>       properties                = new LinkedHashMap<>();
+        private AtomicInteger                              position                  = new AtomicInteger();
+        private Map<String, Integer>                       propertyToIndex           = new LinkedHashMap<>();
 
-        private Consumer<Stream<NestedFlattenedProperty>> propertiesBuilder = newProperties ->
-        {
-            Map<String, NestedFlattenedProperty> collectedProperties = newProperties.collect(Collectors.toMap(property -> property.getPropertyName(),
-                                                                                                              property -> property));
-            this.properties.putAll(collectedProperties);
-            this.propertyToIndex.putAll(collectedProperties.keySet()
-                                                           .stream()
-                                                           .collect(Collectors.toMap(property -> property, property -> this.position.getAndIncrement())));
-        };
+        private Consumer<Stream<NestedFlattenedProperty>>  propertiesBuilder         = newProperties ->
+                                                                                     {
+                                                                                         Map<String, NestedFlattenedProperty> collectedProperties = newProperties.collect(Collectors.toMap(property -> property.getPropertyName(),
+                                                                                                                                                                                           property -> property));
+                                                                                         this.properties.putAll(collectedProperties);
+                                                                                         this.propertyToIndex.putAll(collectedProperties.keySet()
+                                                                                                                                        .stream()
+                                                                                                                                        .collect(Collectors.toMap(property -> property,
+                                                                                                                                                                  property -> this.position.getAndIncrement())));
+                                                                                     };
 
         private Set<String>                                alreadyExplodedProperties = new HashSet<>();
         private Function<NestedFlattenedProperty, Boolean> propertyExplodingConsumer = nestedProperty ->
@@ -497,8 +497,8 @@ public class ListUtils
                                                                                          boolean retval = false;
                                                                                          String propertyName = nestedProperty.getPropertyName();
                                                                                          if (!this.alreadyExplodedProperties.contains(propertyName)
-                                                                                                 && !nestedProperty.getProperty()
-                                                                                                                   .hasPrimitiveType())
+                                                                                             && !nestedProperty.getProperty()
+                                                                                                               .hasPrimitiveType())
                                                                                          {
                                                                                              this.alreadyExplodedProperties.add(propertyName);
                                                                                              this.propertiesBuilder.accept(nestedProperty.getSubProperties());
@@ -540,8 +540,7 @@ public class ListUtils
             return this.beanAnalyzer.newProxy(this.propertyToIndex.keySet()
                                                                   .stream()
                                                                   .collect(Collectors.toMap(property1 -> property1,
-                                                                                            property2 -> (BeanPropertyAccessor<Object>) new BeanPropertyAccessor<Object>()
-                                                                                            {
+                                                                                            property2 -> (BeanPropertyAccessor<Object>) new BeanPropertyAccessor<Object>() {
                                                                                                 @Override
                                                                                                 public void accept(Object t)
                                                                                                 {
@@ -566,8 +565,7 @@ public class ListUtils
         return toMemoryOptimizedList(type, list, breakFunction, mergeFunction);
     }
 
-    public static <E> List<E> toMemoryOptimizedList(Class<E> type, List<E> list, Function<E, List<Object>> breakFunction,
-                                                    Function<List<Object>, E> mergeFunction)
+    public static <E> List<E> toMemoryOptimizedList(Class<E> type, List<E> list, Function<E, List<Object>> breakFunction, Function<List<Object>, E> mergeFunction)
     {
         List<List<Object>> rawSourceLists = new ArrayList<>();
         list.stream()
@@ -805,7 +803,7 @@ public class ListUtils
     {
         return "[" + (list != null ? list.stream() : Stream.empty()).map(element -> StringUtils.toString(element))
                                                                     .collect(Collectors.joining(","))
-                + "]";
+               + "]";
     }
 
     public static <E> Stream<E> toStream(List<E> list)
@@ -910,8 +908,7 @@ public class ListUtils
      */
     public static ListBuilder<?> builder()
     {
-        return new ListBuilder<Object>()
-        {
+        return new ListBuilder<Object>() {
             private List<Object> list = new ArrayList<>();
 
             @Override
@@ -1048,8 +1045,7 @@ public class ListUtils
                                                  .orElse(Collections.emptyList()));
         if (modifier != null)
         {
-            modifier.accept(new ListModifier<E>()
-            {
+            modifier.accept(new ListModifier<E>() {
                 @Override
                 public ListModifier<E> atPosition(int index, UnaryOperator<E> positionModifier)
                 {

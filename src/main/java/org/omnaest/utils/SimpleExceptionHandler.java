@@ -40,5 +40,5 @@ package org.omnaest.utils;
  */
 public interface SimpleExceptionHandler
 {
-	public void handle(Exception e);
+    public void handle(Exception e);
 }

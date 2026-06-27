@@ -84,13 +84,11 @@ public class ThreadUtils
 
     public static SleepBuilder sleep()
     {
-        return new SleepBuilder()
-        {
+        return new SleepBuilder() {
             @Override
             public IntervalSleepBuilder inIntervalOf(int interval, TimeUnit timeUnit)
             {
-                return new IntervalSleepBuilder()
-                {
+                return new IntervalSleepBuilder() {
                     private List<IntConsumer> operations               = new ArrayList<>();
                     private int               minimumNumberOfIntervals = 0;
 

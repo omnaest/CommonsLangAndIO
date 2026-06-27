@@ -45,36 +45,36 @@ import org.omnaest.utils.MapUtils;
 
 public class CRUDMapToMapAdapterTest
 {
-	@Test
-	public void test()
-	{
-		Map<String, String> map = CRUDMap	.of(MapUtils.builder()
-														.put("key1", "value1")
-														.put("key2", "value2")
-														.build())
-											.toMap();
-		assertEquals(2, map.size());
-		assertFalse(map.isEmpty());
-		assertEquals(2, map	.keySet()
-							.size());
-		assertEquals(	Arrays.asList("key1", "key2")
-							.stream()
-							.collect(Collectors.toSet()),
-						map.keySet());
-		assertEquals(	Arrays	.asList("value1", "value2")
-								.stream()
-								.collect(Collectors.toSet()),
-						map	.values()
-							.stream()
-							.collect(Collectors.toSet()));
-		assertEquals(2, map	.entrySet()
-							.size());
-		assertEquals("value1", map	.entrySet()
-									.stream()
-									.filter(entry -> entry	.getKey()
-															.equals("key1"))
-									.findAny()
-									.get()
-									.getValue());
-	}
+    @Test
+    public void test()
+    {
+        Map<String, String> map = CRUDMap.of(MapUtils.builder()
+                                                     .put("key1", "value1")
+                                                     .put("key2", "value2")
+                                                     .build())
+                                         .toMap();
+        assertEquals(2, map.size());
+        assertFalse(map.isEmpty());
+        assertEquals(2, map.keySet()
+                           .size());
+        assertEquals(Arrays.asList("key1", "key2")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     map.keySet());
+        assertEquals(Arrays.asList("value1", "value2")
+                           .stream()
+                           .collect(Collectors.toSet()),
+                     map.values()
+                        .stream()
+                        .collect(Collectors.toSet()));
+        assertEquals(2, map.entrySet()
+                           .size());
+        assertEquals("value1", map.entrySet()
+                                  .stream()
+                                  .filter(entry -> entry.getKey()
+                                                        .equals("key1"))
+                                  .findAny()
+                                  .get()
+                                  .getValue());
+    }
 }

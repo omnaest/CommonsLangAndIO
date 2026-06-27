@@ -57,7 +57,7 @@ public class BitSetBitsTest
     @Test
     public void testSetByteArray() throws Exception
     {
-        assertEquals("100000101011111", Bits.of(new byte[] { 0b01011111, 0b01000001 })
+        assertEquals("100000101011111", Bits.of(new byte[] {0b01011111, 0b01000001})
                                             .toBinaryDigits()
                                             .toString());
     }
@@ -65,7 +65,7 @@ public class BitSetBitsTest
     @Test
     public void testSetBooleanArray() throws Exception
     {
-        assertEquals("101001", Bits.of(new boolean[] { true, false, false, true, false, true })
+        assertEquals("101001", Bits.of(new boolean[] {true, false, false, true, false, true})
                                    .toBinaryDigits()
                                    .toString());
     }
@@ -77,74 +77,74 @@ public class BitSetBitsTest
         assertArrayEquals(bytes, Bits.of(bytes)
                                      .toBytes());
 
-        assertArrayEquals(new byte[] { 11 }, Bits.of(11)
-                                                 .setLength(8)
-                                                 .toBytes());
+        assertArrayEquals(new byte[] {11}, Bits.of(11)
+                                               .setLength(8)
+                                               .toBytes());
 
-        assertArrayEquals(new byte[] { 0 }, Bits.of(0)
-                                                .setLength(8)
-                                                .toBytes());
+        assertArrayEquals(new byte[] {0}, Bits.of(0)
+                                              .setLength(8)
+                                              .toBytes());
     }
 
     @Test
     public void testToIndexPositionArray() throws Exception
     {
-        assertArrayEquals(new int[] { 0, 3, 8 }, Bits.ofIndexPositions(new int[] { 0, 3, 8 })
-                                                     .toIndexPositionArray());
+        assertArrayEquals(new int[] {0, 3, 8}, Bits.ofIndexPositions(new int[] {0, 3, 8})
+                                                   .toIndexPositionArray());
     }
 
     @Test
     public void testToBitSet() throws Exception
     {
-        assertArrayEquals(new int[] { 0, 3, 8 }, Bits.ofIndexPositions(new int[] { 0, 3, 8 })
-                                                     .clone()
-                                                     .toIndexPositionArray());
+        assertArrayEquals(new int[] {0, 3, 8}, Bits.ofIndexPositions(new int[] {0, 3, 8})
+                                                   .clone()
+                                                   .toIndexPositionArray());
     }
 
     @Test
     public void testAnd() throws Exception
     {
-        assertArrayEquals(new int[] { 3 }, Bits.ofIndexPositions(new int[] { 0, 3, 8 })
-                                               .and(Bits.ofIndexPositions(new int[] { 3, 5 }))
-                                               .toIndexPositionArray());
+        assertArrayEquals(new int[] {3}, Bits.ofIndexPositions(new int[] {0, 3, 8})
+                                             .and(Bits.ofIndexPositions(new int[] {3, 5}))
+                                             .toIndexPositionArray());
     }
 
     @Test
     public void testOr() throws Exception
     {
-        assertArrayEquals(new int[] { 0, 3, 5, 8 }, Bits.ofIndexPositions(new int[] { 0, 3, 8 })
-                                                        .or(Bits.ofIndexPositions(new int[] { 3, 5 }))
-                                                        .toIndexPositionArray());
+        assertArrayEquals(new int[] {0, 3, 5, 8}, Bits.ofIndexPositions(new int[] {0, 3, 8})
+                                                      .or(Bits.ofIndexPositions(new int[] {3, 5}))
+                                                      .toIndexPositionArray());
     }
 
     @Test
     public void testXor() throws Exception
     {
-        assertArrayEquals(new int[] { 0, 5, 8 }, Bits.ofIndexPositions(new int[] { 0, 3, 8 })
-                                                     .xor(Bits.ofIndexPositions(new int[] { 3, 5 }))
-                                                     .toIndexPositionArray());
+        assertArrayEquals(new int[] {0, 5, 8}, Bits.ofIndexPositions(new int[] {0, 3, 8})
+                                                   .xor(Bits.ofIndexPositions(new int[] {3, 5}))
+                                                   .toIndexPositionArray());
     }
 
     @Test
     public void testNegate() throws Exception
     {
-        assertArrayEquals(new boolean[] { false, true, false }, Bits.of(new boolean[] { true, false, true })
-                                                                    .negate()
-                                                                    .toBooleanArray());
+        assertArrayEquals(new boolean[] {false, true, false}, Bits.of(new boolean[] {true, false, true})
+                                                                  .negate()
+                                                                  .toBooleanArray());
     }
 
     @Test
     public void testSetLengthIntBoolean() throws Exception
     {
-        assertArrayEquals(new boolean[] { true, false }, Bits.of(new boolean[] { true, false, false })
-                                                             .setLength(2)
-                                                             .toBooleanArray());
-        assertArrayEquals(new boolean[] { false, false, false }, Bits.of(new boolean[] { false, false, false, true })
-                                                                     .setLength(3)
-                                                                     .toBooleanArray());
-        assertArrayEquals(new boolean[] { false, false, false, true, true }, Bits.of(new boolean[] { false, false, false })
-                                                                                 .setLength(5, true)
-                                                                                 .toBooleanArray());
+        assertArrayEquals(new boolean[] {true, false}, Bits.of(new boolean[] {true, false, false})
+                                                           .setLength(2)
+                                                           .toBooleanArray());
+        assertArrayEquals(new boolean[] {false, false, false}, Bits.of(new boolean[] {false, false, false, true})
+                                                                   .setLength(3)
+                                                                   .toBooleanArray());
+        assertArrayEquals(new boolean[] {false, false, false, true, true}, Bits.of(new boolean[] {false, false, false})
+                                                                               .setLength(5, true)
+                                                                               .toBooleanArray());
     }
 
     @Test

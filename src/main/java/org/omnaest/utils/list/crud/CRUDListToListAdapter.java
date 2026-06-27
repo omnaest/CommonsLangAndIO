@@ -39,48 +39,48 @@ import org.omnaest.utils.list.AbstractList;
 
 public class CRUDListToListAdapter<E> extends AbstractList<E>
 {
-	private CRUDList<E> list;
+    private CRUDList<E> list;
 
-	public CRUDListToListAdapter(CRUDList<E> list)
-	{
-		super();
-		this.list = list;
-	}
+    public CRUDListToListAdapter(CRUDList<E> list)
+    {
+        super();
+        this.list = list;
+    }
 
-	@Override
-	public E get(int index)
-	{
-		return this.list.get(index);
-	}
+    @Override
+    public E get(int index)
+    {
+        return this.list.get(index);
+    }
 
-	@Override
-	public E set(int index, E element)
-	{
-		return this.list.set(index, element);
-	}
+    @Override
+    public E set(int index, E element)
+    {
+        return this.list.set(index, element);
+    }
 
-	@Override
-	public void add(int index, E element)
-	{
-		this.list.add(index, element);
-	}
+    @Override
+    public void add(int index, E element)
+    {
+        this.list.add(index, element);
+    }
 
-	@Override
-	public E remove(int index)
-	{
-		return this.list.remove(index);
-	}
+    @Override
+    public E remove(int index)
+    {
+        return this.list.remove(index);
+    }
 
-	@Override
-	public int size()
-	{
-		return this.list.size();
-	}
+    @Override
+    public int size()
+    {
+        return this.list.size();
+    }
 
-	@Override
-	public String toString()
-	{
-		return new ArrayList<>(this).toString();
-	}
+    @Override
+    public String toString()
+    {
+        return new ArrayList<>(this).toString();
+    }
 
 }

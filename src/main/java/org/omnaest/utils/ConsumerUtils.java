@@ -66,8 +66,7 @@ public class ConsumerUtils
      */
     public static <E> Consumer<E> consumeOnce(Consumer<E> consumer)
     {
-        return new Consumer<E>()
-        {
+        return new Consumer<E>() {
             private AtomicBoolean done = new AtomicBoolean(false);
 
             @Override
@@ -88,8 +87,7 @@ public class ConsumerUtils
      */
     public static <E, E1, E2> NoOperationConsumer<E, E1, E2> noOperation()
     {
-        return new NoOperationConsumer<E, E1, E2>()
-        {
+        return new NoOperationConsumer<E, E1, E2>() {
             @Override
             public void accept(E t)
             {
@@ -177,8 +175,7 @@ public class ConsumerUtils
         }
     }
 
-    public static <E1, E2, E3> TriElement<E1, E2, E3> consumeWithAndGet(E1 element1, E2 element2, E3 element3,
-                                                                        TriConsumer<? super E1, ? super E2, ? super E3> elementConsumer)
+    public static <E1, E2, E3> TriElement<E1, E2, E3> consumeWithAndGet(E1 element1, E2 element2, E3 element3, TriConsumer<? super E1, ? super E2, ? super E3> elementConsumer)
     {
         consumeWith(element1, element2, element3, elementConsumer);
         return TriElement.of(element1, element2, element3);
@@ -191,8 +188,7 @@ public class ConsumerUtils
      */
     public static <E> ListAddingConsumer<E> newAddingConsumer()
     {
-        return new ListAddingConsumer<E>()
-        {
+        return new ListAddingConsumer<E>() {
             private List<E> elements = new ArrayList<>();
 
             @Override
@@ -211,8 +207,7 @@ public class ConsumerUtils
 
     public static <E1, E2> ListAddingBiConsumer<E1, E2> newAddingBiConsumer()
     {
-        return new ListAddingBiConsumer<>()
-        {
+        return new ListAddingBiConsumer<>() {
             private List<BiElement<E1, E2>> elements = new ArrayList<>();
 
             @Override
@@ -231,8 +226,7 @@ public class ConsumerUtils
 
     public static <E1, E2, E3> ListAddingTriConsumer<E1, E2, E3> newAddingTriConsumer()
     {
-        return new ListAddingTriConsumer<>()
-        {
+        return new ListAddingTriConsumer<>() {
             private List<TriElement<E1, E2, E3>> elements = new ArrayList<>();
 
             @Override

@@ -45,30 +45,30 @@ import org.omnaest.utils.list.projection.ListAggregationBuilder.UnaryElementsSou
  */
 public class ListToUnaryElementsSourceAdapter<E> implements UnaryElementsSource<E>
 {
-	private List<E> list;
+    private List<E> list;
 
-	public ListToUnaryElementsSourceAdapter(List<E> list)
-	{
-		super();
-		this.list = list;
-	}
+    public ListToUnaryElementsSourceAdapter(List<E> list)
+    {
+        super();
+        this.list = list;
+    }
 
-	@Override
-	public E get(int index)
-	{
-		return this.list.get(index);
-	}
+    @Override
+    public E get(int index)
+    {
+        return this.list.get(index);
+    }
 
-	@Override
-	public int size()
-	{
-		return this.list.size();
-	}
+    @Override
+    public int size()
+    {
+        return this.list.size();
+    }
 
-	@Override
-	public String toString()
-	{
-		return "ListToUnaryElementsSourceAdapter [list=" + this.list + "]";
-	}
+    @Override
+    public String toString()
+    {
+        return "ListToUnaryElementsSourceAdapter [list=" + this.list + "]";
+    }
 
 }

@@ -41,97 +41,97 @@ import org.omnaest.utils.list.crud.ReadList;
 
 public interface ListAggregationBuilder
 {
-	public static interface ElementsSource<E1, E2>
-	{
-		public E1 getFirstElement();
+    public static interface ElementsSource<E1, E2>
+    {
+        public E1 getFirstElement();
 
-		public E2 getSecondElement();
-	}
+        public E2 getSecondElement();
+    }
 
-	public static interface UnaryElementsSource<E> extends ReadList<E>
-	{
-		@Override
-		public E get(int index);
+    public static interface UnaryElementsSource<E> extends ReadList<E>
+    {
+        @Override
+        public E get(int index);
 
-		@Override
-		public int size();
+        @Override
+        public int size();
 
-		public static <E> UnaryElementsSource<E> valueOf(List<E> list)
-		{
-			return new ListToUnaryElementsSourceAdapter<>(list);
-		}
+        public static <E> UnaryElementsSource<E> valueOf(List<E> list)
+        {
+            return new ListToUnaryElementsSourceAdapter<>(list);
+        }
 
-		public default List<E> toList()
-		{
-			return ListUtils.toList(this);
-		}
-	}
+        public default List<E> toList()
+        {
+            return ListUtils.toList(this);
+        }
+    }
 
-	public static interface UnaryAggregationBuilder
-	{
-		public <T, E> Readonly<T, E> withReadProjection(Function<UnaryElementsSource<E>, T> readProjection);
+    public static interface UnaryAggregationBuilder
+    {
+        public <T, E> Readonly<T, E> withReadProjection(Function<UnaryElementsSource<E>, T> readProjection);
 
-		public <T, E> Writeonly<T, E> withWriteProjection(Function<T, UnaryElementsSource<E>> writeProjection);
+        public <T, E> Writeonly<T, E> withWriteProjection(Function<T, UnaryElementsSource<E>> writeProjection);
 
-		public static interface Base<T, E>
-		{
-			public Sourced<T> usingSources(List<List<E>> lists);
-		}
+        public static interface Base<T, E>
+        {
+            public Sourced<T> usingSources(List<List<E>> lists);
+        }
 
-		public static interface Readonly<T, E> extends Base<T, E>
-		{
-			public ReadAndWrite<T, E> andWriteProjection(Function<T, UnaryElementsSource<E>> writeProjection);
-		}
+        public static interface Readonly<T, E> extends Base<T, E>
+        {
+            public ReadAndWrite<T, E> andWriteProjection(Function<T, UnaryElementsSource<E>> writeProjection);
+        }
 
-		public static interface Writeonly<T, E> extends Base<T, E>
-		{
-			public ReadAndWrite<T, E> andReadProjection(Function<UnaryElementsSource<E>, T> readProjection);
-		}
+        public static interface Writeonly<T, E> extends Base<T, E>
+        {
+            public ReadAndWrite<T, E> andReadProjection(Function<UnaryElementsSource<E>, T> readProjection);
+        }
 
-		public static interface ReadAndWrite<T, E> extends Base<T, E>
-		{
-		}
+        public static interface ReadAndWrite<T, E> extends Base<T, E>
+        {
+        }
 
-		public static interface Sourced<T>
-		{
-			public List<T> build();
-		}
-	}
+        public static interface Sourced<T>
+        {
+            public List<T> build();
+        }
+    }
 
-	public static interface QualifiedAggregationBuilder
-	{
-		public <T, E1, E2> Readonly<T, E1, E2> withReadAggregation(Function<ElementsSource<E1, E2>, T> readAggregation);
+    public static interface QualifiedAggregationBuilder
+    {
+        public <T, E1, E2> Readonly<T, E1, E2> withReadAggregation(Function<ElementsSource<E1, E2>, T> readAggregation);
 
-		public <T, E1, E2> Writeonly<T, E1, E2> withWriteAggregation(Function<T, ElementsSource<E1, E2>> writeAggregation);
+        public <T, E1, E2> Writeonly<T, E1, E2> withWriteAggregation(Function<T, ElementsSource<E1, E2>> writeAggregation);
 
-		public static interface Base<T, E1, E2>
-		{
-			public Sourced<T> usingSources(List<E1> list1, List<E2> list2);
+        public static interface Base<T, E1, E2>
+        {
+            public Sourced<T> usingSources(List<E1> list1, List<E2> list2);
 
-			public Sourced<T> usingSources(E1[] array1, E2[] array2);
-		}
+            public Sourced<T> usingSources(E1[] array1, E2[] array2);
+        }
 
-		public static interface Readonly<T, E1, E2> extends Base<T, E1, E2>
-		{
-			public ReadAndWrite<T, E1, E2> andWriteAggregation(Function<T, ElementsSource<E1, E2>> writeAggregation);
-		}
+        public static interface Readonly<T, E1, E2> extends Base<T, E1, E2>
+        {
+            public ReadAndWrite<T, E1, E2> andWriteAggregation(Function<T, ElementsSource<E1, E2>> writeAggregation);
+        }
 
-		public static interface Writeonly<T, E1, E2> extends Base<T, E1, E2>
-		{
-			public ReadAndWrite<T, E1, E2> andReadAggregation(Function<ElementsSource<E1, E2>, T> readAggregation);
-		}
+        public static interface Writeonly<T, E1, E2> extends Base<T, E1, E2>
+        {
+            public ReadAndWrite<T, E1, E2> andReadAggregation(Function<ElementsSource<E1, E2>, T> readAggregation);
+        }
 
-		public static interface ReadAndWrite<T, E1, E2> extends Base<T, E1, E2>
-		{
-		}
+        public static interface ReadAndWrite<T, E1, E2> extends Base<T, E1, E2>
+        {
+        }
 
-		public static interface Sourced<T>
-		{
-			public List<T> build();
-		}
-	}
+        public static interface Sourced<T>
+        {
+            public List<T> build();
+        }
+    }
 
-	public UnaryAggregationBuilder withUnarySource();
+    public UnaryAggregationBuilder withUnarySource();
 
-	public QualifiedAggregationBuilder withQualifiedSource();
+    public QualifiedAggregationBuilder withQualifiedSource();
 }

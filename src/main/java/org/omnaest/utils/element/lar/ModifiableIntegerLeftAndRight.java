@@ -39,28 +39,28 @@ package org.omnaest.utils.element.lar;
  */
 public class ModifiableIntegerLeftAndRight extends IntegerLeftAndRight
 {
-	public ModifiableIntegerLeftAndRight()
-	{
-		this(null, null);
-	}
+    public ModifiableIntegerLeftAndRight()
+    {
+        this(null, null);
+    }
 
-	public ModifiableIntegerLeftAndRight(Integer left, Integer right)
-	{
-		super(left, right);
-	}
+    public ModifiableIntegerLeftAndRight(Integer left, Integer right)
+    {
+        super(left, right);
+    }
 
-	@Override
-	public ModifiableIntegerLeftAndRight setLeft(Integer left)
-	{
-		super.setLeft(left);
-		return this;
-	}
+    @Override
+    public ModifiableIntegerLeftAndRight setLeft(Integer left)
+    {
+        super.setLeft(left);
+        return this;
+    }
 
-	@Override
-	public ModifiableIntegerLeftAndRight setRight(Integer right)
-	{
-		super.setRight(right);
-		return this;
-	}
+    @Override
+    public ModifiableIntegerLeftAndRight setRight(Integer right)
+    {
+        super.setRight(right);
+        return this;
+    }
 
 }

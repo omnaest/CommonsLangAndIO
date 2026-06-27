@@ -412,8 +412,7 @@ public class MatcherUtils
      */
     public static MatchFinderBuilder matcherBuilder()
     {
-        return new MatchFinderBuilder()
-        {
+        return new MatchFinderBuilder() {
             private List<String> regExParts            = new ArrayList<>();
             private List<String> regExSuffixes         = new ArrayList<>();
             private List<String> regExOptionalSuffixes = new ArrayList<>();
@@ -515,7 +514,7 @@ public class MatcherUtils
                         : this.encloseInNonCapturingGroup(this.regExOptionalSuffixes.stream()
                                                                                     .map(this::encloseInNonCapturingGroup)
                                                                                     .collect(Collectors.joining("|")))
-                                + "?";
+                          + "?";
                 String prefixRegEx = this.regExPrefixes.isEmpty() ? ""
                         : this.encloseInNonCapturingGroup(this.regExPrefixes.stream()
                                                                             .map(this::encloseInNonCapturingGroup)
@@ -524,7 +523,7 @@ public class MatcherUtils
                         : this.encloseInNonCapturingGroup(this.regExOptionalPrefixes.stream()
                                                                                     .map(this::encloseInNonCapturingGroup)
                                                                                     .collect(Collectors.joining("|")))
-                                + "?";
+                          + "?";
                 String regEx = this.regExParts.stream()
                                               .map(part -> prefixRegEx + optionalPrefixRegEx + part + suffixRegEx + optionalSuffixRegEx)
                                               .map(this::encloseInNonCapturingGroup)
@@ -549,8 +548,7 @@ public class MatcherUtils
      */
     public static MatchFinderFactory matcher()
     {
-        return new MatchFinderFactory()
-        {
+        return new MatchFinderFactory() {
 
             @Override
             public MatchFinder ofRegEx(String regEx)
@@ -583,8 +581,7 @@ public class MatcherUtils
             @Override
             public MatchFinder of(Pattern pattern)
             {
-                return new MatchFinder()
-                {
+                return new MatchFinder() {
                     @Override
                     public Optional<Match> matchAgainst(String input)
                     {
@@ -654,8 +651,7 @@ public class MatcherUtils
                 groupToRegion.put(ii, BiElement.of(matcher.start(ii), matcher.end(ii)));
             }
 
-            retval = Optional.of(new Match()
-            {
+            retval = Optional.of(new Match() {
                 @Override
                 public int getStart()
                 {
@@ -814,8 +810,7 @@ public class MatcherUtils
 
     public static Replacer replacer()
     {
-        return new Replacer()
-        {
+        return new Replacer() {
             private Map<String, UnaryOperator<String>>   exactMatchTokenToValue = new LinkedHashMap<>();
             private Map<String, Function<Match, String>> regexToReplacement     = new LinkedHashMap<>();
 
@@ -936,8 +931,7 @@ public class MatcherUtils
     public static TokenInterpreter interpreter()
     {
         Replacer replacer = MatcherUtils.replacer();
-        return new TokenInterpreter()
-        {
+        return new TokenInterpreter() {
             private AtomicBoolean           operationHasRun = new AtomicBoolean(false);
             private Optional<ElseOperation> elseOperation   = Optional.empty();
 
@@ -1037,8 +1031,8 @@ public class MatcherUtils
 
     private static class MatchResultImpl implements MatchResult, FilteredMatchResult
     {
-        private final Pattern pattern;
-        private final String  input;
+        private final Pattern           pattern;
+        private final String            input;
 
         private Supplier<Stream<Match>> matches;
 
@@ -1167,8 +1161,7 @@ public class MatcherUtils
 
         public static Optional<Stream<Match>> determineMatches(String input, Matcher matcher, BooleanSupplier matcherAction)
         {
-            Iterator<Match> iterator = new Iterator<Match>()
-            {
+            Iterator<Match> iterator = new Iterator<Match>() {
                 private CachedElement<Match> matchCache = CachedElement.of(() -> this.determineNextMatch()
                                                                                      .orElse(null));
 

@@ -58,8 +58,7 @@ public class JoinerUtils
 
     public static <E> Joiner<E> join(Stream<E> elements)
     {
-        return new Joiner<E>()
-        {
+        return new Joiner<E>() {
 
             @Override
             public <E2> JoinerWithElements<E, E2> with(Collection<E2> joinElements)
@@ -70,13 +69,11 @@ public class JoinerUtils
             @Override
             public <E2> JoinerWithElements<E, E2> with(Stream<E2> joinElements)
             {
-                return new JoinerWithElements<E, E2>()
-                {
+                return new JoinerWithElements<E, E2>() {
                     @Override
                     public InnerJoiner<E, E2> inner()
                     {
-                        return new InnerJoiner<E, E2>()
-                        {
+                        return new InnerJoiner<E, E2>() {
                             @Override
                             public <PK> Stream<BiElement<E, E2>> usingPrimaryKey(Function<E, PK> primaryKeyMapper1, Function<E2, PK> primaryKeyMapper2)
                             {

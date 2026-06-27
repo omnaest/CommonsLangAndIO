@@ -44,16 +44,16 @@ import java.util.Collection;
  */
 public class EnumArrayList<E extends Enum<?>> extends ArrayList<E> implements EnumList<E>
 {
-	private static final long serialVersionUID = 5208379807666239497L;
+    private static final long serialVersionUID = 5208379807666239497L;
 
-	public EnumArrayList()
-	{
-		super();
-	}
+    public EnumArrayList()
+    {
+        super();
+    }
 
-	public EnumArrayList(Collection<? extends E> c)
-	{
-		super(c);
-	}
+    public EnumArrayList(Collection<? extends E> c)
+    {
+        super(c);
+    }
 
 }

@@ -44,28 +44,28 @@ import java.util.Set;
 public interface CRUDMap<K, V>
 {
 
-	public int size();
+    public int size();
 
-	public boolean containsKey(K key);
+    public boolean containsKey(K key);
 
-	public V get(K key);
+    public V get(K key);
 
-	public V put(K key, V value);
+    public V put(K key, V value);
 
-	public V remove(K key);
+    public V remove(K key);
 
-	public void clear();
+    public void clear();
 
-	public Set<K> keySet();
+    public Set<K> keySet();
 
-	public default Map<K, V> toMap()
-	{
-		return new CRUDMapToMapAdapter<>(this);
-	}
+    public default Map<K, V> toMap()
+    {
+        return new CRUDMapToMapAdapter<>(this);
+    }
 
-	public static <K, V> CRUDMap<K, V> of(Map<K, V> map)
-	{
-		return new MapToCRUDMapAdapter<>(map);
-	}
+    public static <K, V> CRUDMap<K, V> of(Map<K, V> map)
+    {
+        return new MapToCRUDMapAdapter<>(map);
+    }
 
 }

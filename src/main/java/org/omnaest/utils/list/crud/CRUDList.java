@@ -46,25 +46,25 @@ import org.omnaest.utils.ListUtils;
  */
 public interface CRUDList<E> extends ReadList<E>
 {
-	public E set(int index, E element);
+    public E set(int index, E element);
 
-	public void add(int index, E element);
+    public void add(int index, E element);
 
-	public E remove(int index);
+    public E remove(int index);
 
-	/**
-	 * @see ListUtils#toCRUDList(List)
-	 * @param list
-	 * @return
-	 */
-	public static <E> CRUDList<E> valueOf(List<E> list)
-	{
-		return new ListToCRUDAdapter<>(list);
-	}
+    /**
+     * @see ListUtils#toCRUDList(List)
+     * @param list
+     * @return
+     */
+    public static <E> CRUDList<E> valueOf(List<E> list)
+    {
+        return new ListToCRUDAdapter<>(list);
+    }
 
-	public static <E> CRUDList<E> valueOf(ReadList<E> readList)
-	{
-		return new ReadListToCRUDListAdapter<>(readList);
-	}
+    public static <E> CRUDList<E> valueOf(ReadList<E> readList)
+    {
+        return new ReadListToCRUDListAdapter<>(readList);
+    }
 
 }

@@ -93,7 +93,7 @@ public class StreamUtilsTest
     public void testFromIteratorFlatMap() throws Exception
     {
         AtomicInteger counter = new AtomicInteger();
-        Stream<String> stream = Arrays.asList(new String[] { "1", "2" }, new String[] { "3", "4" })
+        Stream<String> stream = Arrays.asList(new String[] {"1", "2"}, new String[] {"3", "4"})
                                       .stream()
                                       .map(Arrays::asList)
                                       .map(List::iterator)
@@ -160,16 +160,16 @@ public class StreamUtilsTest
                                                                             .stream())
                                                .collect(Collectors.toList());
             assertEquals(2, frames.size());
-            assertArrayEquals(new String[] { "1", "2", "3" }, frames.get(0));
-            assertArrayEquals(new String[] { "4", "5", "6" }, frames.get(1));
+            assertArrayEquals(new String[] {"1", "2", "3"}, frames.get(0));
+            assertArrayEquals(new String[] {"4", "5", "6"}, frames.get(1));
         }
         {
             List<String[]> frames = StreamUtils.framedPreserveSize(3, Arrays.asList("1", null, "3", "4", "5")
                                                                             .stream())
                                                .collect(Collectors.toList());
             assertEquals(2, frames.size());
-            assertArrayEquals(new String[] { "1", null, "3" }, frames.get(0));
-            assertArrayEquals(new String[] { "4", "5", null }, frames.get(1));
+            assertArrayEquals(new String[] {"1", null, "3"}, frames.get(0));
+            assertArrayEquals(new String[] {"4", "5", null}, frames.get(1));
         }
     }
 
@@ -181,16 +181,16 @@ public class StreamUtilsTest
                                                                 .stream())
                                                .collect(Collectors.toList());
             assertEquals(2, frames.size());
-            assertArrayEquals(new String[] { "1", "2", "3" }, frames.get(0));
-            assertArrayEquals(new String[] { "4", "5", "6" }, frames.get(1));
+            assertArrayEquals(new String[] {"1", "2", "3"}, frames.get(0));
+            assertArrayEquals(new String[] {"4", "5", "6"}, frames.get(1));
         }
         {
             List<String[]> frames = StreamUtils.framed(3, Arrays.asList("1", null, "3", "4", "5")
                                                                 .stream())
                                                .collect(Collectors.toList());
             assertEquals(2, frames.size());
-            assertArrayEquals(new String[] { "1", null, "3" }, frames.get(0));
-            assertArrayEquals(new String[] { "4", "5" }, frames.get(1));
+            assertArrayEquals(new String[] {"1", null, "3"}, frames.get(0));
+            assertArrayEquals(new String[] {"4", "5"}, frames.get(1));
         }
     }
 
@@ -604,8 +604,8 @@ public class StreamUtilsTest
         assertEquals(Arrays.asList("1a1b", "2a2b", "3b", "4a"), result.stream()
                                                                       .map(entry -> entry.getFirst()
                                                                                          .orElse("")
-                                                                              + entry.getSecond()
-                                                                                     .orElse(""))
+                                                                                    + entry.getSecond()
+                                                                                           .orElse(""))
                                                                       .collect(Collectors.toList()));
     }
 
@@ -678,7 +678,7 @@ public class StreamUtilsTest
         BiFunction<String, Integer, String> mapper = (previous, value) -> Optional.ofNullable(previous)
                                                                                   .map(previousValue -> previousValue + "-")
                                                                                   .orElse("")
-                + value;
+                                                                          + value;
         assertEquals(List.of("0", "0-1", "0-1-2"), StreamUtils.mapWithPrevious(IntStream.range(0, 3)
                                                                                         .boxed(),
                                                                                mapper)
@@ -691,11 +691,142 @@ public class StreamUtilsTest
         BiFunction<String, Integer, String> mapper = (previous, value) -> Optional.ofNullable(previous)
                                                                                   .map(previousValue -> previousValue + "-")
                                                                                   .orElse("")
-                + value;
+                                                                          + value;
         assertEquals("0-1-2", StreamUtils.reduceWithPrevious(IntStream.range(0, 3)
                                                                       .boxed(),
                                                              mapper)
                                          .get());
+    }
+
+    @Test
+    public void testDistinctByPredicate() throws Exception
+    {
+        List<String> result = Stream.of("apple", "ant", "banana", "avocado")
+                                    .filter(StreamUtils.distinctBy(s -> s.charAt(0)))
+                                    .collect(Collectors.toList());
+        assertEquals(Arrays.asList("apple", "banana"), result);
+    }
+
+    @Test
+    public void testDistinctByStream() throws Exception
+    {
+        List<String> result = StreamUtils.distinctBy(Stream.of("apple", "ant", "banana", "avocado"), s -> s.charAt(0))
+                                         .collect(Collectors.toList());
+        assertEquals(Arrays.asList("apple", "banana"), result);
+    }
+
+    @Test
+    public void testDistinctByAllUnique() throws Exception
+    {
+        List<String> result = Stream.of("apple", "banana", "cherry")
+                                    .filter(StreamUtils.distinctBy(s -> s.charAt(0)))
+                                    .collect(Collectors.toList());
+        assertEquals(Arrays.asList("apple", "banana", "cherry"), result);
+    }
+
+    @Test
+    public void testDistinctByAllSameKey() throws Exception
+    {
+        List<String> result = Stream.of("ant", "ape", "avocado")
+                                    .filter(StreamUtils.distinctBy(s -> s.charAt(0)))
+                                    .collect(Collectors.toList());
+        assertEquals(Arrays.asList("ant"), result);
+    }
+
+    @Test
+    public void testDistinctByNullStream() throws Exception
+    {
+        Stream<String> nullStream = null;
+        List<String> result = StreamUtils.distinctBy(nullStream, s -> s.charAt(0))
+                                         .collect(Collectors.toList());
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testDistinctByEmptyStream() throws Exception
+    {
+        List<String> result = StreamUtils.distinctBy(Stream.<String>empty(), s -> s.charAt(0))
+                                         .collect(Collectors.toList());
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testDistinctByPreservesOrder() throws Exception
+    {
+        List<Integer> result = StreamUtils.distinctBy(Stream.of(3, 1, 4, 1, 5, 9, 2, 6, 5, 3), i -> i)
+                                          .collect(Collectors.toList());
+        assertEquals(Arrays.asList(3, 1, 4, 5, 9, 2, 6), result);
+    }
+
+    @Test
+    public void testEnumerate() throws Exception
+    {
+        // basic case: three elements get indices 0, 1, 2
+        List<BiElement<Long, String>> result = StreamUtils.enumerate(Stream.of("a", "b", "c"))
+                                                          .collect(Collectors.toList());
+        assertEquals(3, result.size());
+        assertEquals(Long.valueOf(0L), result.get(0).getFirst());
+        assertEquals("a", result.get(0).getSecond());
+        assertEquals(Long.valueOf(1L), result.get(1).getFirst());
+        assertEquals("b", result.get(1).getSecond());
+        assertEquals(Long.valueOf(2L), result.get(2).getFirst());
+        assertEquals("c", result.get(2).getSecond());
+
+        // empty stream
+        List<BiElement<Long, String>> empty = StreamUtils.enumerate(Stream.<String>empty())
+                                                         .collect(Collectors.toList());
+        assertTrue(empty.isEmpty());
+
+        // null stream
+        List<BiElement<Long, String>> nullResult = StreamUtils.enumerate((Stream<String>) null)
+                                                              .collect(Collectors.toList());
+        assertTrue(nullResult.isEmpty());
+
+        // single element gets index 0
+        List<BiElement<Long, String>> single = StreamUtils.enumerate(Stream.of("x"))
+                                                          .collect(Collectors.toList());
+        assertEquals(1, single.size());
+        assertEquals(Long.valueOf(0L), single.get(0).getFirst());
+        assertEquals("x", single.get(0).getSecond());
+    }
+
+    @Test
+    public void testInterleave() throws Exception
+    {
+        // basic: A longer than B → stops when B is exhausted
+        assertEquals(Arrays.asList(1, 10, 2, 20),
+                     StreamUtils.interleave(Stream.of(1, 2, 3), Stream.of(10, 20))
+                                .collect(Collectors.toList()));
+
+        // equal length
+        assertEquals(Arrays.asList(1, 10, 2, 20),
+                     StreamUtils.interleave(Stream.of(1, 2), Stream.of(10, 20))
+                                .collect(Collectors.toList()));
+
+        // A shorter than B → stops when A is exhausted
+        assertEquals(Arrays.asList(1, 10),
+                     StreamUtils.interleave(Stream.of(1), Stream.of(10, 20, 30))
+                                .collect(Collectors.toList()));
+
+        // A empty → result is empty
+        assertEquals(Arrays.asList(),
+                     StreamUtils.interleave(Stream.<Integer>empty(), Stream.of(10, 20))
+                                .collect(Collectors.toList()));
+
+        // B empty → result is empty
+        assertEquals(Arrays.asList(),
+                     StreamUtils.interleave(Stream.of(1, 2), Stream.<Integer>empty())
+                                .collect(Collectors.toList()));
+
+        // null A → treated as empty
+        assertEquals(Arrays.asList(),
+                     StreamUtils.interleave(null, Stream.of(10, 20))
+                                .collect(Collectors.toList()));
+
+        // null B → treated as empty
+        assertEquals(Arrays.asList(),
+                     StreamUtils.interleave(Stream.of(1, 2), null)
+                                .collect(Collectors.toList()));
     }
 
 }

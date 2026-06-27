@@ -224,8 +224,7 @@ public class StringUtils
      */
     public static StringTextBuilder builder()
     {
-        return new StringTextBuilder()
-        {
+        return new StringTextBuilder() {
             private StringBuilder builder       = new StringBuilder();
             private String        lineSeparator = System.lineSeparator();
 
@@ -299,8 +298,7 @@ public class StringUtils
             }
 
             @Override
-            public <E> StringTextBuilder processAll(Collection<E> elements, Consumer<ProcessorSupport> processorSupportConsumer,
-                                                    BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer)
+            public <E> StringTextBuilder processAll(Collection<E> elements, Consumer<ProcessorSupport> processorSupportConsumer, BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer)
             {
                 return this.processAll(Optional.ofNullable(elements)
                                                .orElse(Collections.emptyList())
@@ -309,8 +307,7 @@ public class StringUtils
             }
 
             @Override
-            public <E> StringTextBuilder processAll(Stream<E> elements, Consumer<ProcessorSupport> processorSupportConsumer,
-                                                    BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer)
+            public <E> StringTextBuilder processAll(Stream<E> elements, Consumer<ProcessorSupport> processorSupportConsumer, BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer)
             {
                 ProcessorSupportImpl processorSupport = ConsumerUtils.consumeWithAndGet(new ProcessorSupportImpl(), processorSupportConsumer);
                 return this.add(StringUtils.wrap(Optional.ofNullable(elements)
@@ -459,8 +456,7 @@ public class StringUtils
          * @param elementAndBuilderConsumer
          * @return
          */
-        public <E> StringTextBuilder processAll(Collection<E> elements, Consumer<ProcessorSupport> supportConsumer,
-                                                BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer);
+        public <E> StringTextBuilder processAll(Collection<E> elements, Consumer<ProcessorSupport> supportConsumer, BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer);
 
         /**
          * Similar to {@link #processAll(Collection, Consumer, BiConsumer)}
@@ -470,8 +466,7 @@ public class StringUtils
          * @param elementAndBuilderConsumer
          * @return
          */
-        public <E> StringTextBuilder processAll(Stream<E> elements, Consumer<ProcessorSupport> supportConsumer,
-                                                BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer);
+        public <E> StringTextBuilder processAll(Stream<E> elements, Consumer<ProcessorSupport> supportConsumer, BiConsumer<E, StringTextBuilder> elementAndBuilderConsumer);
 
         /**
          * Adds the given {@link String} text only if the condition is true
@@ -751,15 +746,13 @@ public class StringUtils
 
     public static StringEncoderAndDecoderInitializer encoder()
     {
-        return new StringEncoderAndDecoderInitializer()
-        {
+        return new StringEncoderAndDecoderInitializer() {
             @Override
             public StringEncoderAndDecoder with(Function<TextEncoderAndDecoderFactory, TextEncoderAndDecoder> consumer)
             {
                 EncoderAndDecoderFactory factory = EncoderUtils.newInstance();
                 TextEncoderAndDecoder encoderAndDecoder = consumer.apply(factory);
-                return new StringEncoderAndDecoder()
-                {
+                return new StringEncoderAndDecoder() {
 
                     @Override
                     public String encodeList(List<String> list, String delimiter)
@@ -929,10 +922,10 @@ public class StringUtils
     {
         return Optional.ofNullable(prefix)
                        .orElse("")
-                + Optional.ofNullable(text)
-                          .orElse("")
-                + Optional.ofNullable(suffix)
-                          .orElse("");
+               + Optional.ofNullable(text)
+                         .orElse("")
+               + Optional.ofNullable(suffix)
+                         .orElse("");
     }
 
     /**

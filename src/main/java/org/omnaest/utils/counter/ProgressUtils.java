@@ -29,8 +29,7 @@ public class ProgressUtils
     {
         DurationProgressCounter durationProgressCounter = DurationProgressCounter.fromZero()
                                                                                  .withMaximum(maxCount);
-        return new IncrementCounterLogger<E>()
-        {
+        return new IncrementCounterLogger<E>() {
             private int increment = 1;
 
             @Override

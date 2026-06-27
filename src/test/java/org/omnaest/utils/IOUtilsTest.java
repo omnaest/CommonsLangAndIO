@@ -111,9 +111,9 @@ public class IOUtilsTest
                                .to(new StringWriter())
                                .getCount());
 
-        assertArrayEquals(new byte[] { 1, 2, 3, 4, 5 }, IOUtils.copy()
-                                                               .from(new ByteArrayInputStream(new byte[] { 1, 2, 3, 4, 5 }))
-                                                               .toByteArray()
-                                                               .get());
+        assertArrayEquals(new byte[] {1, 2, 3, 4, 5}, IOUtils.copy()
+                                                             .from(new ByteArrayInputStream(new byte[] {1, 2, 3, 4, 5}))
+                                                             .toByteArray()
+                                                             .get());
     }
 }

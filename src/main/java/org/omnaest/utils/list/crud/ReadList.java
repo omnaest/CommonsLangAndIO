@@ -43,12 +43,12 @@ import java.util.List;
  */
 public interface ReadList<E>
 {
-	public E get(int index);
+    public E get(int index);
 
-	public int size();
+    public int size();
 
-	public static <E> ReadList<E> valueOf(List<E> list)
-	{
-		return CRUDList.valueOf(list);
-	}
+    public static <E> ReadList<E> valueOf(List<E> list)
+    {
+        return CRUDList.valueOf(list);
+    }
 }

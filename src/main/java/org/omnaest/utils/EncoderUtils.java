@@ -30,8 +30,7 @@ public class EncoderUtils
 {
     public static EncoderAndDecoderFactory newInstance()
     {
-        return new EncoderAndDecoderFactory()
-        {
+        return new EncoderAndDecoderFactory() {
             @Override
             public TextEncoderAndDecoder forAlphaNumericText()
             {
@@ -49,8 +48,7 @@ public class EncoderUtils
             @Override
             public TextEncoderAndDecoderBuilder forText()
             {
-                return new TextEncoderAndDecoderBuilder()
-                {
+                return new TextEncoderAndDecoderBuilder() {
                     private Pattern allowedCharactersPattern = Pattern.compile(".");
 
                     @Override
@@ -65,7 +63,7 @@ public class EncoderUtils
                         this.allowedCharactersPattern = Pattern.compile("[" + characters.stream()
                                                                                         .map(character -> Pattern.quote(character))
                                                                                         .collect(Collectors.joining(""))
-                                + "]");
+                                                                        + "]");
                         return this;
                     }
 
@@ -143,7 +141,7 @@ public class EncoderUtils
 
     protected static class GenericTextEncoderAndDecoder implements TextEncoderAndDecoder
     {
-        private static final String DELIMITER = "_";
+        private static final String                          DELIMITER          = "_";
 
         private Pattern                                      allowedCharactersPattern;
         private IntermediateTextEncoderAndDecoder<IntStream> utf8EncoderDecoder = newInstance().forUTF8TextAsIntStream();
@@ -162,7 +160,7 @@ public class EncoderUtils
                               {
                                   if (this.allowedCharactersPattern.matcher(character)
                                                                    .matches()
-                                          && !org.apache.commons.lang3.StringUtils.equals(DELIMITER, character))
+                                      && !org.apache.commons.lang3.StringUtils.equals(DELIMITER, character))
                                   {
                                       return character;
                                   }
@@ -171,7 +169,7 @@ public class EncoderUtils
                                       return DELIMITER + this.utf8EncoderDecoder.encode(character)
                                                                                 .mapToObj(v -> "" + v)
                                                                                 .collect(Collectors.joining(DELIMITER))
-                                              + DELIMITER;
+                                             + DELIMITER;
                                   }
                               })
                               .collect(Collectors.joining());

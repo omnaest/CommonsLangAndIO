@@ -77,8 +77,7 @@ public class MapUtils
 
     public static <K, V> MapAction<K, V> withMap(Map<K, V> map)
     {
-        return new MapAction<K, V>()
-        {
+        return new MapAction<K, V>() {
             @Override
             public MapAction<K, V> put(K key, V value)
             {
@@ -512,23 +511,18 @@ public class MapUtils
      * @param valueReadMapper
      * @return
      */
-    public static <K, V, KS, VS> Map<K, V> toMediatedMap(Map<KS, VS> map, BidirectionalFunction<K, KS> keyWriteMapper,
-                                                         BidirectionalFunction<K, KS> keyReadMapper, BidirectionalFunction<V, VS> valueWriteMapper,
-                                                         BidirectionalFunction<V, VS> valueReadMapper)
+    public static <K, V, KS, VS> Map<K, V> toMediatedMap(Map<KS, VS> map, BidirectionalFunction<K, KS> keyWriteMapper, BidirectionalFunction<K, KS> keyReadMapper, BidirectionalFunction<V, VS> valueWriteMapper, BidirectionalFunction<V, VS> valueReadMapper)
     {
         return new MediatedMap<>(map, keyWriteMapper, keyReadMapper, valueWriteMapper, valueReadMapper);
     }
 
-    public static <K, V, SK extends Supplier<K>, SV extends Supplier<V>> SupplierMap<K, V, SK, SV> newConcurrentHashSupplierMap(Function<Supplier<K>, SK> keySupplierFunction,
-                                                                                                                                Function<Supplier<V>, SV> valueSupplierFunction)
+    public static <K, V, SK extends Supplier<K>, SV extends Supplier<V>> SupplierMap<K, V, SK, SV> newConcurrentHashSupplierMap(Function<Supplier<K>, SK> keySupplierFunction, Function<Supplier<V>, SV> valueSupplierFunction)
     {
         Map<AbstractSupplierMap.KeySupplier<K>, Supplier<V>> map = new ConcurrentHashMap<>();
         return newSupplierMap(() -> map, keySupplierFunction, valueSupplierFunction);
     }
 
-    public static <K, V, SK extends Supplier<K>, SV extends Supplier<V>> SupplierMap<K, V, SK, SV> newSupplierMap(Supplier<Map<KeySupplier<K>, Supplier<V>>> mapFactory,
-                                                                                                                  Function<Supplier<K>, SK> keySupplierFunction,
-                                                                                                                  Function<Supplier<V>, SV> valueSupplierFunction)
+    public static <K, V, SK extends Supplier<K>, SV extends Supplier<V>> SupplierMap<K, V, SK, SV> newSupplierMap(Supplier<Map<KeySupplier<K>, Supplier<V>>> mapFactory, Function<Supplier<K>, SK> keySupplierFunction, Function<Supplier<V>, SV> valueSupplierFunction)
     {
         return new AbstractSupplierMap<>(mapFactory, keySupplierFunction, valueSupplierFunction);
     }
@@ -928,8 +922,7 @@ public class MapUtils
     {
         Map<K, V> effectiveMap = Optional.ofNullable(map)
                                          .orElse(Collections.emptyMap());
-        return new AbstractSet<K>()
-        {
+        return new AbstractSet<K>() {
             @Override
             public Iterator<K> iterator()
             {

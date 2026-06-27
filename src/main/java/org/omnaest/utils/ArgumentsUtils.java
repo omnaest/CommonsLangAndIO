@@ -16,8 +16,7 @@ public class ArgumentsUtils
 {
     public static Arguments parse(String... args)
     {
-        return new Arguments()
-        {
+        return new Arguments() {
             private ArgumentsConditionImpl argumentsCondition = new ArgumentsConditionImpl(this);
 
             @Override
@@ -31,8 +30,7 @@ public class ArgumentsUtils
                                     return StringUtils.startsWith(token, "-") && StringUtils.equalsIgnoreCase(name, StringUtils.removeStart(token, "-"));
                                 })
                                 .findFirst()
-                                .map(index -> new Parameter()
-                                {
+                                .map(index -> new Parameter() {
                                     @Override
                                     public Optional<Argument> getFirstArgument()
                                     {
@@ -52,8 +50,7 @@ public class ArgumentsUtils
             {
                 return Optional.ofNullable(args)
                                .filter(a -> index >= 0 && index < args.length)
-                               .map(arg -> new Argument()
-                               {
+                               .map(arg -> new Argument() {
                                    @Override
                                    public String get()
                                    {

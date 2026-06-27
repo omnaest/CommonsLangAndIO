@@ -43,73 +43,73 @@ import java.util.ListIterator;
  */
 public class DefaultListIterator<E> implements ListIterator<E>
 {
-	private int		position	= -1;
-	private List<E>	list;
+    private int     position = -1;
+    private List<E> list;
 
-	public DefaultListIterator(List<E> list)
-	{
-		this.list = list;
-	}
+    public DefaultListIterator(List<E> list)
+    {
+        this.list = list;
+    }
 
-	public DefaultListIterator(int index, List<E> list)
-	{
-		super();
-		this.position = index - 1;
-		this.list = list;
-	}
+    public DefaultListIterator(int index, List<E> list)
+    {
+        super();
+        this.position = index - 1;
+        this.list = list;
+    }
 
-	@Override
-	public boolean hasNext()
-	{
-		return this.position + 1 < this.list.size();
-	}
+    @Override
+    public boolean hasNext()
+    {
+        return this.position + 1 < this.list.size();
+    }
 
-	@Override
-	public E next()
-	{
-		return this.list.get(++this.position);
-	}
+    @Override
+    public E next()
+    {
+        return this.list.get(++this.position);
+    }
 
-	@Override
-	public void remove()
-	{
-		this.list.remove(this.position);
-	}
+    @Override
+    public void remove()
+    {
+        this.list.remove(this.position);
+    }
 
-	@Override
-	public boolean hasPrevious()
-	{
-		return this.position > 0;
-	}
+    @Override
+    public boolean hasPrevious()
+    {
+        return this.position > 0;
+    }
 
-	@Override
-	public E previous()
-	{
-		return this.list.get(--this.position);
-	}
+    @Override
+    public E previous()
+    {
+        return this.list.get(--this.position);
+    }
 
-	@Override
-	public int nextIndex()
-	{
-		return this.position + 1;
-	}
+    @Override
+    public int nextIndex()
+    {
+        return this.position + 1;
+    }
 
-	@Override
-	public int previousIndex()
-	{
-		return this.position - 1;
-	}
+    @Override
+    public int previousIndex()
+    {
+        return this.position - 1;
+    }
 
-	@Override
-	public void set(E element)
-	{
-		this.list.set(this.position, element);
+    @Override
+    public void set(E element)
+    {
+        this.list.set(this.position, element);
 
-	}
+    }
 
-	@Override
-	public void add(E element)
-	{
-		this.list.add(this.position, element);
-	}
+    @Override
+    public void add(E element)
+    {
+        this.list.add(this.position, element);
+    }
 }

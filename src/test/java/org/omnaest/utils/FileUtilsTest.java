@@ -98,7 +98,7 @@ public class FileUtilsTest
         FileUtils.toConsumer(tempFile2)
                  .accept("b");
 
-        byte[] expectedContent = new byte[] { "a".getBytes(StandardCharsets.UTF_8)[0], "b".getBytes(StandardCharsets.UTF_8)[0] };
+        byte[] expectedContent = new byte[] {"a".getBytes(StandardCharsets.UTF_8)[0], "b".getBytes(StandardCharsets.UTF_8)[0]};
         assertArrayEquals(expectedContent, FileUtils.read()
                                                     .from(tempFile1, tempFile2)
                                                     .intoByteArray());

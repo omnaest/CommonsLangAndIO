@@ -40,8 +40,7 @@ public class DefaultSupplierStream<E> extends StreamDecorator<E> implements Supp
     {
         super(null);
 
-        this.modifyStream(stream -> StreamUtils.fromIterator(new Iterator<E>()
-        {
+        this.modifyStream(stream -> StreamUtils.fromIterator(new Iterator<E>() {
             private AtomicReference<E> takenElement = new AtomicReference<>();
             private AtomicBoolean      terminated   = new AtomicBoolean();
 

@@ -121,8 +121,7 @@ public abstract class AbstractImmutableDurationProgressCounter implements Immuta
         {
             Optional<DisplayableDuration> eta = this.getETA();
             Optional<DisplayableDuration> passedTime = this.getPassedTime();
-            durationProgressConsumer.accept(new DurationProgress()
-            {
+            durationProgressConsumer.accept(new DurationProgress() {
                 @Override
                 public long getCounter()
                 {

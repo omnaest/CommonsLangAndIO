@@ -179,8 +179,7 @@ public class ReflectionUtils
         @Override
         public MethodAccessor access(T instance)
         {
-            return new MethodAccessor()
-            {
+            return new MethodAccessor() {
                 @SuppressWarnings("unchecked")
                 @Override
                 public <E> void setValue(E element)
@@ -292,7 +291,7 @@ public class ReflectionUtils
         public String toString()
         {
             return "MethodImpl [getName()=" + this.getName() + ", getReturnType()=" + this.getReturnType() + ", getParameterTypes()=" + this.getParameterTypes()
-                    + "]";
+                   + "]";
         }
 
     }
@@ -378,8 +377,7 @@ public class ReflectionUtils
 
     public static <T> TypeReflection<T> of(Class<T> type)
     {
-        return new TypeReflection<T>()
-        {
+        return new TypeReflection<T>() {
             @Override
             public Stream<Class<?>> getInterfaces()
             {

@@ -76,8 +76,7 @@ public class RetryUtils
 
     public static RetryOperationBuilder retry()
     {
-        return new RetryOperationBuilder()
-        {
+        return new RetryOperationBuilder() {
             private int                  times           = 3;
             private Duration             durationInBetween;
             private Predicate<Exception> exceptionFilter = e -> true;
@@ -285,8 +284,7 @@ public class RetryUtils
         return retry(times, durationInBetween, timeUnit, operation, validResultFilter);
     }
 
-    public static <E> E retry(int times, int durationInBetween, TimeUnit timeUnit, RetryGetOperation<E> operation, Predicate<E> validResultFilter)
-            throws Exception
+    public static <E> E retry(int times, int durationInBetween, TimeUnit timeUnit, RetryGetOperation<E> operation, Predicate<E> validResultFilter) throws Exception
     {
         E retval = null;
 

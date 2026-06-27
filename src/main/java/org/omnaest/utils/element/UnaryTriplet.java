@@ -39,13 +39,13 @@ import java.util.List;
 public class UnaryTriplet<E> extends Triplet<E, E, E>
 {
 
-	public UnaryTriplet(E element1, E element2, E element3)
-	{
-		super(element1, element2, element3);
-	}
+    public UnaryTriplet(E element1, E element2, E element3)
+    {
+        super(element1, element2, element3);
+    }
 
-	public List<E> toList()
-	{
-		return Arrays.asList(this.getElement1(), this.getElement2(), this.getElement3());
-	}
+    public List<E> toList()
+    {
+        return Arrays.asList(this.getElement1(), this.getElement2(), this.getElement3());
+    }
 }

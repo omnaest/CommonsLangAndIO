@@ -82,8 +82,7 @@ public class BeanUtilsTest
     {
         Bean bean = BeanUtils.analyze(Bean.class)
                              .newProxy(MapUtils.builder()
-                                               .put("field", new BeanUtils.BeanPropertyAccessor<String>()
-                                               {
+                                               .put("field", new BeanUtils.BeanPropertyAccessor<String>() {
                                                    private String value;
 
                                                    @Override
@@ -170,7 +169,7 @@ public class BeanUtilsTest
 
     protected static class BeanImpl implements ParentBean
     {
-        private Bean parent = null;
+        private Bean   parent = null;
 
         @FieldDefinition("alternativeField")
         private String field;

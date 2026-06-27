@@ -147,8 +147,7 @@ public class NumberUtils
      */
     public static NumberFormatter formatter()
     {
-        return new NumberFormatter()
-        {
+        return new NumberFormatter() {
             private Locale                         locale                   = Locale.US;
             private Integer                        minimumFractionDigits    = null;
             private Integer                        maximumFractionDigits    = null;

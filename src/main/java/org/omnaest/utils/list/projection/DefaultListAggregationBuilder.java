@@ -45,8 +45,13 @@ import org.omnaest.utils.list.crud.CRUDList;
 public class DefaultListAggregationBuilder implements ListAggregationBuilder
 {
 
-    private static class UnaryAggregationBuilderImpl<T, E> implements UnaryAggregationBuilder, UnaryAggregationBuilder.Sourced<T>,
-            UnaryAggregationBuilder.Readonly<T, E>, UnaryAggregationBuilder.Writeonly<T, E>, UnaryAggregationBuilder.ReadAndWrite<T, E>
+    private static class UnaryAggregationBuilderImpl<T, E>
+            implements
+                UnaryAggregationBuilder,
+                UnaryAggregationBuilder.Sourced<T>,
+                UnaryAggregationBuilder.Readonly<T, E>,
+                UnaryAggregationBuilder.Writeonly<T, E>,
+                UnaryAggregationBuilder.ReadAndWrite<T, E>
     {
         private Function<UnaryElementsSource<E>, T> readAggregation;
         private Function<T, UnaryElementsSource<E>> writeAggregation;
@@ -106,8 +111,12 @@ public class DefaultListAggregationBuilder implements ListAggregationBuilder
     }
 
     private static class QualifiedAggregationBuilderImpl<T, E1, E2>
-            implements QualifiedAggregationBuilder, QualifiedAggregationBuilder.Sourced<T>, QualifiedAggregationBuilder.ReadAndWrite<T, E1, E2>,
-            QualifiedAggregationBuilder.Readonly<T, E1, E2>, QualifiedAggregationBuilder.Writeonly<T, E1, E2>
+            implements
+                QualifiedAggregationBuilder,
+                QualifiedAggregationBuilder.Sourced<T>,
+                QualifiedAggregationBuilder.ReadAndWrite<T, E1, E2>,
+                QualifiedAggregationBuilder.Readonly<T, E1, E2>,
+                QualifiedAggregationBuilder.Writeonly<T, E1, E2>
     {
         private Function<ElementsSource<E1, E2>, T> readProjection;
         private Function<T, ElementsSource<E1, E2>> writeProjection;
@@ -195,16 +204,13 @@ public class DefaultListAggregationBuilder implements ListAggregationBuilder
      * @param list2
      * @return
      */
-    public static <T, E1, E2> List<T> aggregation(Function<ElementsSource<E1, E2>, T> readAggregation, Function<T, ElementsSource<E1, E2>> writeAggregation,
-                                                  List<E1> list1, List<E2> list2)
+    public static <T, E1, E2> List<T> aggregation(Function<ElementsSource<E1, E2>, T> readAggregation, Function<T, ElementsSource<E1, E2>> writeAggregation, List<E1> list1, List<E2> list2)
     {
-        CRUDList<T> crudList = new CRUDList<T>()
-        {
+        CRUDList<T> crudList = new CRUDList<T>() {
             @Override
             public T get(int index)
             {
-                return readAggregation.apply(new ElementsSource<E1, E2>()
-                {
+                return readAggregation.apply(new ElementsSource<E1, E2>() {
                     @Override
                     public E1 getFirstElement()
                     {
@@ -230,8 +236,7 @@ public class DefaultListAggregationBuilder implements ListAggregationBuilder
 
             private T wrapSourceElements(Function<ElementsSource<E1, E2>, T> readProjection, E1 element1, E2 element2)
             {
-                return readProjection.apply(new ElementsSource<E1, E2>()
-                {
+                return readProjection.apply(new ElementsSource<E1, E2>() {
                     @Override
                     public E1 getFirstElement()
                     {
@@ -318,16 +323,13 @@ public class DefaultListAggregationBuilder implements ListAggregationBuilder
         return aggregation(readAggregation, writeAggregation, lists);
     }
 
-    public static <T, E> List<T> aggregation(Function<UnaryElementsSource<E>, T> readAggregation, Function<T, UnaryElementsSource<E>> writeAggregation,
-                                             List<List<E>> lists)
+    public static <T, E> List<T> aggregation(Function<UnaryElementsSource<E>, T> readAggregation, Function<T, UnaryElementsSource<E>> writeAggregation, List<List<E>> lists)
     {
-        CRUDList<T> crudList = new CRUDList<T>()
-        {
+        CRUDList<T> crudList = new CRUDList<T>() {
             @Override
             public T get(int index)
             {
-                return readAggregation.apply(new UnaryElementsSource<E>()
-                {
+                return readAggregation.apply(new UnaryElementsSource<E>() {
                     @Override
                     public E get(int listIndex)
                     {
@@ -357,8 +359,7 @@ public class DefaultListAggregationBuilder implements ListAggregationBuilder
 
             private T wrapSourceElements(Function<UnaryElementsSource<E>, T> readProjection, List<E> elements)
             {
-                return readProjection.apply(new UnaryElementsSource<E>()
-                {
+                return readProjection.apply(new UnaryElementsSource<E>() {
                     @Override
                     public E get(int index)
                     {

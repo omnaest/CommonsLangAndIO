@@ -79,8 +79,7 @@ public abstract class AbstractImmutableProgressCounter implements ImmutableProgr
         {
             double progress = this.getProgress();
 
-            progressConsumer.accept(new Progress()
-            {
+            progressConsumer.accept(new Progress() {
                 @Override
                 public long getCounter()
                 {

@@ -97,8 +97,7 @@ public class AtomicIntegerCounterMap<K> extends AbstractCounterMap<K, Integer> i
     {
         return this.keyToCounter.entrySet()
                                 .stream()
-                                .map(entry -> new CountedKey<K>()
-                                {
+                                .map(entry -> new CountedKey<K>() {
                                     @Override
                                     public K getKey()
                                     {

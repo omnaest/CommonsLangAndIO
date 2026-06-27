@@ -83,7 +83,7 @@ public class ListUtilsTest
         List<String> projection = ListUtils.aggregation()
                                            .withQualifiedSource()
                                            .withReadAggregation(source -> source.getFirstElement() + "" + source.getSecondElement())
-                                           .usingSources(new String[] { "A", "B", "C" }, new Integer[] { 1, 2, 3 })
+                                           .usingSources(new String[] {"A", "B", "C"}, new Integer[] {1, 2, 3})
                                            .build();
         assertEquals(Arrays.asList("A1", "B2", "C3"), projection);
     }

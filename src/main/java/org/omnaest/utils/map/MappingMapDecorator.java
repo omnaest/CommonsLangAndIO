@@ -42,9 +42,7 @@ public class MappingMapDecorator<K, KS, V, VS> implements Map<K, V>
     protected Function<V, VS>       valueToReadableSourceMapper;
     protected Function<V, VS>       valueToWritableSourceMapper;
 
-    public MappingMapDecorator(Supplier<Map<KS, VS>> sourceMap, Function<KS, K> keyFromSourceMapper, Function<K, KS> keyToReadableSourceMapper,
-                               Function<VS, V> valueFromSourceMapper, Function<V, VS> valueToReadableSourceMapper, Function<K, KS> keyToWritableSourceMapper,
-                               Function<V, VS> valueToWritableSourceMapper)
+    public MappingMapDecorator(Supplier<Map<KS, VS>> sourceMap, Function<KS, K> keyFromSourceMapper, Function<K, KS> keyToReadableSourceMapper, Function<VS, V> valueFromSourceMapper, Function<V, VS> valueToReadableSourceMapper, Function<K, KS> keyToWritableSourceMapper, Function<V, VS> valueToWritableSourceMapper)
     {
         super();
         this.map = sourceMap;
@@ -56,12 +54,10 @@ public class MappingMapDecorator<K, KS, V, VS> implements Map<K, V>
         this.valueToWritableSourceMapper = valueToWritableSourceMapper;
     }
 
-    public MappingMapDecorator(Map<KS, VS> sourceMap, Function<KS, K> keyFromSourceMapper, Function<K, KS> keyToSourceMapper,
-                               Function<VS, V> valueFromSourceMapper, Function<V, VS> valueToSourceMapper, Function<K, KS> keyToWritableSourceMapper,
-                               Function<V, VS> valueToWritableSourceMapper)
+    public MappingMapDecorator(Map<KS, VS> sourceMap, Function<KS, K> keyFromSourceMapper, Function<K, KS> keyToSourceMapper, Function<VS, V> valueFromSourceMapper, Function<V, VS> valueToSourceMapper, Function<K, KS> keyToWritableSourceMapper, Function<V, VS> valueToWritableSourceMapper)
     {
         this(() -> sourceMap, keyFromSourceMapper, keyToSourceMapper, valueFromSourceMapper, valueToSourceMapper, keyToWritableSourceMapper,
-                valueToWritableSourceMapper);
+             valueToWritableSourceMapper);
     }
 
     @Override
@@ -210,8 +206,7 @@ public class MappingMapDecorator<K, KS, V, VS> implements Map<K, V>
         return Collections.unmodifiableSet(this.map.get()
                                                    .entrySet()
                                                    .stream()
-                                                   .map(entry -> new Map.Entry<K, V>()
-                                                   {
+                                                   .map(entry -> new Map.Entry<K, V>() {
                                                        @Override
                                                        public K getKey()
                                                        {

@@ -41,8 +41,8 @@ public class NullOptional<T>
 {
     private static final NullOptional<?> EMPTY = new NullOptional<>(null, false);
 
-    private T       value;
-    private boolean present;
+    private T                            value;
+    private boolean                      present;
 
     protected NullOptional(T value, boolean present)
     {

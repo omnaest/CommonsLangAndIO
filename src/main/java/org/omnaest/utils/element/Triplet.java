@@ -35,37 +35,37 @@ package org.omnaest.utils.element;
 
 public class Triplet<E1, E2, E3>
 {
-	private E1	element1;
-	private E2	element2;
-	private E3	element3;
+    private E1 element1;
+    private E2 element2;
+    private E3 element3;
 
-	public Triplet(E1 element1, E2 element2, E3 element3)
-	{
-		super();
-		this.element1 = element1;
-		this.element2 = element2;
-		this.element3 = element3;
-	}
+    public Triplet(E1 element1, E2 element2, E3 element3)
+    {
+        super();
+        this.element1 = element1;
+        this.element2 = element2;
+        this.element3 = element3;
+    }
 
-	public E1 getElement1()
-	{
-		return this.element1;
-	}
+    public E1 getElement1()
+    {
+        return this.element1;
+    }
 
-	public E2 getElement2()
-	{
-		return this.element2;
-	}
+    public E2 getElement2()
+    {
+        return this.element2;
+    }
 
-	public E3 getElement3()
-	{
-		return this.element3;
-	}
+    public E3 getElement3()
+    {
+        return this.element3;
+    }
 
-	@Override
-	public String toString()
-	{
-		return "Triplet [element1=" + this.element1 + ", element2=" + this.element2 + ", element3=" + this.element3 + "]";
-	}
+    @Override
+    public String toString()
+    {
+        return "Triplet [element1=" + this.element1 + ", element2=" + this.element2 + ", element3=" + this.element3 + "]";
+    }
 
 }

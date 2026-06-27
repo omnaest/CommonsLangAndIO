@@ -63,13 +63,11 @@ public class PredicateUtils
 
     public static <E> ModuloPredicateBuilder<E> modulo(int modulo)
     {
-        return new ModuloPredicateBuilder<E>()
-        {
+        return new ModuloPredicateBuilder<E>() {
             @Override
             public Predicate<E> equals(int value)
             {
-                return new Predicate<E>()
-                {
+                return new Predicate<E>() {
                     private AtomicLong counter = new AtomicLong();
 
                     @Override
@@ -432,8 +430,7 @@ public class PredicateUtils
         @Override
         public MappablePredicate<E> ifConditionThen(boolean condition, Consumer<E> elementConsumer)
         {
-            return new MappablePredicateDecorator<E>(this)
-            {
+            return new MappablePredicateDecorator<E>(this) {
                 @Override
                 public boolean test(E element)
                 {

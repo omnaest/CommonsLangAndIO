@@ -43,12 +43,12 @@ import org.junit.Test;
 public class PatternUtilsTest
 {
 
-	@Test
-	public void testMatchToGroups() throws Exception
-	{
-		Map<Integer, String> groups = PatternUtils.matchToGroups(Pattern.compile("([a-zA-Z]+)([0-9]+)"), "abc123");
-		assertEquals(3, groups.size());
-		assertEquals("abc", groups.get(1));
-	}
+    @Test
+    public void testMatchToGroups() throws Exception
+    {
+        Map<Integer, String> groups = PatternUtils.matchToGroups(Pattern.compile("([a-zA-Z]+)([0-9]+)"), "abc123");
+        assertEquals(3, groups.size());
+        assertEquals("abc", groups.get(1));
+    }
 
 }

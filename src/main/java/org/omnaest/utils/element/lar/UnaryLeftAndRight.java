@@ -42,29 +42,29 @@ package org.omnaest.utils.element.lar;
  */
 public class UnaryLeftAndRight<E> extends LeftAndRight<E, E>
 {
-	public UnaryLeftAndRight(E left, E right)
-	{
-		super(left, right);
-	}
+    public UnaryLeftAndRight(E left, E right)
+    {
+        super(left, right);
+    }
 
-	@Override
-	public String toString()
-	{
-		return "UnaryLeftAndRight [left=" + this.left + ", right=" + this.right + "]";
-	}
+    @Override
+    public String toString()
+    {
+        return "UnaryLeftAndRight [left=" + this.left + ", right=" + this.right + "]";
+    }
 
-	@Override
-	protected UnaryLeftAndRight<E> setLeft(E left)
-	{
-		super.setLeft(left);
-		return this;
-	}
+    @Override
+    protected UnaryLeftAndRight<E> setLeft(E left)
+    {
+        super.setLeft(left);
+        return this;
+    }
 
-	@Override
-	protected UnaryLeftAndRight<E> setRight(E right)
-	{
-		super.setRight(right);
-		return this;
-	}
+    @Override
+    protected UnaryLeftAndRight<E> setRight(E right)
+    {
+        super.setRight(right);
+        return this;
+    }
 
 }

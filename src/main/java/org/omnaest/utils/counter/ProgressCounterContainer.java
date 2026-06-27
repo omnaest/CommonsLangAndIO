@@ -17,8 +17,7 @@ public interface ProgressCounterContainer extends ImmutableProgressCounterContai
 
     public DurationProgressCounter newDurationProgressCounterWithWeight(String name, double weight);
 
-    public ProgressCounterContainer newDurationProgressCounterWithWeight(String name, double weight,
-                                                                         Consumer<DurationProgressCounter> durationProgressCounterConsumer);
+    public ProgressCounterContainer newDurationProgressCounterWithWeight(String name, double weight, Consumer<DurationProgressCounter> durationProgressCounterConsumer);
 
     public DurationProgressCounter newDurationProgressCounterWithWeight(double weight);
 

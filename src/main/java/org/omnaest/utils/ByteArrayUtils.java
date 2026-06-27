@@ -36,8 +36,7 @@ public class ByteArrayUtils
         {
             throw new IllegalArgumentException("initial size must be >= 1");
         }
-        IntSupplier twoPotencySizeProvider = new IntSupplier()
-        {
+        IntSupplier twoPotencySizeProvider = new IntSupplier() {
             private int size = initialSize;
 
             @Override
@@ -164,8 +163,7 @@ public class ByteArrayUtils
 
     public static ByteArrayContainer toByteArrayContainer(byte[] data)
     {
-        return new ByteArrayContainer()
-        {
+        return new ByteArrayContainer() {
             @Override
             public byte[] get()
             {
@@ -196,8 +194,7 @@ public class ByteArrayUtils
 
     public static <K> MultiByteArrayContainer<K> toMultiByteArrayContainer(Map<K, byte[]> keyToData)
     {
-        return new MultiByteArrayContainer<K>()
-        {
+        return new MultiByteArrayContainer<K>() {
             @Override
             public Stream<ByteArrayContainerEntry<K>> stream()
             {
@@ -205,8 +202,7 @@ public class ByteArrayUtils
                                .map(Map::entrySet)
                                .map(Set<Entry<K, byte[]>>::stream)
                                .orElse(Stream.empty())
-                               .map(entry -> new ByteArrayContainerEntry<K>()
-                               {
+                               .map(entry -> new ByteArrayContainerEntry<K>() {
                                    @Override
                                    public K getKey()
                                    {

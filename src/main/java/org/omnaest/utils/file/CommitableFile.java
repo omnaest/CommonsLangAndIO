@@ -38,11 +38,11 @@ import org.omnaest.utils.exception.RuntimeIOException;
  */
 public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
 {
-    private static final int DEFAULT_SLOT = 0;
+    private static final int          DEFAULT_SLOT    = 0;
 
     private final CachedElement<Byte> commitFileState = CachedElement.of(() -> this.determineCommitFileStateFromFile());
 
-    private final File file;
+    private final File                file;
 
     private CommitableFile(File file)
     {
@@ -114,9 +114,8 @@ public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
     public Transaction transaction()
     {
         CachedElement<Byte> newCommitFileState = CachedElement.of(() -> this.calculateNewCommitFileState());
-        return new TransactionWithPartialUpdate()
-        {
-            private boolean success = true;
+        return new TransactionWithPartialUpdate() {
+            private boolean        success    = true;
 
             private List<Runnable> operations = new ArrayList<>();
 
@@ -169,7 +168,7 @@ public class CommitableFile implements Consumer<byte[]>, Supplier<byte[]>
                     try
                     {
                         Byte newState = newCommitFileState.getAndReset();
-                        FileUtils.writeByteArrayToFile(CommitableFile.this.determineCommitFile(), new byte[] { newState });
+                        FileUtils.writeByteArrayToFile(CommitableFile.this.determineCommitFile(), new byte[] {newState});
                         CommitableFile.this.commitFileState.setSuppliedValue(newState);
                     }
                     catch (IOException e)

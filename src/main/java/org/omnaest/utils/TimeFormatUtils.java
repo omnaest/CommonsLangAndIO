@@ -118,13 +118,11 @@ public class TimeFormatUtils
      */
     public static TimeFormatter format()
     {
-        return new TimeFormatter()
-        {
+        return new TimeFormatter() {
             @Override
             public TimeWithUnitFormatter duration(long duration, TimeUnit timeUnit)
             {
-                return new TimeWithUnitFormatter()
-                {
+                return new TimeWithUnitFormatter() {
                     @Override
                     public String asString()
                     {

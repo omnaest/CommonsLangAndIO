@@ -182,8 +182,7 @@ public class DefaultDurationCapture implements DurationCapture
 
     private DurationMeasurement from(long start)
     {
-        return new DurationMeasurement()
-        {
+        return new DurationMeasurement() {
             @Override
             public MeasurementResult stop()
             {

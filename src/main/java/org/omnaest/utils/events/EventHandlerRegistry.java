@@ -41,5 +41,5 @@ package org.omnaest.utils.events;
  */
 public interface EventHandlerRegistry<E>
 {
-	public EventHandlerRegistry<E> register(EventHandler<E> eventHandler);
+    public EventHandlerRegistry<E> register(EventHandler<E> eventHandler);
 }

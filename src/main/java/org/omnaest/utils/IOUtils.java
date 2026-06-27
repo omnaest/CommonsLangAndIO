@@ -60,8 +60,7 @@ public class IOUtils
 
     private static final String COMPRESS_DEFAULT_ENTRY_NAME = "data";
 
-    public static void copyWithProgess(InputStream inputStream, ByteArrayOutputStream outputStream, long size, int steps, DoubleConsumer progessConsumer)
-            throws IOException
+    public static void copyWithProgess(InputStream inputStream, ByteArrayOutputStream outputStream, long size, int steps, DoubleConsumer progessConsumer) throws IOException
     {
         copyWithCounter(inputStream, outputStream, steps, (current, available) ->
         {
@@ -89,11 +88,9 @@ public class IOUtils
         copyWithCounter(inputStream, outputStream, steps, progessConsumer);
     }
 
-    public static void copyWithCounter(InputStream inputStream, OutputStream outputStream, int steps, BiConsumer<Integer, Integer> progessConsumer)
-            throws IOException
+    public static void copyWithCounter(InputStream inputStream, OutputStream outputStream, int steps, BiConsumer<Integer, Integer> progessConsumer) throws IOException
     {
-        ByteStreams.readBytes(inputStream, new ByteProcessor<Void>()
-        {
+        ByteStreams.readBytes(inputStream, new ByteProcessor<Void>() {
             private Counter counter         = Counter.fromZero();
             private Counter previousCounter = Counter.from(-steps);
 
@@ -266,8 +263,7 @@ public class IOUtils
 
     public static Resource toResource(InputStream inputStream)
     {
-        return new Resource()
-        {
+        return new Resource() {
             @Override
             public String asString()
             {
@@ -338,13 +334,11 @@ public class IOUtils
 
     public static IOCopy copy()
     {
-        return new IOCopy()
-        {
+        return new IOCopy() {
             @Override
             public ReaderCopy from(Reader reader)
             {
-                return new ReaderCopy()
-                {
+                return new ReaderCopy() {
                     private long numberOfCharactersLimit = Long.MAX_VALUE;
                     private int  bufferSize              = DEFAULT_BUFFER_SIZE;
 
@@ -374,8 +368,7 @@ public class IOUtils
 
                             long count = counter;
 
-                            return new WriteResult()
-                            {
+                            return new WriteResult() {
                                 @Override
                                 public WriteResult handleException(Consumer<Exception> exceptionHandler)
                                 {
@@ -398,8 +391,7 @@ public class IOUtils
                         }
                         catch (IOException e)
                         {
-                            return new WriteResult()
-                            {
+                            return new WriteResult() {
                                 @Override
                                 public WriteResult handleException(Consumer<Exception> exceptionHandler)
                                 {
@@ -432,8 +424,7 @@ public class IOUtils
                     @Override
                     public WriteResultElement<String> toStringResult()
                     {
-                        return new WriteResultElement<String>()
-                        {
+                        return new WriteResultElement<String>() {
                             private Consumer<Exception> exceptionHandler = ConsumerUtils.noOperation();
 
                             @Override
@@ -473,16 +464,14 @@ public class IOUtils
             @Override
             public InputStreamCopy from(InputStream inputStream)
             {
-                return new InputStreamCopy()
-                {
+                return new InputStreamCopy() {
                     @Override
                     public WriteResult to(OutputStream outputStream)
                     {
                         try
                         {
                             long count = org.apache.commons.io.IOUtils.copyLarge(inputStream, outputStream);
-                            return new WriteResult()
-                            {
+                            return new WriteResult() {
                                 @Override
                                 public long getCount()
                                 {
@@ -505,8 +494,7 @@ public class IOUtils
                         }
                         catch (IOException e)
                         {
-                            return new WriteResult()
-                            {
+                            return new WriteResult() {
                                 @Override
                                 public long getCount()
                                 {
@@ -532,8 +520,7 @@ public class IOUtils
                     @Override
                     public WriteResultElement<byte[]> toByteArray()
                     {
-                        return new WriteResultElement<byte[]>()
-                        {
+                        return new WriteResultElement<byte[]>() {
                             private Consumer<Exception> exceptionHandler = ConsumerUtils.noOperation();
 
                             @Override

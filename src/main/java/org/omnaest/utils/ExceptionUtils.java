@@ -93,8 +93,7 @@ public class ExceptionUtils
         }, Arrays.asList(exceptionHandlers)
                  .stream()
                  .filter(PredicateUtils.notNull())
-                 .map(exceptionHandler -> new RethrowingExceptionHandler()
-                 {
+                 .map(exceptionHandler -> new RethrowingExceptionHandler() {
                      @Override
                      public void accept(Exception e) throws Exception
                      {

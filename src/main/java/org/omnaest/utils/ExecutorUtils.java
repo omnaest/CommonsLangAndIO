@@ -162,7 +162,7 @@ public class ExecutorUtils
     {
         return (int) Math.max(1, Math.round(Runtime.getRuntime()
                                                    .availableProcessors()
-                * numberOfThreadsPerCPUCore));
+                                            * numberOfThreadsPerCPUCore));
     }
 
     private static class ParallelExecutionImpl implements ParallelExecution, AsynchronousParallelExecution
@@ -234,8 +234,7 @@ public class ExecutorUtils
         {
             this.executeWithService(executorService ->
             {
-                ParallelExecutionCollector collector = new ParallelExecutionCollector()
-                {
+                ParallelExecutionCollector collector = new ParallelExecutionCollector() {
                     @Override
                     public <R> Supplier<R> addTask(Callable<R> callable)
                     {
@@ -335,8 +334,7 @@ public class ExecutorUtils
 
             ParallelExecution parallelExecution = this;
 
-            return new ParallelExecutionAndResult<R>()
-            {
+            return new ParallelExecutionAndResult<R>() {
 
                 @Override
                 public ParallelExecution and()
@@ -415,11 +413,10 @@ public class ExecutorUtils
             int numberOfThreads = Math.min(Runtime.getRuntime()
                                                   .availableProcessors(),
                                            this.numberOfThreads)
-                    * 4;
+                                  * 4;
             ExecutorService executorService = this.executorServiceFactory.get();
             Runnable awaitAndShutdownNowOperation = this.createExecutorServiceAwaitAndShutdownNowOperation(executorService);
-            return new ParallelStreamWrapper<E>()
-            {
+            return new ParallelStreamWrapper<E>() {
                 @Override
                 public Stream<E> get()
                 {
@@ -475,8 +472,7 @@ public class ExecutorUtils
     public static ExecutorServiceTerminator shutdown(ExecutorService executorService)
     {
         executorService.shutdown();
-        return new ExecutorServiceTerminator()
-        {
+        return new ExecutorServiceTerminator() {
             private long     timeout  = Integer.MAX_VALUE;
             private TimeUnit timeUnit = TimeUnit.DAYS;
 

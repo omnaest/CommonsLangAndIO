@@ -94,8 +94,7 @@ public class IteratorUtils
     public static <E> RoundRobinIterator<E> roundRobinIterator(Collection<E> collection)
     {
         Supplier<Iterator<E>> supplier = () -> collection.iterator();
-        return new RoundRobinIterator<E>()
-        {
+        return new RoundRobinIterator<E>() {
             private AtomicReference<Iterator<E>> currentIterator = new AtomicReference<>();
 
             @Override
@@ -126,7 +125,8 @@ public class IteratorUtils
                     {
                         this.resetIterator();
                     }
-                } while (retval == null);
+                }
+                while (retval == null);
 
                 return retval;
             }
@@ -150,8 +150,7 @@ public class IteratorUtils
 
     public static <E> RoundRobinListIterator<E> roundRobinListIterator(List<E> list)
     {
-        return new RoundRobinListIterator<E>()
-        {
+        return new RoundRobinListIterator<E>() {
             private AtomicInteger nextIndexPosition = new AtomicInteger();
             private AtomicBoolean first             = new AtomicBoolean(true);
 
@@ -238,8 +237,7 @@ public class IteratorUtils
      */
     public static <E> Iterator<E> withConsumerListener(Iterator<E> iterator, Consumer<E> consumer)
     {
-        return new Iterator<E>()
-        {
+        return new Iterator<E>() {
             @Override
             public boolean hasNext()
             {
@@ -271,8 +269,7 @@ public class IteratorUtils
      */
     public static <E> Iterable<E> toIterable(Supplier<Iterator<E>> iterator)
     {
-        return new Iterable<E>()
-        {
+        return new Iterable<E>() {
             @Override
             public Iterator<E> iterator()
             {
@@ -283,8 +280,7 @@ public class IteratorUtils
 
     public static Iterator<Character> from(String string)
     {
-        return new Iterator<Character>()
-        {
+        return new Iterator<Character>() {
             private int pos = 0;
 
             @Override
@@ -312,8 +308,7 @@ public class IteratorUtils
      */
     public static <L, R> Iterator<LeftAndRight<L, R>> merge(Iterator<L> iterator1, Iterator<R> iterator2)
     {
-        return new Iterator<LeftAndRight<L, R>>()
-        {
+        return new Iterator<LeftAndRight<L, R>>() {
             @Override
             public boolean hasNext()
             {
@@ -371,8 +366,7 @@ public class IteratorUtils
      */
     public static <E> Iterator<E> removeIterator(Iterator<E> iterator)
     {
-        return new Iterator<E>()
-        {
+        return new Iterator<E>() {
             @Override
             public boolean hasNext()
             {
@@ -409,8 +403,7 @@ public class IteratorUtils
      */
     public static <E> ConcurrentIterator<E> wrapIntoConcurrent(Iterator<E> iterator)
     {
-        return new ConcurrentIterator<E>()
-        {
+        return new ConcurrentIterator<E>() {
             private CachedElement<E> element = CachedElement.of(() -> iterator.next())
                                                             .asThreadLocal();
 

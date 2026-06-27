@@ -54,8 +54,7 @@ public class CollectorUtils
         return Collectors.toMap(keyMapper, entry -> entry.getValue());
     }
 
-    public static <K, V, KR, VR> Collector<Map.Entry<K, V>, ?, Map<KR, VR>> toMap(Function<Map.Entry<K, V>, KR> keyMapper,
-                                                                                  Function<Map.Entry<K, V>, VR> valueMapper)
+    public static <K, V, KR, VR> Collector<Map.Entry<K, V>, ?, Map<KR, VR>> toMap(Function<Map.Entry<K, V>, KR> keyMapper, Function<Map.Entry<K, V>, VR> valueMapper)
     {
         return toMap(keyMapper, valueMapper, () -> new HashMap<>());
     }

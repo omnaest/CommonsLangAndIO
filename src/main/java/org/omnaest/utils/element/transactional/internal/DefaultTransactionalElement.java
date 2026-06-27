@@ -62,8 +62,7 @@ public class DefaultTransactionalElement<E> implements TransactionalElement<E>
     @Override
     public TransactionCommit<E> withFinalMergeFunction(UnaryBiFunction<E> mergeFunction)
     {
-        return new TransactionCommit<E>()
-        {
+        return new TransactionCommit<E>() {
             @Override
             public TransactionalElement<E> commit()
             {
@@ -92,16 +91,14 @@ public class DefaultTransactionalElement<E> implements TransactionalElement<E>
     {
         CachedElement<E> staging = this.createStagingInstance(this.supplier);
         AtomicReference<E> active = this.active;
-        return new Transaction<E>()
-        {
+        return new Transaction<E>() {
             @Override
             public <R> TransactionFinalizer<E, R> execute(Callable<R> operation)
             {
                 try
                 {
                     R result = operation.call();
-                    return new TransactionFinalizer<E, R>()
-                    {
+                    return new TransactionFinalizer<E, R>() {
                         private UnaryBiFunction<E> mergeFunction = (staging, previousActive) -> staging;
 
                         @Override

@@ -35,28 +35,28 @@ package org.omnaest.utils.element.lar;
 
 public class ModifiableUnaryLeftAndRight<E> extends UnaryLeftAndRight<E>
 {
-	public ModifiableUnaryLeftAndRight()
-	{
-		this(null, null);
-	}
+    public ModifiableUnaryLeftAndRight()
+    {
+        this(null, null);
+    }
 
-	public ModifiableUnaryLeftAndRight(E left, E right)
-	{
-		super(left, right);
-	}
+    public ModifiableUnaryLeftAndRight(E left, E right)
+    {
+        super(left, right);
+    }
 
-	@Override
-	public ModifiableUnaryLeftAndRight<E> setLeft(E left)
-	{
-		super.setLeft(left);
-		return this;
-	}
+    @Override
+    public ModifiableUnaryLeftAndRight<E> setLeft(E left)
+    {
+        super.setLeft(left);
+        return this;
+    }
 
-	@Override
-	public ModifiableUnaryLeftAndRight<E> setRight(E right)
-	{
-		super.setRight(right);
-		return this;
-	}
+    @Override
+    public ModifiableUnaryLeftAndRight<E> setRight(E right)
+    {
+        super.setRight(right);
+        return this;
+    }
 
 }

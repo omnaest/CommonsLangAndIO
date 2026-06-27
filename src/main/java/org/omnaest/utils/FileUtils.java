@@ -109,7 +109,10 @@ public class FileUtils
     }
 
     private static abstract class AbstractCharacterSetFileContentConsumer<E, FCC extends FileCharacterSetContentConsumer<E, FCC>>
-            extends AbstractFileContentConsumer<E, FCC> implements FileCharacterSetContentConsumer<E, FCC>
+            extends
+                AbstractFileContentConsumer<E, FCC>
+            implements
+                FileCharacterSetContentConsumer<E, FCC>
     {
         protected Charset charset = StandardCharsets.UTF_8;
 
@@ -135,7 +138,8 @@ public class FileUtils
     }
 
     private static class FileStringContentConsumerImpl extends AbstractCharacterSetFileContentConsumer<String, FileStringContentConsumer>
-            implements FileStringContentConsumer
+            implements
+                FileStringContentConsumer
     {
         private FileStringContentConsumerImpl(File file)
         {
@@ -166,7 +170,8 @@ public class FileUtils
     }
 
     private static class FileByteArrayContentConsumerImpl extends AbstractFileContentConsumer<byte[], FileByteArrayContentConsumer>
-            implements FileByteArrayContentConsumer
+            implements
+                FileByteArrayContentConsumer
     {
         private FileByteArrayContentConsumerImpl(File file)
         {
@@ -197,7 +202,8 @@ public class FileUtils
     }
 
     private static class FileStreamContentConsumerImpl extends AbstractCharacterSetFileContentConsumer<Stream<String>, FileStreamContentConsumer>
-            implements FileStreamContentConsumer
+            implements
+                FileStreamContentConsumer
     {
         private FileStreamContentConsumerImpl(File file)
         {
@@ -412,8 +418,7 @@ public class FileUtils
      */
     public static FileStringContentSupplier toSupplier(File file)
     {
-        return new FileStringContentSupplier()
-        {
+        return new FileStringContentSupplier() {
             private Charset charset = StandardCharsets.UTF_8;
 
             @Override
@@ -1232,8 +1237,7 @@ public class FileUtils
 
     public static FileReaderSupplier toReaderSupplier(File file, Charset charset)
     {
-        return new FileReaderSupplier()
-        {
+        return new FileReaderSupplier() {
             private Supplier<Reader> supplier = () ->
             {
                 return toReader(file, charset);
@@ -1274,8 +1278,7 @@ public class FileUtils
 
     public static FileInputSupplier toInputSupplier(File file)
     {
-        return new FileInputSupplier()
-        {
+        return new FileInputSupplier() {
             private Supplier<InputStream> supplier = () ->
             {
                 return toInputStream(file);
@@ -1325,8 +1328,7 @@ public class FileUtils
 
     public static FileWriterSupplier toWriterSupplier(File file, Charset charset)
     {
-        return new FileWriterSupplier()
-        {
+        return new FileWriterSupplier() {
             private Supplier<Writer> supplier = () ->
             {
                 return toWriter(file, charset);
@@ -1364,8 +1366,7 @@ public class FileUtils
 
     public static FileOutputSupplier toOutputSupplier(File file)
     {
-        return new FileOutputSupplier()
-        {
+        return new FileOutputSupplier() {
             private Supplier<OutputStream> supplier = () ->
             {
                 try
@@ -1595,8 +1596,7 @@ public class FileUtils
      */
     public static FileSinkInputStreamSupplier toFileSinkInputStreamSupplier(File file)
     {
-        return new FileSinkInputStreamSupplier()
-        {
+        return new FileSinkInputStreamSupplier() {
             private Charset charset = StandardCharsets.UTF_8;
 
             @Override
@@ -1787,8 +1787,7 @@ public class FileUtils
 
     public static DirectoryNavigator navigate(File directory)
     {
-        return new DirectoryNavigator()
-        {
+        return new DirectoryNavigator() {
             @Override
             public Stream<DirectoryNavigator> listDirectories()
             {
@@ -1825,8 +1824,7 @@ public class FileUtils
 
             private Function<File, FileNavigator> createFileToFileNavigatorMapper()
             {
-                return file -> new FileNavigator()
-                {
+                return file -> new FileNavigator() {
                     @Override
                     public File get()
                     {

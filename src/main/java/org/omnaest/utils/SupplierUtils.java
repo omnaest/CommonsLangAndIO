@@ -104,8 +104,7 @@ public class SupplierUtils
      */
     public static <E> ChainableSupplier<E> toChainableSupplier(Supplier<E> supplier)
     {
-        return new ChainableSupplier<E>()
-        {
+        return new ChainableSupplier<E>() {
             @Override
             public E get()
             {

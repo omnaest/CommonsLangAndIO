@@ -38,60 +38,60 @@ import java.util.Set;
 
 public class MapToCRUDMapAdapter<K, V> implements CRUDMap<K, V>
 {
-	private Map<K, V> map;
+    private Map<K, V> map;
 
-	public MapToCRUDMapAdapter(Map<K, V> map)
-	{
-		super();
-		this.map = map;
-	}
+    public MapToCRUDMapAdapter(Map<K, V> map)
+    {
+        super();
+        this.map = map;
+    }
 
-	@Override
-	public int size()
-	{
-		return this.map.size();
-	}
+    @Override
+    public int size()
+    {
+        return this.map.size();
+    }
 
-	@Override
-	public boolean containsKey(Object key)
-	{
-		return this.map.containsKey(key);
-	}
+    @Override
+    public boolean containsKey(Object key)
+    {
+        return this.map.containsKey(key);
+    }
 
-	@Override
-	public V get(Object key)
-	{
-		return this.map.get(key);
-	}
+    @Override
+    public V get(Object key)
+    {
+        return this.map.get(key);
+    }
 
-	@Override
-	public V put(K key, V value)
-	{
-		return this.map.put(key, value);
-	}
+    @Override
+    public V put(K key, V value)
+    {
+        return this.map.put(key, value);
+    }
 
-	@Override
-	public V remove(Object key)
-	{
-		return this.map.remove(key);
-	}
+    @Override
+    public V remove(Object key)
+    {
+        return this.map.remove(key);
+    }
 
-	@Override
-	public void clear()
-	{
-		this.map.clear();
-	}
+    @Override
+    public void clear()
+    {
+        this.map.clear();
+    }
 
-	@Override
-	public Set<K> keySet()
-	{
-		return this.map.keySet();
-	}
+    @Override
+    public Set<K> keySet()
+    {
+        return this.map.keySet();
+    }
 
-	@Override
-	public String toString()
-	{
-		return "MapToCRUDMapAdapter [map=" + this.map + "]";
-	}
+    @Override
+    public String toString()
+    {
+        return "MapToCRUDMapAdapter [map=" + this.map + "]";
+    }
 
 }
