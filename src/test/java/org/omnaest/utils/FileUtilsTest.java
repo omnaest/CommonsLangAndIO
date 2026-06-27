@@ -175,6 +175,7 @@ public class FileUtilsTest
                                     .collect(Collectors.toList());
         assertEquals(Arrays.asList("subfolder", "test.txt"), files.stream()
                                                                   .map(File::getName)
+                                                                  .sorted()
                                                                   .collect(Collectors.toList()));
     }
 
