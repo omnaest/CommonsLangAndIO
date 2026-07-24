@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -52,6 +53,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,6 +66,7 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 import java.util.function.IntSupplier;
+import java.util.function.LongConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -83,14 +86,21 @@ import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.bi.IntUnaryBiElement;
 import org.omnaest.utils.element.cached.CachedElement;
 import org.omnaest.utils.element.cached.CachedFunction;
+import org.omnaest.utils.element.cached.SingleKeyCachedElement;
 import org.omnaest.utils.element.lar.LeftAndRight;
 import org.omnaest.utils.functional.PredicateConsumer;
 import org.omnaest.utils.stream.DefaultSupplierStream;
 import org.omnaest.utils.stream.FilterAllOnFirstFilterFailStreamDecorator;
 import org.omnaest.utils.stream.FilterMapper;
+import org.omnaest.utils.stream.StreamDecoratorLazyLoading;
 import org.omnaest.utils.stream.Streamable;
 import org.omnaest.utils.stream.SupplierStream;
 import org.omnaest.utils.supplier.OptionalSupplier;
+
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.NonNull;
+import lombok.Value;
 
 /**
  * Utils around {@link Stream}s
@@ -486,7 +496,8 @@ public class StreamUtils
                 terminated.set(true);
             }
         });
-        Iterator<E> prefetchIterator = new Iterator<E>() {
+        Iterator<E> prefetchIterator = new Iterator<E>()
+        {
             @Override
             public boolean hasNext()
             {
@@ -506,7 +517,8 @@ public class StreamUtils
             }
 
         };
-        return new Drainage<E>() {
+        return new Drainage<E>()
+        {
             @Override
             public Stream<E> getStream()
             {
@@ -702,7 +714,8 @@ public class StreamUtils
         return cyclicBuffer.asStream()
                            .filter(PredicateUtils.modulo(step)
                                                  .equalsZero())
-                           .map(window -> new Window<E>() {
+                           .map(window -> new Window<E>()
+                           {
                                @Override
                                public List<E> getBefore()
                                {
@@ -764,14 +777,18 @@ public class StreamUtils
      * <br>
      * <br>
      * Example:
+     * 
      * <pre>
      * StreamUtils.interleave(Stream.of(1, 2, 3), Stream.of(10, 20))
      * // → [1, 10, 2, 20]
      * </pre>
+     * 
      * Null streams are treated as empty streams.
      *
-     * @param streamA first source stream; may be {@code null}
-     * @param streamB second source stream; may be {@code null}
+     * @param streamA
+     *            first source stream; may be {@code null}
+     * @param streamB
+     *            second source stream; may be {@code null}
      * @return a {@link Stream} alternating elements from streamA and streamB, stopping when either is exhausted
      */
     public static <E> Stream<E> interleave(Stream<E> streamA, Stream<E> streamB)
@@ -782,7 +799,8 @@ public class StreamUtils
         Iterator<E> iterB = Optional.ofNullable(streamB)
                                     .orElse(Stream.empty())
                                     .iterator();
-        return fromIterator(new Iterator<E>() {
+        return fromIterator(new Iterator<E>()
+        {
             private boolean useA = true;
 
             @Override
@@ -840,7 +858,8 @@ public class StreamUtils
 
     public static interface UnaryTypedSortedStreamMergerIdentityDefiner
     {
-        public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType, Class<I> identityType, Function<E, I> identityFunction);
+        public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType, Class<I> identityType,
+                                                                                                    Function<E, I> identityFunction);
     }
 
     public static interface UnaryTypedSortedStreamMerger<E, I extends Comparable<I>>
@@ -872,21 +891,27 @@ public class StreamUtils
 
     public static StreamMerger merger()
     {
-        return new StreamMerger() {
+        return new StreamMerger()
+        {
             @Override
             public SortedStreamMergerChooser ofSorted()
             {
-                return new SortedStreamMergerChooser() {
+                return new SortedStreamMergerChooser()
+                {
 
                     @Override
                     public UnaryTypedSortedStreamMergerIdentityDefiner unary()
                     {
                         MultiTypedSortedStreamMergerIdentityDefiner multiTypedSortedStreamMerger = this.multiTyped();
-                        return new UnaryTypedSortedStreamMergerIdentityDefiner() {
+                        return new UnaryTypedSortedStreamMergerIdentityDefiner()
+                        {
                             @Override
-                            public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType, Class<I> identityType, Function<E, I> identityFunction)
+                            public <E, I extends Comparable<I>> UnaryTypedSortedStreamMerger<E, I> withIdentityFunction(Class<E> elementType,
+                                                                                                                        Class<I> identityType,
+                                                                                                                        Function<E, I> identityFunction)
                             {
-                                return new UnaryTypedSortedStreamMerger<E, I>() {
+                                return new UnaryTypedSortedStreamMerger<E, I>()
+                                {
                                     private List<Stream<E>> streams = new ArrayList<>();
 
                                     @Override
@@ -936,7 +961,8 @@ public class StreamUtils
                                         }
                                     }
 
-                                    private Stream<E> applyOuterReducer(Class<E> elementType, Class<I> identityType, Function<E, I> identityFunction, BinaryOperator<E> mergeFunction, Collection<Stream<E>> currentStreams)
+                                    private Stream<E> applyOuterReducer(Class<E> elementType, Class<I> identityType, Function<E, I> identityFunction,
+                                                                        BinaryOperator<E> mergeFunction, Collection<Stream<E>> currentStreams)
                                     {
                                         return StreamUtils.merger()
                                                           .ofSorted()
@@ -953,11 +979,13 @@ public class StreamUtils
                     @Override
                     public MultiTypedSortedStreamMergerIdentityDefiner multiTyped()
                     {
-                        return new MultiTypedSortedStreamMergerIdentityDefiner() {
+                        return new MultiTypedSortedStreamMergerIdentityDefiner()
+                        {
                             @Override
                             public <I extends Comparable<I>> MultiTypedSortedStreamMerger<I> withIdentityType(Class<I> type)
                             {
-                                return new MultiTypedSortedStreamMerger<I>() {
+                                return new MultiTypedSortedStreamMerger<I>()
+                                {
                                     private List<StreamAndIdentityFunction<?, I>> streams = new ArrayList<>();
 
                                     @Override
@@ -1124,13 +1152,16 @@ public class StreamUtils
      * <br>
      * <br>
      * Example:
+     * 
      * <pre>
      * StreamUtils.enumerate(Stream.of("a", "b", "c"))
      * // → BiElement(0, "a"), BiElement(1, "b"), BiElement(2, "c")
      * </pre>
+     * 
      * A {@code null} stream is treated as an empty stream.
      *
-     * @param stream source stream; may be {@code null}
+     * @param stream
+     *            source stream; may be {@code null}
      * @return a {@link Stream} of index-element pairs in encounter order
      */
     public static <E> Stream<BiElement<Long, E>> enumerate(Stream<E> stream)
@@ -1320,9 +1351,11 @@ public class StreamUtils
                                                            .withNumberOfThreads(parallelism.getNumberOfThreads());
 
         return framedAsList(parallelism.getNumberOfThreads(), stream).flatMap(elements -> parallelExecution.executeTasks(elements.stream()
-                                                                                                                                 .map(element -> new Callable<R>() {
+                                                                                                                                 .map(element -> new Callable<R>()
+                                                                                                                                 {
                                                                                                                                      @Override
-                                                                                                                                     public R call() throws Exception
+                                                                                                                                     public R call()
+                                                                                                                                             throws Exception
                                                                                                                                      {
                                                                                                                                          return mappingFunction.apply(element);
                                                                                                                                      }
@@ -1403,7 +1436,8 @@ public class StreamUtils
 
     public static StreamBuilder builder()
     {
-        return new StreamBuilder() {
+        return new StreamBuilder()
+        {
             @Override
             public <E> Stream<E> build()
             {
@@ -1662,17 +1696,20 @@ public class StreamUtils
 
     public static StreamGenerator generate()
     {
-        return new StreamGenerator() {
+        return new StreamGenerator()
+        {
 
             @Override
             public BiIntStreamGenerator biIntStream()
             {
-                return new BiIntStreamGenerator() {
+                return new BiIntStreamGenerator()
+                {
 
                     @Override
                     public LeftSidedBiIntStreamGenerator withLeftSide(int leftSideStartInclusive, int leftSideEndExclusive)
                     {
-                        return new LeftSidedBiIntStreamGenerator() {
+                        return new LeftSidedBiIntStreamGenerator()
+                        {
                             @Override
                             public Stream<IntUnaryBiElement> withRightSide(int rightSideStartInclusive, int rightSideEndExclusive)
                             {
@@ -1689,7 +1726,8 @@ public class StreamUtils
             @Override
             public IntStreamGenerator intStream()
             {
-                return new IntStreamGenerator() {
+                return new IntStreamGenerator()
+                {
                     @Override
                     public IntStream with(Options options)
                     {
@@ -1720,7 +1758,8 @@ public class StreamUtils
                     @Override
                     public LimitedIntStreamConfigurator limited()
                     {
-                        return new LimitedIntStreamConfigurator() {
+                        return new LimitedIntStreamConfigurator()
+                        {
                             @Override
                             public IntStreamConfigurator withTerminationPredicate(IntPredicate terminationPredicate)
                             {
@@ -1753,7 +1792,8 @@ public class StreamUtils
             @Override
             public <E, R> Stream<R> recursive(E startElement, Function<E, R> mapper, Function<R, E> nextElementFunction)
             {
-                return StreamUtils.fromSupplier(new Supplier<R>() {
+                return StreamUtils.fromSupplier(new Supplier<R>()
+                {
                     private AtomicReference<E> element = new AtomicReference<>(startElement);
 
                     @Override
@@ -1777,7 +1817,8 @@ public class StreamUtils
             @Override
             public <E, S extends E> Stream<E> recursive(S startElement, UnaryOperator<E> function)
             {
-                return StreamUtils.fromSupplier(new Supplier<E>() {
+                return StreamUtils.fromSupplier(new Supplier<E>()
+                {
                     private E element = startElement;
 
                     @Override
@@ -1840,7 +1881,8 @@ public class StreamUtils
      * @param aggregationFunction
      * @return
      */
-    public static <E, A> Stream<A> aggregate(Stream<E> stream, Predicate<E> startBarrierMatcher, Predicate<E> endBarrierMatcher, Function<Stream<E>, Stream<A>> aggregationFunction)
+    public static <E, A> Stream<A> aggregate(Stream<E> stream, Predicate<E> startBarrierMatcher, Predicate<E> endBarrierMatcher,
+                                             Function<Stream<E>, Stream<A>> aggregationFunction)
     {
         return Optional.ofNullable(stream)
                        .map(s ->
@@ -1976,7 +2018,8 @@ public class StreamUtils
         Iterator<E> iterator = Optional.ofNullable(stream)
                                        .orElse(Stream.empty())
                                        .iterator();
-        return new SplittedStream<E>() {
+        return new SplittedStream<E>()
+        {
             private List<E> includedStack = new ArrayList<>();
             private List<E> excludedStack = new ArrayList<>();
 
@@ -2067,15 +2110,18 @@ public class StreamUtils
      * <br>
      * <br>
      * Example:
+     * 
      * <pre>
      * Stream.of("apple", "ant", "banana", "avocado")
      *       .filter(StreamUtils.distinctBy(s -&gt; s.charAt(0)))
      * // → "apple", "banana"
      * </pre>
+     * 
      * Note: The returned {@link Predicate} is stateful and not thread-safe. Create a fresh instance
      * for each pipeline.
      *
-     * @param keyExtractor function that derives the deduplication key from each element
+     * @param keyExtractor
+     *            function that derives the deduplication key from each element
      * @return a stateful {@link Predicate} that returns {@code true} only for the first element per key
      */
     public static <E, K> Predicate<E> distinctBy(Function<E, K> keyExtractor)
@@ -2092,8 +2138,10 @@ public class StreamUtils
      * <br>
      * A {@code null} stream is treated as an empty stream.
      *
-     * @param stream       source stream; may be {@code null}
-     * @param keyExtractor function that derives the deduplication key from each element
+     * @param stream
+     *            source stream; may be {@code null}
+     * @param keyExtractor
+     *            function that derives the deduplication key from each element
      * @return a new {@link Stream} with at most one element per distinct key
      */
     public static <E, K> Stream<E> distinctBy(Stream<E> stream, Function<E, K> keyExtractor)
@@ -2133,7 +2181,8 @@ public class StreamUtils
      */
     public static <E, R> FilterMapper<E, R> filterMapper(Predicate<E> filter, Function<E, R> mapper)
     {
-        return new FilterMapper<E, R>() {
+        return new FilterMapper<E, R>()
+        {
             @Override
             public boolean test(E t)
             {
@@ -2195,6 +2244,307 @@ public class StreamUtils
                          .map(Optional::get);
     }
 
+    /**
+     * Limits the given {@link Stream} until the last element has been included.
+     * <br>
+     * <br>
+     * Synonym of {@link #takeUntilInclusive(Stream, Predicate)}.
+     *
+     * @see #takeUntilInclusive(Stream, Predicate)
+     * @see #takeUntilExclusive(Stream, Predicate)
+     * @param <E>
+     * @param stream
+     * @param lastElementPredicate
+     * @return
+     */
+    public static <E> Stream<E> takeUntilLastElementIncluded(Stream<E> stream, Predicate<E> lastElementPredicate)
+    {
+        return takeUntilInclusive(stream, lastElementPredicate);
+    }
+
+    /**
+     * Limits the given {@link Stream} to the elements up to and <b>including</b> the first element matching the given {@link Predicate}. If no element matches,
+     * all elements are returned.
+     * <br>
+     * <br>
+     * The returned {@link Stream} is inherently sequential, since the termination decision depends on the encounter order. It stays correct even if the caller
+     * invokes {@link Stream#parallel()} on it, but such a call will not result in any parallel execution of the operations before a further splitting
+     * intermediate operation.
+     * <br>
+     * <br>
+     * The given {@link Predicate} is invoked at most once per element and never for elements after the terminating one. The source {@link Stream} is not
+     * advanced beyond the terminating element, which allows expensive or side effecting sources to be used.
+     *
+     * @see #takeUntilExclusive(Stream, Predicate)
+     * @param <E>
+     * @param stream
+     * @param terminationPredicate
+     * @return
+     */
+    public static <E> Stream<E> takeUntilInclusive(Stream<E> stream, Predicate<E> terminationPredicate)
+    {
+        return takeUntil(stream, terminationPredicate, true);
+    }
+
+    /**
+     * Limits the given {@link Stream} to the elements up to but <b>excluding</b> the first element matching the given {@link Predicate}. If no element matches,
+     * all elements are returned.
+     * <br>
+     * <br>
+     * Shares all traversal and parallelism characteristics of {@link #takeUntilInclusive(Stream, Predicate)}.
+     *
+     * @see #takeUntilInclusive(Stream, Predicate)
+     * @param <E>
+     * @param stream
+     * @param terminationPredicate
+     * @return
+     */
+    public static <E> Stream<E> takeUntilExclusive(Stream<E> stream, Predicate<E> terminationPredicate)
+    {
+        return takeUntil(stream, terminationPredicate, false);
+    }
+
+    /**
+     * Returns a {@link Stream} which traverses the elements of the given {@link Stream} strictly sequential, which means that the consumer of an element has
+     * finished its processing before the next element is pulled from the source.
+     * <br>
+     * <br>
+     * The returned {@link Stream} can not be splitted, so a {@link Stream#parallel()} call of the caller will neither result in parallel execution nor break
+     * any consumer side state which relies on the encounter order. This is the underlying primitive for all stateful and order dependent operations like
+     * {@link #takeUntilInclusive(Stream, Predicate)} or {@link #takeUntilObservedTermination(Stream, BiFunction)}.
+     * <br>
+     * <br>
+     * A null {@link Stream} is treated like an empty {@link Stream}.
+     *
+     * @param <E>
+     * @param stream
+     * @return
+     */
+    public static <E> Stream<E> sequentialized(Stream<E> stream)
+    {
+        Stream<E> sourceStream = Optional.ofNullable(stream)
+                                         .orElse(Stream.empty());
+
+        Spliterator<E> sourceSpliterator = sourceStream.sequential()
+                                                       .spliterator();
+
+        // no element is dropped, so the size stays valid, but there are no sub spliterators anymore
+        int characteristics = sourceSpliterator.characteristics() & ~Spliterator.SUBSIZED;
+
+        Spliterator<E> sequentialSpliterator = new Spliterators.AbstractSpliterator<E>(sourceSpliterator.estimateSize(), characteristics)
+        {
+            @Override
+            public boolean tryAdvance(Consumer<? super E> action)
+            {
+                return sourceSpliterator.tryAdvance(action);
+            }
+
+            @Override
+            public Spliterator<E> trySplit()
+            {
+                // never split, otherwise consumer side state would be shared between the split parts
+                return null;
+            }
+
+            @Override
+            public Comparator<? super E> getComparator()
+            {
+                return sourceSpliterator.getComparator();
+            }
+        };
+
+        return StreamSupport.stream(sequentialSpliterator, false)
+                            .onClose(sourceStream::close);
+    }
+
+    /**
+     * Returns a {@link Stream} which pulls elements from the given source {@link Stream} until an already emitted element has signalled the termination via the
+     * {@link TerminationSignal} given to the element decorator.
+     * <br>
+     * <br>
+     * In contrast to {@link #takeUntilInclusive(Stream, Predicate)} no {@link Predicate} is applied to the elements by this operation itself, so the elements
+     * are never resolved or dereferenced here. Only the consumer decides by its own access to an element whether the termination is signalled. This allows a
+     * downstream {@link Stream#skip(long)} to discard elements without paying for them, at the price that a consumer which never touches any element will never
+     * terminate the {@link Stream}. Use a {@link Stream#limit(long)} or a short circuiting terminal operation for such consumers.
+     * <br>
+     * <br>
+     * The given decorator is invoked for every emitted element and must be cheap, since it is called before the consumer decides to use the element. Typically
+     * it wraps the element into a lazy decorator which calls {@link TerminationSignal#terminateIf(boolean)} as soon as the element gets resolved.
+     * <br>
+     * <br>
+     * A null {@link Stream} is treated like an empty {@link Stream}, a null decorator returns the source {@link Stream} unchanged.
+     *
+     * @see #sequentialized(Stream)
+     * @param <E>
+     * @param stream
+     * @param elementDecorator
+     * @return
+     */
+    public static <E> Stream<E> takeUntilObservedTermination(Stream<E> stream, BiFunction<E, TerminationSignal, E> elementDecorator)
+    {
+        if (elementDecorator == null)
+        {
+            return Optional.ofNullable(stream)
+                           .orElse(Stream.empty());
+        }
+
+        return takeUntilObservedTermination(terminationSignal -> Optional.ofNullable(stream)
+                                                                         .orElse(Stream.<E>empty())
+                                                                         .map(element -> elementDecorator.apply(element, terminationSignal)));
+    }
+
+    /**
+     * Variant of {@link #takeUntilObservedTermination(Stream, BiFunction)} where the source {@link Stream} is created by the given factory with the
+     * {@link TerminationSignal} at hand. Use this if the elements already know how to signal the termination by themselves, e.g. because the decision needs
+     * context like an element index which is only available during the {@link Stream} creation.
+     *
+     * @see #takeUntilObservedTermination(Stream, BiFunction)
+     * @param <E>
+     * @param streamFactory
+     * @return
+     */
+    public static <E> Stream<E> takeUntilObservedTermination(Function<TerminationSignal, Stream<E>> streamFactory)
+    {
+        if (streamFactory == null)
+        {
+            return Stream.empty();
+        }
+
+        AtomicBoolean terminated = new AtomicBoolean(false);
+        TerminationSignal terminationSignal = new TerminationSignal()
+        {
+            @Override
+            public void terminate()
+            {
+                terminated.set(true);
+            }
+
+            @Override
+            public boolean isTerminated()
+            {
+                return terminated.get();
+            }
+        };
+
+        // the termination flag is checked before the next element is emitted, which is safe since the sequentialized stream
+        // guarantees that the consumer has finished the previous element already
+        return sequentialized(streamFactory.apply(terminationSignal)).takeWhile(element -> !terminated.get());
+    }
+
+    /**
+     * Signal given to the element decorator of {@link StreamUtils#takeUntilObservedTermination(Stream, BiFunction)} which allows a consumed element to
+     * terminate the {@link Stream} it originates from.
+     *
+     * @see StreamUtils#takeUntilObservedTermination(Stream, BiFunction)
+     */
+    public static interface TerminationSignal
+    {
+        /**
+         * Signals that the currently observed element is the last one, so no further element is pulled from the source {@link Stream}.
+         */
+        public void terminate();
+
+        /**
+         * Invokes {@link #terminate()} if the given condition is true.
+         *
+         * @param condition
+         */
+        public default void terminateIf(boolean condition)
+        {
+            if (condition)
+            {
+                this.terminate();
+            }
+        }
+
+        /**
+         * Returns true if {@link #terminate()} has been called already.
+         *
+         * @return
+         */
+        public boolean isTerminated();
+
+        /**
+         * Returns a {@link TerminationSignal} which ignores any {@link #terminate()} call. Use this to probe an element without terminating the
+         * {@link Stream} it belongs to.
+         *
+         * @return
+         */
+        public static TerminationSignal noOperation()
+        {
+            return new TerminationSignal()
+            {
+                @Override
+                public void terminate()
+                {
+                    // do nothing
+                }
+
+                @Override
+                public boolean isTerminated()
+                {
+                    return false;
+                }
+            };
+        }
+    }
+
+    private static <E> Stream<E> takeUntil(Stream<E> stream, Predicate<E> terminationPredicate, boolean terminatingElementIncluded)
+    {
+        Stream<E> sourceStream = Optional.ofNullable(stream)
+                                         .orElse(Stream.empty());
+
+        if (terminationPredicate == null)
+        {
+            return sourceStream;
+        }
+
+        Spliterator<E> sourceSpliterator = sourceStream.sequential()
+                                                       .spliterator();
+
+        // the size is not known anymore and a prefix of a sorted source must not claim to provide a comparator
+        int characteristics = sourceSpliterator.characteristics() & ~(Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.SORTED);
+
+        Spliterator<E> limitedSpliterator = new Spliterators.AbstractSpliterator<E>(sourceSpliterator.estimateSize(), characteristics)
+        {
+            private boolean lastElementReached = false;
+
+            @Override
+            public boolean tryAdvance(Consumer<? super E> action)
+            {
+                if (this.lastElementReached)
+                {
+                    return false;
+                }
+                return sourceSpliterator.tryAdvance(element ->
+                {
+                    if (terminationPredicate.test(element))
+                    {
+                        this.lastElementReached = true;
+                        if (terminatingElementIncluded)
+                        {
+                            action.accept(element);
+                        }
+                    }
+                    else
+                    {
+                        action.accept(element);
+                    }
+                });
+            }
+
+            @Override
+            public Spliterator<E> trySplit()
+            {
+                // the termination state is inherently sequential and must not be shared between split parts
+                return null;
+            }
+        };
+
+        return StreamSupport.stream(limitedSpliterator, false)
+                            .onClose(sourceStream::close);
+    }
+
     public static interface StreamPipeline
     {
 
@@ -2250,7 +2600,8 @@ public class StreamUtils
         @Override
         public <A> SourcedStreamPipeline<A> source(Stream<A> stream)
         {
-            return new SourcedStreamPipeline<A>() {
+            return new SourcedStreamPipeline<A>()
+            {
                 @Override
                 public Stream<A> stream()
                 {
@@ -2280,7 +2631,8 @@ public class StreamUtils
         @Override
         public <S> SeededStreamPipeline<S> seed(Collection<S> seeds)
         {
-            return new SeededStreamPipeline<S>() {
+            return new SeededStreamPipeline<S>()
+            {
                 @Override
                 public <A> SourcedStreamPipeline<A> source(Function<Stream<S>, Stream<A>> stream)
                 {
@@ -2288,7 +2640,8 @@ public class StreamUtils
                 }
 
                 @Override
-                public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA, Function<Stream<S>, Stream<B>> streamProviderB)
+                public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA,
+                                                                    Function<Stream<S>, Stream<B>> streamProviderB)
                 {
                     return pipeline().sources(streamProviderA.apply(seeds.stream()), streamProviderB.apply(seeds.stream()));
                 }
@@ -2298,12 +2651,14 @@ public class StreamUtils
         @Override
         public <S> UnbatchedSeededStreamPipeline<S> seed(Stream<S> seeds)
         {
-            return new UnbatchedSeededStreamPipeline<S>() {
+            return new UnbatchedSeededStreamPipeline<S>()
+            {
                 @Override
                 public SeededStreamPipeline<S> batch(int batchSize)
                 {
                     Stream<List<S>> seedBatches = StreamUtils.framedAsList(batchSize, seeds);
-                    return new SeededStreamPipeline<S>() {
+                    return new SeededStreamPipeline<S>()
+                    {
                         @Override
                         public <A> SourcedStreamPipeline<A> source(Function<Stream<S>, Stream<A>> streamProvider)
                         {
@@ -2311,7 +2666,8 @@ public class StreamUtils
                         }
 
                         @Override
-                        public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA, Function<Stream<S>, Stream<B>> streamProviderB)
+                        public <A, B> BiSourcedStreamPipeline<A, B> sources(Function<Stream<S>, Stream<A>> streamProviderA,
+                                                                            Function<Stream<S>, Stream<B>> streamProviderB)
                         {
                             return pipeline().source(seedBatches)
                                              .fork()
@@ -2386,5 +2742,407 @@ public class StreamUtils
         return mapWithPrevious(stream, mapper).map(Optional::ofNullable)
                                               .reduce((r1, r2) -> r2)
                                               .flatMap(Function.identity());
+    }
+
+    public static <E> Stream<E> lazyLoading(Stream<Supplier<E>> stream)
+    {
+        return new StreamDecoratorLazyLoading<>(stream);
+    }
+
+    /**
+     * Variant of {@link #lazyLoading(Stream)} where the given skip observer is notified with the accumulated number of skipped elements whenever
+     * {@link Stream#skip(long)} is called on the returned {@link Stream} or any {@link Stream} derived from it. This allows the producer of the
+     * {@link Supplier}s to know the position of the first element which the consumer will actually resolve.
+     *
+     * @see StreamDecoratorLazyLoading#StreamDecoratorLazyLoading(Stream, LongConsumer)
+     * @param <E>
+     * @param stream
+     * @param skipObserver
+     * @return
+     */
+    public static <E> Stream<E> lazyLoading(Stream<Supplier<E>> stream, LongConsumer skipObserver)
+    {
+        return new StreamDecoratorLazyLoading<>(stream, skipObserver);
+    }
+
+    public static PagesProvider fromPageProvider()
+    {
+        return new PagesProvider()
+        {
+            private int pageSize = 100;
+
+            @Override
+            public PagesProvider withPageSize(int pageSize)
+            {
+                this.pageSize = Math.max(0, pageSize);
+                return this;
+            }
+
+            @Override
+            public <E> StreamablePages<E> usingPageProvider(Function<Paging, Page<E>> paging)
+            {
+                return new StreamablePagesImpl<>(createStreamablePage(paging, this.pageSize), this.pageSize);
+            }
+        };
+    }
+
+    private static <E> IntFunction<Supplier<StreamablePage<E>>> createStreamablePage(Function<Paging, Page<E>> pagingToPageMapper, int pageSize)
+    {
+        return index ->
+        {
+            return CachedElement.of(() -> new StreamablePage<E>()
+            {
+                private CachedElement<Page<E>> pageProvider = CachedElement.of(() -> this.resolvePage(pagingToPageMapper, pageSize, index));
+
+                @Override
+                public Stream<E> stream()
+                {
+                    return this.getElements()
+                               .stream();
+                }
+
+                private List<E> getElements()
+                {
+                    return Optional.of(this.pageProvider.get())
+                                   .map(Page::getElements)
+                                   .orElse(Collections.emptyList());
+                }
+
+                private Page<E> resolvePage(Function<Paging, Page<E>> pagingToPageMapper, int pageSize, int index)
+                {
+                    return pagingToPageMapper.apply(new Paging()
+                    {
+                        @Override
+                        public int getPageIndex()
+                        {
+                            return index;
+                        }
+
+                        @Override
+                        public int getPageSize()
+                        {
+                            return pageSize;
+                        }
+
+                        @Override
+                        public int getStartIndex()
+                        {
+                            return index * pageSize;
+                        }
+
+                        @Override
+                        public int getStopIndexExclusive()
+                        {
+                            return (index + 1) * pageSize;
+                        }
+                    });
+                }
+
+                @Override
+                public boolean isLastPage()
+                {
+                    // if the page does not declare it explicitly, a page which is not filled up to the page size is the last one
+                    return Optional.ofNullable(this.pageProvider.get()
+                                                                .getIsLastPage())
+                                   .orElseGet(() -> this.getElements()
+                                                        .size() < pageSize);
+                }
+
+                @Override
+                public Stream<Supplier<Stream<E>>> elementProviderStream()
+                {
+                    return IntStream.range(0, pageSize)
+                                    .mapToObj(elementIndex -> () ->
+                                    {
+                                        List<E> elements = this.getElements();
+                                        if (elementIndex >= 0 && elementIndex < elements.size())
+                                        {
+                                            return Stream.of(ListUtils.get(elements, elementIndex));
+                                        }
+                                        else
+                                        {
+                                            return Stream.empty();
+                                        }
+                                    });
+                }
+            });
+        };
+    }
+
+    /**
+     * {@link StreamablePage} decorator which signals the termination of the surrounding page {@link Stream} as soon as the consumer resolves a page which is
+     * the last one. A page which is never touched by the consumer, e.g. because it has been skipped, does not signal anything and does not resolve the
+     * underlying page.
+     *
+     * @see StreamUtils#takeUntilObservedTermination(Stream, BiFunction)
+     * @param <E>
+     */
+    private static class TerminationSignalingStreamablePage<E> implements StreamablePage<E>
+    {
+        private final StreamablePage<E> page;
+        private final TerminationSignal terminationSignal;
+
+        public TerminationSignalingStreamablePage(StreamablePage<E> page, TerminationSignal terminationSignal)
+        {
+            this.page = page;
+            this.terminationSignal = terminationSignal;
+        }
+
+        @Override
+        public Stream<E> stream()
+        {
+            Stream<E> stream = this.page.stream();
+            this.signalTerminationIfLastPage();
+            return stream;
+        }
+
+        @Override
+        public Stream<Supplier<Stream<E>>> elementProviderStream()
+        {
+            Stream<Supplier<Stream<E>>> elementProviderStream = this.page.elementProviderStream();
+            this.signalTerminationIfLastPage();
+            return elementProviderStream;
+        }
+
+        @Override
+        public boolean isLastPage()
+        {
+            boolean lastPage = this.page.isLastPage();
+            this.terminationSignal.terminateIf(lastPage);
+            return lastPage;
+        }
+
+        private void signalTerminationIfLastPage()
+        {
+            // the page is resolved already at this point, so this does not trigger any further page retrieval
+            this.terminationSignal.terminateIf(this.page.isLastPage());
+        }
+    }
+
+    private static class StreamablePagesImpl<E> implements StreamablePages<E>
+    {
+        private final IntFunction<Supplier<StreamablePage<E>>> randomAccessPageProvider;
+        private final int                                      pageSize;
+
+        public StreamablePagesImpl(IntFunction<Supplier<StreamablePage<E>>> randomAccessPageProvider, int pageSize)
+        {
+            this.randomAccessPageProvider = randomAccessPageProvider;
+            this.pageSize = pageSize;
+        }
+
+        @Override
+        public StreamablePageElements<E> asElements()
+        {
+            int pageSize = this.pageSize;
+            IntFunction<Supplier<StreamablePage<E>>> randomAccessPageProvider = this.randomAccessPageProvider;
+            return new StreamablePageElements<E>()
+            {
+                @Override
+                public Stream<E> stream()
+                {
+                    SingleKeyCachedElement<Integer, StreamablePage<E>> pageIndexToStreamablePage = new SingleKeyCachedElement<>();
+                    AtomicReference<int[]> lastResolvedPosition = new AtomicReference<>();
+
+                    // the index of the first element which the consumer will resolve, moved forward by any skip of the consumer
+                    AtomicInteger anchorIndex = new AtomicInteger(0);
+
+                    // the highest index which is known to be available, since a resolved page reveals all of its remaining elements at once
+                    AtomicInteger knownAvailableUpToIndex = new AtomicInteger(-1);
+
+                    BiFunction<Integer, TerminationSignal, Optional<Element<E>>> elementResolver = (index, terminationSignal) ->
+                    {
+                        int[] previousPosition = lastResolvedPosition.get();
+                        int pageIndex;
+                        int elementIndex;
+                        if (previousPosition != null && previousPosition[0] == index)
+                        {
+                            // the same index has been resolved before, e.g. by a probe, so its position is reused to stay consistent
+                            pageIndex = previousPosition[1];
+                            elementIndex = previousPosition[2];
+                        }
+                        else if (previousPosition != null && previousPosition[0] == index - 1)
+                        {
+                            pageIndex = previousPosition[1];
+                            elementIndex = previousPosition[2] + 1;
+                        }
+                        else
+                        {
+                            // no predecessor has been resolved, e.g. because of a skip, so the page size based mapping is used
+                            pageIndex = index / pageSize;
+                            elementIndex = index - pageIndex * pageSize;
+                        }
+
+                        StreamablePage<E> page = pageIndexToStreamablePage.apply(pageIndex, randomAccessPageProvider.apply(pageIndex))
+                                                                          .get();
+                        Optional<Element<E>> element = page.nthElement(elementIndex);
+
+                        // a page which provides less elements than the page size and which is not the last one rolls over to the next page
+                        while (element.isEmpty() && !page.isLastPage())
+                        {
+                            pageIndex = pageIndex + 1;
+                            elementIndex = 0;
+                            page = pageIndexToStreamablePage.apply(pageIndex, randomAccessPageProvider.apply(pageIndex))
+                                                            .get();
+                            element = page.nthElement(elementIndex);
+                        }
+
+                        if (element.isPresent())
+                        {
+                            lastResolvedPosition.set(new int[] { index, pageIndex, elementIndex });
+
+                            // the resolved page reveals all of its remaining elements, so they do not have to be probed anymore
+                            int remainingElementsOfPage = (int) page.stream()
+                                                                    .count()
+                                    - 1 - elementIndex;
+                            knownAvailableUpToIndex.updateAndGet(knownIndex -> Math.max(knownIndex, index + remainingElementsOfPage));
+                        }
+
+                        // the look ahead stays within the already resolved page, so it does not retrieve any further page
+                        terminationSignal.terminateIf(page.isLastPage() && page.nthElement(elementIndex + 1)
+                                                                              .isEmpty());
+
+                        return element;
+                    };
+
+                    // no predicate is applied to the elements here, the termination is decided by the element which the consumer resolves,
+                    // which allows a downstream skip to discard elements without retrieving their pages
+                    Stream<Supplier<Optional<Element<E>>>> elementProviderStream = StreamUtils.takeUntilObservedTermination(terminationSignal ->
+                    {
+                        return StreamUtils.generate()
+                                          .intStream()
+                                          .unlimited()
+                                          .fromZero()
+                                          // an element is only emitted if it is known to be available. This is the case for elements which are discarded by a
+                                          // skip of the consumer anyway and for elements of an already resolved page. All other elements are probed before
+                                          // they are emitted, which keeps an exhausted source from emitting an unresolvable element. The probe must not
+                                          // signal the termination, since the probed element still has to be emitted.
+                                          .takeWhile(index -> !terminationSignal.isTerminated()
+                                                  && (index < anchorIndex.get() || index <= knownAvailableUpToIndex.get()
+                                                          || elementResolver.apply(index, TerminationSignal.noOperation())
+                                                                            .isPresent()))
+                                          .mapToObj(index -> () -> elementResolver.apply(index, terminationSignal));
+                    });
+
+                    return StreamUtils.lazyLoading(elementProviderStream,
+                                                   skipOffset -> anchorIndex.set((int) Math.min(Integer.MAX_VALUE, skipOffset)))
+                                      .map(element -> element.map(Element::getValue)
+                                                             .orElse(null));
+                }
+
+            };
+        }
+
+        @Override
+        public Stream<StreamablePage<E>> stream()
+        {
+            // the lazy loading decorator stays on the outside, so that a downstream skip discards the page providers without resolving any page
+            return StreamUtils.lazyLoading(StreamUtils.takeUntilObservedTermination(StreamUtils.generate()
+                                                                                               .intStream()
+                                                                                               .unlimited()
+                                                                                               .fromZero()
+                                                                                               .mapToObj(this.randomAccessPageProvider),
+                                                                                    (pageProvider, terminationSignal) -> () -> new TerminationSignalingStreamablePage<>(pageProvider.get(),
+                                                                                                                                                                        terminationSignal)));
+        }
+
+    }
+
+    public static interface PagesProvider
+    {
+
+        public PagesProvider withPageSize(int pageSize);
+
+        public <E> StreamablePages<E> usingPageProvider(Function<Paging, Page<E>> page);
+
+    }
+
+    public static interface Paging
+    {
+        public int getPageSize();
+
+        /**
+         * Returns the absolute page index position (0,1,2,...)
+         * 
+         * @return
+         */
+        public int getPageIndex();
+
+        /**
+         * Returns the absolute start index position (inclusive) for individual elements (0,1,2,...)
+         * 
+         * @return
+         */
+        public int getStartIndex();
+
+        /**
+         * Returns the absolute stop index position (exclusive) (0,1,2, ...)
+         * 
+         * @return
+         */
+        public int getStopIndexExclusive();
+
+    }
+
+    @Value
+    @Builder
+    public static class Page<E>
+    {
+        @Default
+        private List<E> elements = Collections.emptyList();
+
+        /**
+         * Optional flag which marks this {@link Page} as the last one. If it is not set, the last page is determined by the fill level of the {@link Page}: a
+         * {@link Page} which provides less elements than the requested {@link Paging#getPageSize()} is the last one.
+         */
+        private Boolean isLastPage;
+
+        /**
+         * Creates a {@link Page} with the given elements where the last page is determined by the fill level of the {@link Page}.
+         *
+         * @see #of(List, boolean)
+         * @param <E>
+         * @param elements
+         * @return
+         */
+        public static <E> Page<E> of(List<E> elements)
+        {
+            return Page.<E>builder()
+                       .elements(elements)
+                       .build();
+        }
+
+        /**
+         * Creates a {@link Page} with the given elements and an explicit last page flag.
+         *
+         * @see #of(List)
+         * @param <E>
+         * @param elements
+         * @param isLastPage
+         * @return
+         */
+        public static <E> Page<E> of(List<E> elements, boolean isLastPage)
+        {
+            return Page.<E>builder()
+                       .elements(elements)
+                       .isLastPage(isLastPage)
+                       .build();
+        }
+    }
+
+    public static interface StreamablePages<E> extends Streamable<StreamablePage<E>>
+    {
+        public StreamablePageElements<E> asElements();
+    }
+
+    public static interface StreamablePageElements<E> extends Streamable<E>
+    {
+
+    }
+
+    public static interface StreamablePage<E> extends Streamable<E>
+    {
+        public boolean isLastPage();
+
+        public Stream<Supplier<Stream<E>>> elementProviderStream();
     }
 }

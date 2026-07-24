@@ -45,15 +45,20 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.omnaest.utils.StreamUtils.Drainage;
+import org.omnaest.utils.StreamUtils.Page;
 import org.omnaest.utils.StreamUtils.SplittedStream;
+import org.omnaest.utils.StreamUtils.StreamablePage;
+import org.omnaest.utils.StreamUtils.TerminationSignal;
 import org.omnaest.utils.StreamUtils.UnaryMergeEntry;
 import org.omnaest.utils.element.bi.BiElement;
 import org.omnaest.utils.element.bi.IntUnaryBiElement;
@@ -93,7 +98,7 @@ public class StreamUtilsTest
     public void testFromIteratorFlatMap() throws Exception
     {
         AtomicInteger counter = new AtomicInteger();
-        Stream<String> stream = Arrays.asList(new String[] {"1", "2"}, new String[] {"3", "4"})
+        Stream<String> stream = Arrays.asList(new String[] { "1", "2" }, new String[] { "3", "4" })
                                       .stream()
                                       .map(Arrays::asList)
                                       .map(List::iterator)
@@ -160,16 +165,16 @@ public class StreamUtilsTest
                                                                             .stream())
                                                .collect(Collectors.toList());
             assertEquals(2, frames.size());
-            assertArrayEquals(new String[] {"1", "2", "3"}, frames.get(0));
-            assertArrayEquals(new String[] {"4", "5", "6"}, frames.get(1));
+            assertArrayEquals(new String[] { "1", "2", "3" }, frames.get(0));
+            assertArrayEquals(new String[] { "4", "5", "6" }, frames.get(1));
         }
         {
             List<String[]> frames = StreamUtils.framedPreserveSize(3, Arrays.asList("1", null, "3", "4", "5")
                                                                             .stream())
                                                .collect(Collectors.toList());
             assertEquals(2, frames.size());
-            assertArrayEquals(new String[] {"1", null, "3"}, frames.get(0));
-            assertArrayEquals(new String[] {"4", "5", null}, frames.get(1));
+            assertArrayEquals(new String[] { "1", null, "3" }, frames.get(0));
+            assertArrayEquals(new String[] { "4", "5", null }, frames.get(1));
         }
     }
 
@@ -181,16 +186,16 @@ public class StreamUtilsTest
                                                                 .stream())
                                                .collect(Collectors.toList());
             assertEquals(2, frames.size());
-            assertArrayEquals(new String[] {"1", "2", "3"}, frames.get(0));
-            assertArrayEquals(new String[] {"4", "5", "6"}, frames.get(1));
+            assertArrayEquals(new String[] { "1", "2", "3" }, frames.get(0));
+            assertArrayEquals(new String[] { "4", "5", "6" }, frames.get(1));
         }
         {
             List<String[]> frames = StreamUtils.framed(3, Arrays.asList("1", null, "3", "4", "5")
                                                                 .stream())
                                                .collect(Collectors.toList());
             assertEquals(2, frames.size());
-            assertArrayEquals(new String[] {"1", null, "3"}, frames.get(0));
-            assertArrayEquals(new String[] {"4", "5"}, frames.get(1));
+            assertArrayEquals(new String[] { "1", null, "3" }, frames.get(0));
+            assertArrayEquals(new String[] { "4", "5" }, frames.get(1));
         }
     }
 
@@ -604,8 +609,8 @@ public class StreamUtilsTest
         assertEquals(Arrays.asList("1a1b", "2a2b", "3b", "4a"), result.stream()
                                                                       .map(entry -> entry.getFirst()
                                                                                          .orElse("")
-                                                                                    + entry.getSecond()
-                                                                                           .orElse(""))
+                                                                              + entry.getSecond()
+                                                                                     .orElse(""))
                                                                       .collect(Collectors.toList()));
     }
 
@@ -678,7 +683,7 @@ public class StreamUtilsTest
         BiFunction<String, Integer, String> mapper = (previous, value) -> Optional.ofNullable(previous)
                                                                                   .map(previousValue -> previousValue + "-")
                                                                                   .orElse("")
-                                                                          + value;
+                + value;
         assertEquals(List.of("0", "0-1", "0-1-2"), StreamUtils.mapWithPrevious(IntStream.range(0, 3)
                                                                                         .boxed(),
                                                                                mapper)
@@ -691,7 +696,7 @@ public class StreamUtilsTest
         BiFunction<String, Integer, String> mapper = (previous, value) -> Optional.ofNullable(previous)
                                                                                   .map(previousValue -> previousValue + "-")
                                                                                   .orElse("")
-                                                                          + value;
+                + value;
         assertEquals("0-1-2", StreamUtils.reduceWithPrevious(IntStream.range(0, 3)
                                                                       .boxed(),
                                                              mapper)
@@ -765,12 +770,18 @@ public class StreamUtilsTest
         List<BiElement<Long, String>> result = StreamUtils.enumerate(Stream.of("a", "b", "c"))
                                                           .collect(Collectors.toList());
         assertEquals(3, result.size());
-        assertEquals(Long.valueOf(0L), result.get(0).getFirst());
-        assertEquals("a", result.get(0).getSecond());
-        assertEquals(Long.valueOf(1L), result.get(1).getFirst());
-        assertEquals("b", result.get(1).getSecond());
-        assertEquals(Long.valueOf(2L), result.get(2).getFirst());
-        assertEquals("c", result.get(2).getSecond());
+        assertEquals(Long.valueOf(0L), result.get(0)
+                                             .getFirst());
+        assertEquals("a", result.get(0)
+                                .getSecond());
+        assertEquals(Long.valueOf(1L), result.get(1)
+                                             .getFirst());
+        assertEquals("b", result.get(1)
+                                .getSecond());
+        assertEquals(Long.valueOf(2L), result.get(2)
+                                             .getFirst());
+        assertEquals("c", result.get(2)
+                                .getSecond());
 
         // empty stream
         List<BiElement<Long, String>> empty = StreamUtils.enumerate(Stream.<String>empty())
@@ -786,47 +797,490 @@ public class StreamUtilsTest
         List<BiElement<Long, String>> single = StreamUtils.enumerate(Stream.of("x"))
                                                           .collect(Collectors.toList());
         assertEquals(1, single.size());
-        assertEquals(Long.valueOf(0L), single.get(0).getFirst());
-        assertEquals("x", single.get(0).getSecond());
+        assertEquals(Long.valueOf(0L), single.get(0)
+                                             .getFirst());
+        assertEquals("x", single.get(0)
+                                .getSecond());
     }
 
     @Test
     public void testInterleave() throws Exception
     {
         // basic: A longer than B → stops when B is exhausted
-        assertEquals(Arrays.asList(1, 10, 2, 20),
-                     StreamUtils.interleave(Stream.of(1, 2, 3), Stream.of(10, 20))
-                                .collect(Collectors.toList()));
+        assertEquals(Arrays.asList(1, 10, 2, 20), StreamUtils.interleave(Stream.of(1, 2, 3), Stream.of(10, 20))
+                                                             .collect(Collectors.toList()));
 
         // equal length
-        assertEquals(Arrays.asList(1, 10, 2, 20),
-                     StreamUtils.interleave(Stream.of(1, 2), Stream.of(10, 20))
-                                .collect(Collectors.toList()));
+        assertEquals(Arrays.asList(1, 10, 2, 20), StreamUtils.interleave(Stream.of(1, 2), Stream.of(10, 20))
+                                                             .collect(Collectors.toList()));
 
         // A shorter than B → stops when A is exhausted
-        assertEquals(Arrays.asList(1, 10),
-                     StreamUtils.interleave(Stream.of(1), Stream.of(10, 20, 30))
-                                .collect(Collectors.toList()));
+        assertEquals(Arrays.asList(1, 10), StreamUtils.interleave(Stream.of(1), Stream.of(10, 20, 30))
+                                                      .collect(Collectors.toList()));
 
         // A empty → result is empty
-        assertEquals(Arrays.asList(),
-                     StreamUtils.interleave(Stream.<Integer>empty(), Stream.of(10, 20))
-                                .collect(Collectors.toList()));
+        assertEquals(Arrays.asList(), StreamUtils.interleave(Stream.<Integer>empty(), Stream.of(10, 20))
+                                                 .collect(Collectors.toList()));
 
         // B empty → result is empty
-        assertEquals(Arrays.asList(),
-                     StreamUtils.interleave(Stream.of(1, 2), Stream.<Integer>empty())
-                                .collect(Collectors.toList()));
+        assertEquals(Arrays.asList(), StreamUtils.interleave(Stream.of(1, 2), Stream.<Integer>empty())
+                                                 .collect(Collectors.toList()));
 
         // null A → treated as empty
-        assertEquals(Arrays.asList(),
-                     StreamUtils.interleave(null, Stream.of(10, 20))
-                                .collect(Collectors.toList()));
+        assertEquals(Arrays.asList(), StreamUtils.interleave(null, Stream.of(10, 20))
+                                                 .collect(Collectors.toList()));
 
         // null B → treated as empty
-        assertEquals(Arrays.asList(),
-                     StreamUtils.interleave(Stream.of(1, 2), null)
-                                .collect(Collectors.toList()));
+        assertEquals(Arrays.asList(), StreamUtils.interleave(Stream.of(1, 2), null)
+                                                 .collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testFromPageProviderWithSinglePage()
+    {
+        assertEquals(List.of("A0:0"), StreamUtils.fromPageProvider()
+                                                 .withPageSize(100)
+                                                 .usingPageProvider(paging -> Page.of(List.of("A" + paging.getPageIndex() + ":" + paging.getStartIndex()),
+                                                                                      true))
+                                                 .asElements()
+                                                 .toList());
+    }
+
+    @Test
+    public void testFromPageProviderWithMultiplePages()
+    {
+        List<Integer> elements = IntStream.range(0, 10)
+                                          .boxed()
+                                          .toList();
+        assertEquals(elements, StreamUtils.fromPageProvider()
+                                          .withPageSize(3)
+                                          .usingPageProvider(paging -> Page.of(elements.subList(paging.getStartIndex(),
+                                                                                                Math.min(elements.size(),
+                                                                                                         paging.getStopIndexExclusive())),
+                                                                               paging.getStopIndexExclusive() >= elements.size()))
+                                          .asElements()
+                                          .toList());
+    }
+
+    @Test
+    public void testFromPageProviderWithPageIndexBasedProvider()
+    {
+        List<Integer> elements = IntStream.range(0, 10)
+                                          .boxed()
+                                          .toList();
+        assertEquals(elements, StreamUtils.fromPageProvider()
+                                          .withPageSize(2)
+                                          .usingPageProvider(paging -> Page.of(elements.subList(paging.getPageSize() * paging.getPageIndex(),
+                                                                                                Math.min(elements.size(),
+                                                                                                         paging.getStopIndexExclusive())),
+                                                                               paging.getStopIndexExclusive() >= elements.size()))
+                                          .asElements()
+                                          .toList());
+    }
+
+    @Test
+    public void testFromPageProviderWithSkippedPages()
+    {
+        List<Integer> elements = IntStream.range(0, 10)
+                                          .boxed()
+                                          .toList();
+        List<Integer> pageHits = new ArrayList<>();
+        assertEquals(elements.subList(6, elements.size()), StreamUtils.fromPageProvider()
+                                                                      .withPageSize(3)
+                                                                      .usingPageProvider(paging ->
+                                                                      {
+                                                                          pageHits.add(paging.getPageIndex());
+                                                                          return Page.of(elements.subList(paging.getStartIndex(),
+                                                                                                          Math.min(elements.size(),
+                                                                                                                   paging.getStopIndexExclusive())),
+                                                                                         paging.getStopIndexExclusive() >= elements.size());
+                                                                      })
+                                                                      .stream()
+                                                                      .skip(2)
+                                                                      .limit(2)
+                                                                      .flatMap(StreamablePage::stream)
+                                                                      .toList());
+        // the skipped pages are not retrieved, since a page is only resolved when the consumer accesses it
+        assertEquals(List.of(2, 3), pageHits);
+    }
+
+    @Test
+    public void testFromPageProviderWithSkippedElements()
+    {
+        List<Integer> elements = IntStream.range(0, 10)
+                                          .boxed()
+                                          .toList();
+        List<Integer> pageHits = new ArrayList<>();
+        assertEquals(elements.subList(6, elements.size()), StreamUtils.fromPageProvider()
+                                                                      .withPageSize(3)
+                                                                      .usingPageProvider(paging ->
+                                                                      {
+                                                                          pageHits.add(paging.getPageIndex());
+                                                                          return Page.of(elements.subList(paging.getStartIndex(),
+                                                                                                          Math.min(elements.size(),
+                                                                                                                   paging.getStopIndexExclusive())),
+                                                                                         paging.getStopIndexExclusive() >= elements.size());
+                                                                      })
+                                                                      .asElements()
+                                                                      .stream()
+                                                                      .skip(6)
+                                                                      .toList());
+        // the skip moves the probe of the first resolved element to page 2, so the pages 0 and 1 are not retrieved at all
+        assertEquals(List.of(2, 3), pageHits);
+    }
+
+    @Test
+    public void testFromPageProviderWithPartiallyFilledPages()
+    {
+        List<Page<Object>> pages = List.of(Page.of(List.of("A", "B"), false), Page.of(List.of("C", "D", "E"), true));
+        assertEquals(List.of("A", "B", "C", "D", "E"), StreamUtils.fromPageProvider()
+                                                                  .withPageSize(100)
+                                                                  .usingPageProvider(paging -> pages.get(paging.getPageIndex()))
+                                                                  .asElements()
+                                                                  .toList());
+    }
+
+    @Test
+    public void testFromPageProviderWithDeterminedLastPage()
+    {
+        // a partially filled page is the last page
+        List<Integer> elements = IntStream.range(0, 5)
+                                          .boxed()
+                                          .toList();
+        List<Integer> pageHits = new ArrayList<>();
+        assertEquals(elements, StreamUtils.fromPageProvider()
+                                          .withPageSize(3)
+                                          .usingPageProvider(paging ->
+                                          {
+                                              pageHits.add(paging.getPageIndex());
+                                              return Page.of(elements.subList(Math.min(elements.size(), paging.getStartIndex()),
+                                                                              Math.min(elements.size(), paging.getStopIndexExclusive())));
+                                          })
+                                          .asElements()
+                                          .toList());
+        assertEquals(List.of(0, 1), pageHits);
+    }
+
+    @Test
+    public void testFromPageProviderWithDeterminedLastPageOnExactPageSizeMultiple()
+    {
+        // the element count is an exact multiple of the page size, so the trailing empty page determines the end and must not emit an element
+        List<Integer> elements = IntStream.range(0, 6)
+                                          .boxed()
+                                          .toList();
+        List<Integer> pageHits = new ArrayList<>();
+        assertEquals(elements, StreamUtils.fromPageProvider()
+                                          .withPageSize(3)
+                                          .usingPageProvider(paging ->
+                                          {
+                                              pageHits.add(paging.getPageIndex());
+                                              return Page.of(elements.subList(Math.min(elements.size(), paging.getStartIndex()),
+                                                                              Math.min(elements.size(), paging.getStopIndexExclusive())));
+                                          })
+                                          .asElements()
+                                          .toList());
+        assertEquals(List.of(0, 1, 2), pageHits);
+    }
+
+    @Test
+    public void testFromPageProviderWithDeterminedLastPageAndWithoutAnyElement()
+    {
+        List<Integer> pageHits = new ArrayList<>();
+        assertEquals(List.of(), StreamUtils.fromPageProvider()
+                                           .withPageSize(3)
+                                           .usingPageProvider(paging ->
+                                           {
+                                               pageHits.add(paging.getPageIndex());
+                                               return Page.of(List.of());
+                                           })
+                                           .asElements()
+                                           .toList());
+        assertEquals(List.of(0), pageHits);
+    }
+
+    @Test
+    public void testFromPageProviderWithDeterminedLastPageAndSkippedElements()
+    {
+        List<Integer> elements = IntStream.range(0, 10)
+                                          .boxed()
+                                          .toList();
+        List<Integer> pageHits = new ArrayList<>();
+        assertEquals(List.of(6, 7, 8, 9), StreamUtils.fromPageProvider()
+                                                     .withPageSize(3)
+                                                     .usingPageProvider(paging ->
+                                                     {
+                                                         pageHits.add(paging.getPageIndex());
+                                                         return Page.of(elements.subList(Math.min(elements.size(), paging.getStartIndex()),
+                                                                                         Math.min(elements.size(), paging.getStopIndexExclusive())));
+                                                     })
+                                                     .asElements()
+                                                     .stream()
+                                                     .skip(6)
+                                                     .toList());
+        assertEquals(List.of(2, 3), pageHits);
+    }
+
+    @Test
+    public void testFromPageProviderWithSkipBeyondTheLastElement()
+    {
+        List<Integer> elements = IntStream.range(0, 10)
+                                          .boxed()
+                                          .toList();
+        List<Integer> pageHits = new ArrayList<>();
+        assertEquals(List.of(), StreamUtils.fromPageProvider()
+                                           .withPageSize(3)
+                                           .usingPageProvider(paging ->
+                                           {
+                                               pageHits.add(paging.getPageIndex());
+                                               return Page.of(elements.subList(Math.min(elements.size(), paging.getStartIndex()),
+                                                                               Math.min(elements.size(), paging.getStopIndexExclusive())),
+                                                              paging.getStopIndexExclusive() >= elements.size());
+                                           })
+                                           .asElements()
+                                           .stream()
+                                           .skip(100)
+                                           .toList());
+        // only the page of the probed anchor element is retrieved, no element is emitted
+        assertEquals(List.of(33), pageHits);
+    }
+
+    @Test
+    public void testFromPageProviderWithoutAnyElement()
+    {
+        List<Integer> pageHits = new ArrayList<>();
+        assertEquals(List.of(), StreamUtils.fromPageProvider()
+                                           .withPageSize(3)
+                                           .usingPageProvider(paging ->
+                                           {
+                                               pageHits.add(paging.getPageIndex());
+                                               return Page.of(List.of(), true);
+                                           })
+                                           .asElements()
+                                           .toList());
+        assertEquals(List.of(0), pageHits);
+    }
+
+    @Test
+    public void testTakeUntilLastElementIncluded()
+    {
+        assertEquals(List.of("A", "B"),
+                     StreamUtils.takeUntilLastElementIncluded(Stream.of("A", "B", "C"), element -> org.apache.commons.lang3.StringUtils.equals("B", element))
+                                .toList());
+        assertEquals(List.of("A", "B"),
+                     StreamUtils.takeUntilLastElementIncluded(Stream.of("A", "B"), element -> org.apache.commons.lang3.StringUtils.equals("B", element))
+                                .toList());
+        assertEquals(List.of("A"),
+                     StreamUtils.takeUntilLastElementIncluded(Stream.of("A"), element -> org.apache.commons.lang3.StringUtils.equals("B", element))
+                                .toList());
+        assertEquals(List.of(), StreamUtils.takeUntilLastElementIncluded(Stream.<String>empty(), element -> true)
+                                           .toList());
+        assertEquals(List.of(), StreamUtils.<String>takeUntilLastElementIncluded(null, element -> true)
+                                           .toList());
+        assertEquals(List.of("A", "B"), StreamUtils.takeUntilLastElementIncluded(Stream.of("A", "B"), null)
+                                                   .toList());
+    }
+
+    @Test
+    public void testTakeUntilInclusive()
+    {
+        assertEquals(List.of("A", "B"), StreamUtils.takeUntilInclusive(Stream.of("A", "B", "C"), "B"::equals)
+                                                   .toList());
+        assertEquals(List.of("A", "B"), StreamUtils.takeUntilInclusive(Stream.of("A", "B"), "B"::equals)
+                                                   .toList());
+        assertEquals(List.of("A"), StreamUtils.takeUntilInclusive(Stream.of("A"), "B"::equals)
+                                              .toList());
+        assertEquals(List.of("B"), StreamUtils.takeUntilInclusive(Stream.of("B", "A"), "B"::equals)
+                                              .toList());
+        assertEquals(List.of(), StreamUtils.takeUntilInclusive(Stream.<String>empty(), "B"::equals)
+                                           .toList());
+    }
+
+    @Test
+    public void testTakeUntilExclusive()
+    {
+        assertEquals(List.of("A"), StreamUtils.takeUntilExclusive(Stream.of("A", "B", "C"), "B"::equals)
+                                              .toList());
+        assertEquals(List.of("A"), StreamUtils.takeUntilExclusive(Stream.of("A", "B"), "B"::equals)
+                                              .toList());
+        assertEquals(List.of("A"), StreamUtils.takeUntilExclusive(Stream.of("A"), "B"::equals)
+                                              .toList());
+        assertEquals(List.of(), StreamUtils.takeUntilExclusive(Stream.of("B", "A"), "B"::equals)
+                                           .toList());
+        assertEquals(List.of(), StreamUtils.takeUntilExclusive(Stream.<String>empty(), "B"::equals)
+                                           .toList());
+        assertEquals(List.of(0, 1, 2, 3, 4), StreamUtils.takeUntilExclusive(Stream.iterate(0, element -> element + 1), element -> element >= 5)
+                                                        .toList());
+        assertEquals(List.of(0, 1, 2, 3, 4), StreamUtils.takeUntilExclusive(IntStream.range(0, 2000)
+                                                                                     .boxed(),
+                                                                            element -> element >= 5)
+                                                        .parallel()
+                                                        .toList());
+    }
+
+    @Test
+    public void testSequentialized()
+    {
+        assertEquals(List.of("A", "B", "C"), StreamUtils.sequentialized(Stream.of("A", "B", "C"))
+                                                        .toList());
+        assertEquals(List.of(), StreamUtils.sequentialized(null)
+                                           .toList());
+
+        // a sorted source must not break on the missing comparator
+        assertEquals(List.of(0, 1, 2), StreamUtils.sequentialized(IntStream.range(0, 3)
+                                                                           .boxed()
+                                                                           .sorted())
+                                                  .toList());
+
+        // the size stays known, so a count does not need to traverse the stream
+        assertEquals(1000, StreamUtils.sequentialized(IntStream.range(0, 1000)
+                                                               .boxed())
+                                      .count());
+
+        // a downstream parallel call must neither split the source nor break consumer side state
+        List<Integer> encounterOrder = Collections.synchronizedList(new ArrayList<>());
+        StreamUtils.sequentialized(IntStream.range(0, 1000)
+                                            .boxed())
+                   .parallel()
+                   .forEach(encounterOrder::add);
+        assertEquals(IntStream.range(0, 1000)
+                              .boxed()
+                              .toList(),
+                     encounterOrder);
+    }
+
+    @Test
+    public void testSequentializedClosesSourceStream()
+    {
+        AtomicBoolean closed = new AtomicBoolean(false);
+        try (Stream<String> stream = StreamUtils.sequentialized(Stream.of("A", "B")
+                                                                      .onClose(() -> closed.set(true))))
+        {
+            assertEquals(List.of("A", "B"), stream.toList());
+        }
+        assertTrue(closed.get());
+    }
+
+    @Test
+    public void testTakeUntilObservedTermination()
+    {
+        // an element which is resolved by the consumer terminates the stream
+        {
+            List<Integer> resolvedIndexes = new ArrayList<>();
+            Stream<Supplier<Integer>> source = Stream.iterate(0, index -> index + 1)
+                                                     .map(index -> () ->
+                                                     {
+                                                         resolvedIndexes.add(index);
+                                                         return index;
+                                                     });
+            BiFunction<Supplier<Integer>, TerminationSignal, Supplier<Integer>> decorator = (supplier, signal) -> () ->
+            {
+                Integer value = supplier.get();
+                signal.terminateIf(value >= 3);
+                return value;
+            };
+            assertEquals(List.of(0, 1, 2, 3), StreamUtils.takeUntilObservedTermination(source, decorator)
+                                                         .map(Supplier::get)
+                                                         .toList());
+            assertEquals(List.of(0, 1, 2, 3), resolvedIndexes);
+        }
+
+        // an element which is skipped is never resolved, so the skipped elements do not cost anything
+        {
+            List<Integer> resolvedIndexes = new ArrayList<>();
+            Stream<Supplier<Integer>> source = Stream.iterate(0, index -> index + 1)
+                                                     .map(index -> () ->
+                                                     {
+                                                         resolvedIndexes.add(index);
+                                                         return index;
+                                                     });
+            BiFunction<Supplier<Integer>, TerminationSignal, Supplier<Integer>> decorator = (supplier, signal) -> () ->
+            {
+                Integer value = supplier.get();
+                signal.terminateIf(value >= 3);
+                return value;
+            };
+            assertEquals(List.of(2, 3), StreamUtils.takeUntilObservedTermination(source, decorator)
+                                                   .skip(2)
+                                                   .map(Supplier::get)
+                                                   .toList());
+            assertEquals(List.of(2, 3), resolvedIndexes);
+        }
+
+        // a consumer which never resolves an element relies on its own short circuiting
+        assertEquals(3, StreamUtils.takeUntilObservedTermination(Stream.iterate(0, index -> index + 1), (index, signal) -> index)
+                                   .limit(3)
+                                   .toList()
+                                   .size());
+
+        assertEquals(List.of(), StreamUtils.takeUntilObservedTermination(Stream.<String>empty(), (element, signal) -> element)
+                                           .toList());
+        assertEquals(List.of("A", "B"), StreamUtils.takeUntilObservedTermination(Stream.of("A", "B"), null)
+                                                   .toList());
+    }
+
+    @Test
+    public void testTakeUntilLastElementIncludedWithParallelStream()
+    {
+        assertEquals(List.of(0, 1, 2, 3, 4, 5), StreamUtils.takeUntilLastElementIncluded(IntStream.range(0, 2000)
+                                                                                                  .boxed(),
+                                                                                         element -> element >= 5)
+                                                           .parallel()
+                                                           .toList());
+        assertEquals(List.of(0, 1, 2, 3, 4, 5), StreamUtils.takeUntilLastElementIncluded(IntStream.range(0, 2000)
+                                                                                                  .boxed()
+                                                                                                  .parallel(),
+                                                                                         element -> element >= 5)
+                                                           .toList());
+    }
+
+    @Test
+    public void testTakeUntilLastElementIncludedWithInfiniteStream()
+    {
+        AtomicInteger sourceElementCounter = new AtomicInteger();
+        AtomicInteger predicateCounter = new AtomicInteger();
+
+        assertEquals(List.of(0, 1, 2), StreamUtils.takeUntilLastElementIncluded(Stream.iterate(0, element -> element + 1)
+                                                                                      .peek(element -> sourceElementCounter.incrementAndGet()),
+                                                                                element ->
+                                                                                {
+                                                                                    predicateCounter.incrementAndGet();
+                                                                                    return element >= 2;
+                                                                                })
+                                                  .toList());
+        assertEquals(3, sourceElementCounter.get());
+        assertEquals(3, predicateCounter.get());
+    }
+
+    @Test
+    public void testTakeUntilLastElementIncludedClosesSourceStream()
+    {
+        AtomicBoolean closed = new AtomicBoolean(false);
+        try (Stream<String> stream = StreamUtils.takeUntilLastElementIncluded(Stream.of("A", "B", "C")
+                                                                                    .onClose(() -> closed.set(true)),
+                                                                              element -> org.apache.commons.lang3.StringUtils.equals("B", element)))
+        {
+            assertEquals(List.of("A", "B"), stream.toList());
+        }
+        assertTrue(closed.get());
+    }
+
+    @Test
+    public void testLazyLoading()
+    {
+        assertEquals(List.of(0, 1, 2), StreamUtils.lazyLoading(Stream.of(() -> 0, () -> 1, () -> 2))
+                                                  .toList());
+        assertEquals(List.of(1), StreamUtils.lazyLoading(Stream.of(() -> 0, () -> 1, () -> 2))
+                                            .skip(1)
+                                            .limit(1)
+                                            .toList());
+        {
+            AtomicInteger counter = new AtomicInteger(0);
+            assertEquals(List.of(0, 1), StreamUtils.lazyLoading(IntStream.range(0, 10)
+                                                                         .mapToObj(i -> () -> counter.getAndIncrement()))
+                                                   .skip(5)
+                                                   .limit(2)
+                                                   .toList());
+        }
     }
 
 }

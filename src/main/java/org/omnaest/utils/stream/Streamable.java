@@ -22,6 +22,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.omnaest.utils.ListUtils;
+
+import lombok.AllArgsConstructor;
+import lombok.Value;
+
 /**
  * Similar to {@link Iterable} but provides additionally the {@link #stream()} method which is to be implemented.
  * 
@@ -104,5 +109,30 @@ public interface Streamable<E> extends Iterable<E>
         return this.stream()
                    .skip(index)
                    .findFirst();
+    }
+
+    /**
+     * Returns the nth element. index = 0,1,2, ...
+     * 
+     * @see #first()
+     * @param index
+     * @return
+     */
+    public default Optional<Element<E>> nthElement(int index)
+    {
+        List<E> list = this.stream()
+                           .skip(index)
+                           .limit(1)
+                           .toList();
+        return Optional.of(list)
+                       .filter(ListUtils::isNotEmpty)
+                       .map(nonEmptyList -> Element.of(nonEmptyList.get(0)));
+    }
+
+    @Value
+    @AllArgsConstructor(staticName = "of")
+    public static class Element<E>
+    {
+        private final E value;
     }
 }
