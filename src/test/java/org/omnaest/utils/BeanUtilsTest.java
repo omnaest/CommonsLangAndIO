@@ -34,6 +34,7 @@
 package org.omnaest.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -100,6 +101,35 @@ public class BeanUtilsTest
                                                .build());
         bean.setField("value1");
         assertEquals("value1", bean.getField());
+    }
+
+    @Test
+    public void testProxyWithPartialPropertyCoverage()
+    {
+        ParentBean bean = BeanUtils.analyze(ParentBean.class)
+                                   .newProxy(MapUtils.builder()
+                                                     .put("field", new BeanUtils.BeanPropertyAccessor<String>() {
+                                                         private String value;
+
+                                                         @Override
+                                                         public void accept(String value)
+                                                         {
+                                                             this.value = value;
+                                                         }
+
+                                                         @Override
+                                                         public String get()
+                                                         {
+                                                             return this.value;
+                                                         }
+                                                     })
+                                                     .build());
+        bean.setField("value1");
+        assertEquals("value1", bean.getField());
+
+        //
+        // a property without an attached accessor returns null instead of throwing
+        assertNull(bean.getParent());
     }
 
     @Test

@@ -582,6 +582,9 @@ public class BeanUtils
                     .forEach(registry -> registerStream.accept(registry));
                 return ProxyUtils.builder()
                                  .of(type)
+                                 //
+                                 // a bean proxy supports partial property coverage, so methods without an accessor return null instead of throwing
+                                 .withDefaultHandler(arguments -> null)
                                  .withHandler(propertyToAccessors.entrySet()
                                                                  .stream()
                                                                  .flatMap(entry ->
