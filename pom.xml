@@ -43,11 +43,9 @@
             <artifactId>commons-io</artifactId>
             <version>2.22.0</version>
         </dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
-        </dependency>
+        <!-- commons-lang 2.6 has been removed. The org.apache.commons.lang.* types it provided are served by the deprecated
+             migration shim under src/main/java/org/apache/commons/lang, which forwards to commons-lang3. The shim is to be
+             deleted once no source imports org.apache.commons.lang.* any more. -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
