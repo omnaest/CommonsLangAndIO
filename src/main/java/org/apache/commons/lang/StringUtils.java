@@ -80,6 +80,11 @@ public class StringUtils
         return org.apache.commons.lang3.StringUtils.indexOf(str, searchStr, startPos);
     }
 
+    public static boolean contains(String str, String searchStr)
+    {
+        return org.apache.commons.lang3.StringUtils.contains(str, searchStr);
+    }
+
     public static boolean containsIgnoreCase(String str, String searchStr)
     {
         return org.apache.commons.lang3.StringUtils.containsIgnoreCase(str, searchStr);
@@ -113,6 +118,11 @@ public class StringUtils
     public static String[] split(String str, String separatorChars, int max)
     {
         return org.apache.commons.lang3.StringUtils.split(str, separatorChars, max);
+    }
+
+    public static String[] splitByWholeSeparator(String str, String separator)
+    {
+        return org.apache.commons.lang3.StringUtils.splitByWholeSeparator(str, separator);
     }
 
     public static String[] splitPreserveAllTokens(String str)

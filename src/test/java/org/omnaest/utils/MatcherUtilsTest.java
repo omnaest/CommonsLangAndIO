@@ -142,9 +142,9 @@ public class MatcherUtilsTest
                                         .ofExact("ab")
                                         .findInAnd("def")
                                         .replace(token -> "_"));
-        assertEquals("!ง$%$/&/& _ (/()(=)=?`,.-*", MatcherUtils.matcher()
+        assertEquals("!ยง$%$/&/& _ (/()(=)=?`,.-*", MatcherUtils.matcher()
                                                                .ofExact("ab")
-                                                               .findInAnd("!ง$%$/&/& ab (/()(=)=?`,.-*")
+                                                               .findInAnd("!ยง$%$/&/& ab (/()(=)=?`,.-*")
                                                                .replace(token -> "_"));
 
     }

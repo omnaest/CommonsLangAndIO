@@ -60,7 +60,7 @@ Example: `FileUtils` exposes `FileReaderLoader`, `FileNavigator`, `CommitableFil
 
 ## Dependencies (compile scope)
 
-- `commons-io`, `commons-lang`, `commons-lang3`, `commons-text` — Apache Commons
+- `commons-io`, `commons-lang3`, `commons-text` — Apache Commons (note: `commons-lang` itself is NOT a declared dependency — the `org.apache.commons.lang.*` types are served by a deprecated migration shim under `src/main/java/org/apache/commons/lang` that forwards to `commons-lang3`, to be deleted once nothing imports `org.apache.commons.lang.*` any more)
 - `guava` — Guava utilities
 - `parallel-collectors` — parallel stream collection
 - `jakarta.xml.bind-api` — JAXB API

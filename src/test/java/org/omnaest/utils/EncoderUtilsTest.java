@@ -28,7 +28,7 @@ public class EncoderUtilsTest
     @Test
     public void testAlphaNumericText() throws Exception
     {
-        Arrays.asList("abc", "012349", "°^!§$%&/()=?`*'_:;²³{}\\´+~#-.,")
+        Arrays.asList("abc", "012349", "Â°^!Â§$%&/()=?`*'_:;Â²Â³{}\\Â´+~#-.,")
               .forEach(text ->
               {
                   TextEncoderAndDecoder encoderAndDecoder = EncoderUtils.newInstance()
